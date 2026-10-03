@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "my-agent-skills：從集合 repo 到隱私掃描報告",
+    "output": "architecture.html",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "main-path",
+        "label": "主線：安裝到報告",
+        "focus": ["repo", "installer", "skilldir", "agent", "scanner", "report"],
+        "note": "一條主路徑：集合 repo 安裝成 skill，agent 讀取後執行掃描，最後產生報告。"
+      },
+      {
+        "id": "scan-branches",
+        "label": "分支：掃描周圍的邊界",
+        "focus": ["scanner", "git", "gitleaks", "hooks", "ci"],
+        "note": "掃描核心只讀取目標 repo，並在四個明確邊界上被使用。"
+      }
+    ]
+  },
+  "components": [
+    { "id": "repo", "type": "external", "label": "集合 repo", "sublabel": "skills/・private", "pos": [30, 350], "size": [120, 64] },
+    { "id": "installer", "type": "backend", "label": "安裝工具", "sublabel": "skills CLI", "pos": [245, 350], "size": [130, 64] },
+    { "id": "skilldir", "type": "database", "label": "已安裝 skill", "sublabel": "SKILL.md", "pos": [470, 350], "size": [140, 64] },
+    { "id": "agent", "type": "frontend", "label": "agent runtime", "sublabel": "OpenCode", "pos": [705, 350], "size": [140, 64], "tag": "待實測" },
+    { "id": "scanner", "type": "backend", "label": "掃描核心", "sublabel": "唯讀掃描", "pos": [940, 350], "size": [160, 70] },
+    { "id": "report", "type": "frontend", "label": "報告", "sublabel": "text／json", "pos": [1195, 350], "size": [150, 64] },
+    { "id": "hooks", "type": "security", "label": "hooks", "sublabel": "明確安裝", "pos": [470, 160], "size": [140, 62] },
+    { "id": "gitleaks", "type": "security", "label": "Gitleaks", "sublabel": "高風險密鑰", "pos": [940, 160], "size": [160, 62] },
+    { "id": "ci", "type": "cloud", "label": "CI", "sublabel": "唯讀執行", "pos": [1195, 160], "size": [150, 62] },
+    { "id": "git", "type": "database", "label": "目標 Git repo", "sublabel": "index／refs", "pos": [940, 540], "size": [160, 62] }
+  ],
+  "connections": [
+    { "id": "repo-to-installer", "from": "repo", "to": "installer", "label": "npx／複製" },
+    { "id": "installer-to-skilldir", "from": "installer", "to": "skilldir", "label": "寫入目錄" },
+    { "id": "skilldir-to-agent", "from": "skilldir", "to": "agent", "label": "讀 SKILL.md" },
+    { "id": "agent-to-scanner", "from": "agent", "to": "scanner", "label": "執行掃描" },
+    { "id": "scanner-to-report", "from": "scanner", "to": "report", "label": "退出碼 0／1／2" },
+    { "id": "scanner-to-git", "from": "scanner", "to": "git", "label": "唯讀讀取", "fromSide": "bottom", "toSide": "top", "labelDy": 24 },
+    { "id": "scanner-to-gitleaks", "from": "scanner", "to": "gitleaks", "label": "密鑰比對", "variant": "security", "fromSide": "top", "toSide": "bottom", "labelDy": -84 },
+    { "id": "scanner-to-hooks", "from": "scanner", "to": "hooks", "label": "退出碼 1／2 阻擋", "variant": "security", "fromSide": "top", "toSide": "bottom" },
+    { "id": "scanner-to-ci", "from": "scanner", "to": "ci", "label": "CI 執行掃描", "variant": "dashed", "fromSide": "top", "toSide": "bottom" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "退出碼就是結論",
+      "items": [
+        "0：掃描完整且沒有 high 等級發現",
+        "1：掃描完整，但有 high 等級發現",
+        "2：未完整掃描或工具失敗，不可視為通過"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "安裝邊界",
+      "items": [
+        "安裝 skill 不會自動安裝 hooks",
+        "skills CLI 安裝成功不等於 agent runtime 已實測",
+        "hooks 只在單一 repo 內安裝，不改全域 Git 設定"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "安全邊界",
+      "items": [
+        "缺少 Gitleaks 時狀態為 incomplete、退出碼 2",
+        "不自動修復、不重寫歷史、不推送",
+        "秘密以遮罩呈現，原文不進報告"
+      ]
+    }
+  ]
+}

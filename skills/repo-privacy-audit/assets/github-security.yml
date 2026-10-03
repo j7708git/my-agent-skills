@@ -1,0 +1,113 @@
+# repo-privacy-audit CI 範本（純掃描、唯讀）
+#
+# 這是**範本**，不會自動安裝到你的專案，也不會修改任何 GitHub 設定。
+# 使用前請先讀 skill 內的 SKILL.md 與 references/checks.md，再依你的 repo 調整。
+#
+# 使用前提（任何一項不滿足就應該讓工作流程失敗，不要降級成「大致沒問題」）：
+#   1. 這個 skill 已經安裝並 commit 在你的 repo（SKILL_DIR 指向該目錄）。
+#      常見做法是把它放在專案內的 skill 目錄，例如：
+#        .agents/skills/repo-privacy-audit
+#      CI 不會自動下載或安裝 skill；它必須已經在版本控制裡。
+#   2. 你接受下面的 Gitleaks 取得方式（固定版本 + SHA-256 校驗）。
+#      掃描器本身永遠不會替你下載工具，這裡是 CI 環境的明確一次性設定。
+#   3. 你知道 branch protection、required checks、Dependabot 排程
+#      都必須由維護者手動設定；這個工作流程不做那些事。
+#
+# 設計重點：
+#   - 權限只有 contents: read；不需要額外 secret，也不呼叫會寫入的 API。
+#   - action 以 commit SHA 釘選，不用浮動 tag；runner 固定版本。
+#   - fetch-depth 0，才能掃到完整歷史。
+#   - 只擋退出碼 1（有 high 發現）與 2（未完整掃描或操作失敗）。
+#   - 報告只印在日誌（已遮罩），不上傳 artifact、不建立 issue、不發通知。
+name: privacy-audit
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: privacy-audit-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # 這個 skill 在本 repo 內的位置。若你裝在別的位置，請改這一行為正確路徑。
+  SKILL_DIR: .agents/skills/repo-privacy-audit
+  # Gitleaks 版本與校驗和取自該版本官方發布的 checksums 檔案。
+  # 換版本時請同時更新這兩個值，並比對官方 checksums。
+  GITLEAKS_VERSION: 8.30.1
+  GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+
+jobs:
+  history-scan:
+    name: 掃描完整歷史（唯讀）
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: 取得完整歷史
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: 確認 skill 已就位（不滿足就失敗）
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -f "${SKILL_DIR}/scripts/repo-privacy-audit.sh" ]; then
+            echo "找不到 ${SKILL_DIR}/scripts/repo-privacy-audit.sh" >&2
+            echo "請先把 repo-privacy-audit skill 安裝並 commit 進這個 repo，再執行本工作流程。" >&2
+            echo "CI 不會自動下載或安裝 skill。掃描未完成，以退出碼 2 結束。" >&2
+            exit 2
+          fi
+
+      - name: 準備 Gitleaks（固定版本 + SHA-256 校驗）
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          dest="${RUNNER_TEMP}/${archive}"
+          mkdir -p "${RUNNER_TEMP}/gitleaks-bin"
+          curl -fsSL --proto '=https' --tlsv1.2 -o "${dest}" \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/${archive}"
+          echo "${GITLEAKS_SHA256}  ${dest}" | sha256sum -c -
+          tar -xzf "${dest}" -C "${RUNNER_TEMP}/gitleaks-bin" gitleaks
+          chmod 0755 "${RUNNER_TEMP}/gitleaks-bin/gitleaks"
+          echo "GITLEAKS_BIN=${RUNNER_TEMP}/gitleaks-bin/gitleaks" >> "${GITHUB_ENV}"
+
+      - name: 掃描本機 refs 可達的完整歷史
+        shell: bash
+        run: |
+          # 刻意不使用 set -e：要自己判讀掃描器的 0 / 1 / 2 語意。
+          set -uo pipefail
+          bash "${SKILL_DIR}/scripts/repo-privacy-audit.sh" \
+            --history \
+            --repo . \
+            --policy "${SKILL_DIR}/assets/policy.example.json" \
+            --gitleaks "${GITLEAKS_BIN}" \
+            --format text
+          rc=$?
+          case "${rc}" in
+            0)
+              echo "掃描完整，且沒有 high 等級發現。"
+              ;;
+            1)
+              echo "掃描完整，但有 high 等級發現：依 skill 內 references/remediation.md 的順序處理，" >&2
+              echo "先撤銷／輪替憑證，不要先想清理歷史。" >&2
+              exit 1
+              ;;
+            2)
+              echo "掃描未完成或操作失敗（例如沒有取得 Gitleaks、政策有錯、超過上限被截斷）。" >&2
+              echo "不可視為通過；請依日誌中的錯誤與警告補齊條件後重跑。" >&2
+              exit 2
+              ;;
+            *)
+              echo "掃描器回傳非預期的退出碼：${rc}" >&2
+              exit 2
+              ;;
+          esac

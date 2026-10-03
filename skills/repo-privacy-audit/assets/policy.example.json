@@ -1,0 +1,38 @@
+{
+  "schemaVersion": "1.0",
+  "id": "repo-privacy-audit-example",
+  "description": "範例政策：以預設值為基準的起點。身分規則維持預設（一般 email 為 low、電話型 email 為 high、姓名為 off），台灣個資格式規則關閉，報告不顯示任何秘密字元。欄位說明見 skill 內的 references/checks.md。",
+  "pii": {
+    "enabled": false
+  },
+  "paths": {
+    "skipGlobs": [],
+    "maxFileBytes": 1048576,
+    "sensitiveSeverity": "high",
+    "personalPathSeverity": "medium"
+  },
+  "masking": {
+    "previewChars": 0
+  },
+  "limits": {
+    "maxCommits": 2000,
+    "maxFiles": 4000,
+    "maxTotalBytes": 67108864
+  },
+  "metadata": {
+    "enabled": true,
+    "emailSeverity": "low",
+    "phoneEmailSeverity": "high",
+    "nameSeverity": "off",
+    "scanCommitMessage": true,
+    "allowedEmails": [
+      "example@example.invalid",
+      "*@example.invalid"
+    ],
+    "ignoreNoReply": true
+  },
+  "githubSettings": {
+    "visibilitySeverity": "medium",
+    "securitySeverity": "medium"
+  }
+}

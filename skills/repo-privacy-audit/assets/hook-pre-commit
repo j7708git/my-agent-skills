@@ -1,0 +1,127 @@
+#!/usr/bin/env bash
+# repo-privacy-audit-hook:v1 pre-commit
+#
+# 由 rpa-hooks.sh install 安裝，請勿手改。
+# 要移除請執行：bash <skill>/scripts/rpa-hooks.sh uninstall --repo <repo>
+#
+# 設計重點：
+# - 這支 hook **不內嵌任何路徑**。設定（CLI 路徑、政策檔路徑、hook 檔案雜湊）
+#   放在旁邊的 hooks.json，由本檔用 JSON 解析器讀出。
+#   設定檔永遠不被 eval、不被 source、不被當成 shell 程式片段；
+#   因此帶引號、換行、反斜線或 shell meta 字元都不會改變行為。
+# - 掃描的是「將要進入 commit 的 index 內容」，不是工作目錄現況。
+# - 只執行設定檔記錄的那一個 CLI 路徑。路徑含空白或 shell meta 字元都安全：
+#   它從 JSON 讀出後全程以 "$CLI" 引號帶入，不經過 eval。
+# - 退出碼：0=完整且無 high；1=有 high；2=未完整掃描。
+#   2 一樣會擋住 commit，因為「沒掃完」不等於「沒問題」。
+set -uo pipefail
+
+HOOK_DIR=''
+CONFIG_FILE=''
+
+rpa_self_dir() {
+  local src=${BASH_SOURCE[0]} dir
+  while [ -L "$src" ]; do
+    dir=$(cd -P "$(dirname "$src")" >/dev/null 2>&1 && pwd) || return 1
+    src=$(readlink "$src")
+    case $src in
+      /*) ;;
+      *) src=$dir/$src ;;
+    esac
+  done
+  cd -P "$(dirname "$src")" >/dev/null 2>&1 && pwd
+}
+
+rpa_fail() {
+  echo "[repo-privacy-audit] $1" >&2
+  exit 2
+}
+
+rpa_python() {
+  local candidate
+  if [ -n "${REPO_PRIVACY_AUDIT_PYTHON:-}" ]; then
+    printf '%s\n' "$REPO_PRIVACY_AUDIT_PYTHON"
+    return 0
+  fi
+  for candidate in python3 python; do
+    if command -v "$candidate" >/dev/null 2>&1; then
+      command -v "$candidate"
+      return 0
+    fi
+  done
+  return 1
+}
+
+# 用 JSON 解析器取出設定值。設定檔內容完全不進入 shell 的解析路徑。
+rpa_read_config() {
+  "$RPA_PY" -c '
+import json, sys
+try:
+    with open(sys.argv[1], encoding="utf-8") as handle:
+        data = json.load(handle)
+except Exception:
+    raise SystemExit(1)
+if not isinstance(data, dict):
+    raise SystemExit(1)
+value = data.get(sys.argv[2])
+if value is None:
+    raise SystemExit(1)
+if not isinstance(value, str):
+    raise SystemExit(1)
+sys.stdout.write(value)
+' "$1" "$2"
+}
+
+HOOK_DIR=$(rpa_self_dir) || rpa_fail "無法解析 hook 自身位置；掃描未完成。"
+RPA_PY=$(rpa_python) || rpa_fail "找不到 Python 3；掃描未完成。"
+
+# 找設定檔：優先環境變數，其餘是相對於 hook 位置的候選路徑
+# （讓 skill 被 copy 或安裝到不同位置時仍能找到）。
+if [ -n "${REPO_PRIVACY_AUDIT_CONFIG:-}" ]; then
+  CONFIG_FILE=$REPO_PRIVACY_AUDIT_CONFIG
+else
+  for candidate in \
+    "$HOOK_DIR/../repo-privacy-audit/hooks.json" \
+    "$HOOK_DIR/../../repo-privacy-audit/hooks.json" \
+    "$HOOK_DIR/../../../../repo-privacy-audit/hooks.json"; do
+    if [ -f "$candidate" ]; then
+      CONFIG_FILE=$candidate
+      break
+    fi
+  done
+fi
+
+if [ -z "$CONFIG_FILE" ] || [ ! -f "$CONFIG_FILE" ]; then
+  rpa_fail "pre-commit：找不到 repo-privacy-audit 的安裝設定（hooks.json）。
+  請設定 REPO_PRIVACY_AUDIT_BIN 指向 repo-privacy-audit.sh 的完整路徑，
+  或重新執行 rpa-hooks.sh install。掃描未完成，以退出碼 2 擋下這個 commit。"
+fi
+
+if [ -n "${REPO_PRIVACY_AUDIT_BIN:-}" ]; then
+  CLI=$REPO_PRIVACY_AUDIT_BIN
+else
+  CLI=$(rpa_read_config "$CONFIG_FILE" cli) || rpa_fail "安裝設定缺少可用的 cli 欄位。
+  請重新執行 rpa-hooks.sh install。掃描未完成，以退出碼 2 擋下這個 commit。"
+fi
+
+if [ ! -f "$CLI" ]; then
+  rpa_fail "pre-commit：已記錄的掃描 CLI 不存在：$CLI
+  CLI 可能被移動或刪除。請設定 REPO_PRIVACY_AUDIT_BIN 指向正確路徑，
+  或重新執行 rpa-hooks.sh install。掃描未完成，以退出碼 2 擋下這個 commit。"
+fi
+
+RPA_ARGS=(--staged --repo "$PWD" --format "${REPO_PRIVACY_AUDIT_FORMAT:-text}")
+
+RPA_POLICY=$(rpa_read_config "$CONFIG_FILE" policy 2>/dev/null || true)
+if [ -n "$RPA_POLICY" ] && [ -f "$RPA_POLICY" ]; then
+  RPA_ARGS+=(--policy "$RPA_POLICY")
+fi
+
+if [ -n "${REPO_PRIVACY_AUDIT_ARGS:-}" ]; then
+  read -r -a RPA_EXTRA <<<"$REPO_PRIVACY_AUDIT_ARGS"
+  RPA_ARGS+=("${RPA_EXTRA[@]}")
+fi
+
+bash "$CLI" "${RPA_ARGS[@]}"
+RPA_EXIT=$?
+exit "$RPA_EXIT"

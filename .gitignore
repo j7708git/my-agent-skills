@@ -1,0 +1,48 @@
+# 編輯器／作業系統產物
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*~
+
+# Python 快取與暫存環境
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+
+# 個人設定與本機憑證（.env.example 仍要進版控，供範例用途）
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+!.gitconfig.local
+
+# 掃描輸出與報告（產物，不進版控）
+reports/
+report/
+*-report.json
+*-report.txt
+*-report.csv
+*-report.sarif
+gitleaks-report.*
+.gitleaks-report.*
+.sarif
+
+# 本機任務／工作區 metadata（PM 派工卡不屬於公開 repo 內容）
+.openchamber/
+
+# Archify 視覺檢查 sidecar（截圖與收據含本機絕對路徑，不追蹤；成品 docs/architecture.html 要進版控）
+*.visual-check.json
+*.visual-check.html
+*.visual-check.*.png
+
+# 暫存檔
+*.tmp
+*.bak
