@@ -60,4 +60,4 @@ jobs:
         # 測試的預設 gitleaks 路徑是本機暫存位置，在 runner 上不存在會被 skip，讓 CI 綠燈
         # 但等於沒跑真實掃描。必須在 shell 內展開 $HOME（Actions 的 env: 不做 shell 展開），
         # 這樣測試與掃描用的是前一步安裝並校驗過的同一支執行檔；只影響這個 step 的子行程。
-        run: RPA_REAL_GITLEAKS="$HOME/.local/bin/gitleaks" bash scripts/run-checks.sh
+        run: GITLEAKS="$HOME/.local/bin/gitleaks" RPA_REAL_GITLEAKS="$HOME/.local/bin/gitleaks" bash scripts/run-checks.sh
