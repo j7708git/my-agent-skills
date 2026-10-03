@@ -1,12 +1,14 @@
 # 開發與驗證說明
 
 本文件說明這個 repo 自己的格式驗證、檢查腳本、CI 與工具版本。
-使用 skill 請看 [README.md](README.md)；相容性範圍請看 [compatibility.md](compatibility.md)。
+產品行為契約（CLI、退出碼、輸出、安全邊界）請看 [specification.md](specification.md)；
+使用 skill 請看 [README.md](../README.md)；相容性範圍請看 [compatibility.md](compatibility.md)。
 
 ## 目錄一覽
 
 | 路徑 | 用途 |
 | --- | --- |
+| `docs/specification.md` | 產品技術契約：CLI、退出碼、輸出格式、安全邊界 |
 | `scripts/validate_skills.py` | 格式驗證器（Python 3 標準函式庫，無外部相依） |
 | `scripts/run-checks.sh` | 統一檢查入口：格式 → 測試 → Bash 語法 → Python 語法 → Gitleaks（歷史＋staged） |
 | `.github/workflows/ci.yml` | 本 repo 的 CI，權限 `contents: read` |
@@ -17,16 +19,31 @@
 `scripts/run-checks.sh` **只維護這個集合 repo**，不是 skill 的執行入口；
 skill 安裝到使用者的專案後，這個腳本不會跟著走。
 
+### 公開文件與本機工作紀錄
+
+`docs/` 只放**公開**文件：使用說明、產品契約、維護指南、相容性、可分享研究與架構成品。
+
+本機工作紀錄不進版控，兩條路：
+
+| 路徑 | 內容 | 版控 |
+| --- | --- | --- |
+| `.local/` | 完整計畫、todo、session 日誌、驗收紀錄、研究筆記、視覺檢查 sidecar | 忽略 |
+| `.openchamber/` | 派工用的任務計畫卡 | 忽略 |
+
+預設工作筆記不發布；要把某份筆記變成公開文件，先依用途審核
+（讀者是誰、會不會連到本機路徑或尚未公開的資訊），再改寫成自足文件放入 `docs/`。
+公開文件不可引用 `.local/` 或 `.openchamber/` 的路徑——對外部讀者那是死連結。
+
 ### 測試現況
 
-目前共 **180 項**測試，全部通過：
+目前共 **191 項**測試，全部通過：
 
 | 測試檔 | 項目數 | 覆蓋對象 |
 | --- | --- | --- |
 | `tests/repo-privacy-audit/test_core_contract.py` | 64 | 掃描核心契約：模式、退出碼、遮罩、政策、政策欄位 |
 | `tests/repo-privacy-audit/test_hooks.py` | 68 | hooks 安裝／移除／實際 `git commit` 與 `git push` 擋下行為 |
 | `tests/repo-privacy-audit/test_cli_modes.py` | 12 | CLI 模式與輸入處理 |
-| `tests/scaffold/test_validate_skills.py` | 22 | 驗證器自身 |
+| `tests/scaffold/test_validate_skills.py` | 33 | 驗證器自身與文件分流：公開文件自足、禁止引用本機路徑、禁止追蹤本機目錄 |
 | `tests/scaffold/test_run_checks_cli.py` | 14 | 檢查腳本的 CLI 與失敗聚合 |
 
 fixtures 全部是合成資料；完整假憑證只在暫存測試 repo 的執行期組合，原始碼保留分段字串。
@@ -64,12 +81,27 @@ fixtures 全部是合成資料；完整假憑證只在暫存測試 repo 的執�
 3. `description` 長度與非空。
 4. `SKILL.md` 的相對資源存在：Markdown 連結目標、程式碼片段中的路徑、帶副檔名的路徑。
    **只以 skill 根目錄為基準解析**，且不得離開 skill 目錄——安裝時只會複製 skill 目錄，
-   引用 repo 根檔案（例如 `docs/plan.md`）在安裝後會失效，一律報錯。
+   引用 repo 根檔案（例如 `docs/specification.md`）在安裝後會失效，一律報錯。
    skill 內部可以用 `references/../references/x.md` 這種不逃出的相對路徑。
-5. `--check-docs`：必要的 repo 維護文件（README、AGENTS、CONTRIBUTING、SECURITY、LICENSE、
-   本文件、compatibility）存在且非空，其中的 Markdown 相對連結指向存在的檔案。
-   repo 文件依序以「文件所在目錄、repo 根目錄」為基準解析，邊界是 repo 根。
+5. `--check-docs`：
+   - 必要的公開維護文件存在且非空：README、AGENTS、CONTRIBUTING、SECURITY、LICENSE，
+     以及三份契約與維護文件——**`docs/specification.md`**（產品契約：CLI、退出碼、
+     輸出、安全邊界）、本文件、`docs/compatibility.md`。
+     契約缺席或空白都算錯誤：沒有它，公開文件就沒有說明產品怎麼用、怎麼讀退出碼。
+   - 公開文件（含 `docs/research/portability.md`）的 Markdown 相對連結指向存在的檔案，
+     依序以「文件所在目錄、repo 根目錄」為基準解析，邊界是 repo 根。
+   - 公開文件**不得引用** `.local/` 或 `.openchamber/`：這些路徑不在版控內，
+     對外部讀者是死連結。這項檢查先於存在性檢查，因為這些路徑在本機確實存在。
+   - `.local/` 與 `.openchamber/` **不得被 Git 追蹤**（唯讀 `git ls-files`）。
+     目標不是 Git 工作樹或 `git` 不可用時，這一項**跳過且不宣稱已檢查**
+     （`coverage` 不會列出 `local-dirs-not-tracked`）；本 repo 自己就是 Git 工作樹，
+     所以 CI 與 `run-checks.sh` 一定會實際執行。
 6. 警告（不影響退出碼，除非 `--strict`）：description 過短、內文超過 500 行、`.sh` 缺 shebang。
+
+`--check-docs` 只驗證**公開**文件。內部計畫與驗收紀錄（`.local/`）與任務卡
+（`.openchamber/`）不在版控內，新鮮 clone 不存在，所以驗證器不要求它們存在，
+也不會因為它們缺席而報錯。用 `--repo` 檢查其他 repo 時，同樣要求對方具備
+自己的產品契約（`docs/specification.md`）。
 
 ### 退出碼
 
@@ -174,7 +206,13 @@ node <archify>/bin/archify.mjs visual-check docs/architecture.html --json
 ```
 
 `deliver` 會凍結當次規格並輸出 spec／artifact 的 SHA-256；`visual-check` 只讀取已交付的 HTML，
-產生的截圖與收據（`*.visual-check.*`）含本機絕對路徑，已被 `.gitignore` 排除，不進版控。
+產生的截圖與收據（檔名含 `visual-check`）含本機絕對路徑，**不進版控**：
+它們被 `.gitignore` 排除，並集中放在本機工作紀錄目錄（本 repo 為 `.local/reports/architecture/`）
+而不是 `docs/`，避免與公開文件混在一起。成品 `docs/architecture.html` 與來源規格
+`docs/architecture.json` 仍然進版控。
+
+重新產生 sidecar 時**不要覆蓋既有收據**：那是上一版的瀏覽器證據，覆蓋等於毀掉原始資料。
+本 repo 的做法是先移到 `before/` 子目錄留檔，再把新版放進同一層，便於對照。
 
 語言說明：圖的**內容**（節點、關係、卡片）以繁體中文撰寫。Archify 的檢視器介面
 （Light／Dark、Export、Legend、PATH／MAP／LENS 等固定 UI）**維持英文**，
@@ -190,4 +228,5 @@ node <archify>/bin/archify.mjs visual-check docs/architecture.html --json
 - [ ] 內文不超過 500 行，細節放 `references/`。
 - [ ] 腳本有 shebang，`bash -n` 通過。
 - [ ] 測試涵蓋新的分支案例，fixtures 全是合成資料。
+- [ ] 公開文件沒有引用 `.local/`、`.openchamber/`、本機絕對路徑或特定歷史執行紀錄。
 - [ ] `bash scripts/run-checks.sh` 全綠；若缺 Gitleaks，在回報中明說未完成。

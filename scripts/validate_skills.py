@@ -19,6 +19,13 @@
 不會猜測或忽略。規格中的 ``metadata`` 映射屬於已知限制，完整規格請改用
 ``skills-ref validate``（https://agentskills.io/specification）。
 
+文件分流（.local/ 與 .openchamber/ 不進版控）
+----------------------------------------------
+本檢查只驗證**公開**文件：公開文件必須自給自足，不得引用 ``.local/`` 或
+``.openchamber/`` 裡的本機工作紀錄（計畫、任務卡、session 日誌、驗收紀錄、
+研究筆記），否則讀者拿到的是死連結或等於要求外部使用者擁有本機工作區。
+內部文件本身不被檢查（不在版控內，新鮮 clone 不存在），但若被 Git 追蹤則報錯。
+
 退出碼
 ------
 0：通過（可能有警告；``--strict`` 會把警告當成失敗）。
@@ -32,6 +39,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import subprocess
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -80,10 +88,20 @@ REQUIRED_REPO_FILES = (
     "CONTRIBUTING.md",
     "SECURITY.md",
     "LICENSE",
+    "docs/specification.md",
     "docs/development.md",
     "docs/compatibility.md",
 )
-DOC_FILES = REQUIRED_REPO_FILES + ("docs/plan.md", "docs/research/portability.md")
+# 只列公開文件。內部計畫與驗收紀錄（.local/）與任務卡（.openchamber/）不進版控，
+# 新鮮 clone 不存在，因此不得列為必要文件，也不得因為它們缺席而報錯。
+#
+# docs/specification.md 是產品契約，屬於必要公開文件：沒有它，讀者無從得知
+# CLI、退出碼與安全邊界，公開文件就不自足。--repo 指向其他 repo 時若沒有這份契約，
+# 該 repo 應確實先建立它，而不是讓驗證器放行。
+DOC_FILES = REQUIRED_REPO_FILES + ("docs/research/portability.md",)
+
+# 本機專屬目錄：不進版控，因此公開文件不可引用（否則對外部讀者是死連結）。
+LOCAL_ONLY_DIRS = (".local", ".openchamber")
 
 
 @dataclass
@@ -303,6 +321,19 @@ def check_references(
         if target.startswith("/"):
             result.error(rel_path, f"相對資源引用不可為絕對路徑：{clean}")
             continue
+        # 本機專屬目錄不在版控內，公開文件引用它等於給外部讀者一個死連結。
+        # 先於存在性檢查擋下：這些路徑在本機確實存在，但對 clone 出去的人不存在。
+        local_hit = next(
+            (name for name in LOCAL_ONLY_DIRS if name in target.split("/")),
+            None,
+        )
+        if local_hit is not None:
+            result.error(
+                rel_path,
+                f"不可引用本機專屬路徑：{clean}"
+                f"（{local_hit}/ 不進版控，公開文件必須自給自足）",
+            )
+            continue
         # 先做邊界檢查（含不存在也要擋），再做存在性檢查。
         # skill 的邊界是 skill 目錄：安裝時只會複製 skill 目錄，引用 repo 根檔案會失效。
         resolved = None
@@ -417,6 +448,54 @@ def validate_skills(repo_root: Path, result: Result) -> None:
         validate_skill(skill_dir, repo_root, result)
 
 
+def tracked_paths(repo_root: Path) -> list[str] | None:
+    """回傳 Git 已追蹤的路徑（相對 repo_root）；無法判斷時回傳 None。
+
+    這是唯讀查詢（git ls-files），不改 index、不改工作樹、不寫任何設定。
+    目標不是 Git 工作樹、或 git 不可用時回傳 None：呼叫端必須把「無法檢查」
+    如實當成未驗證，而不是當成通過。
+    """
+    try:
+        completed = subprocess.run(
+            ["git", "-C", str(repo_root), "ls-files", "-z"],
+            capture_output=True,
+            timeout=60,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if completed.returncode != 0:
+        return None
+    raw = completed.stdout.decode("utf-8", errors="replace")
+    return [item for item in raw.split("\0") if item]
+
+
+def check_local_dirs_not_tracked(repo_root: Path, result: Result) -> None:
+    """.local/ 與 .openchamber/ 不進版控：被 Git 追蹤就是分流失效。
+
+    沒有 Git 工作樹時（暫存測試 fixture、未安裝 git 的環境）不報錯也不宣稱檢查過；
+    本 repo 自己就是 Git 工作樹，所以 CI 與 run-checks.sh 一定會實際執行這項檢查。
+    """
+    tracked = tracked_paths(repo_root)
+    if tracked is None:
+        return
+    result.coverage.append("local-dirs-not-tracked")
+    offenders = [
+        path
+        for path in tracked
+        if path.split("/")[0] in LOCAL_ONLY_DIRS
+    ]
+    if not offenders:
+        return
+    shown = "、".join(sorted(offenders)[:10])
+    more = f"（另有 {len(offenders) - 10} 個）" if len(offenders) > 10 else ""
+    result.error(
+        ".gitignore",
+        f"本機專屬路徑被 Git 追蹤，必須移出版控：{shown}{more}"
+        "（.local/ 與 .openchamber/ 應由 .gitignore 排除）",
+    )
+
+
 def validate_docs(repo_root: Path, result: Result) -> None:
     result.coverage.extend(["required-repo-files", "markdown-relative-links"])
     for rel in REQUIRED_REPO_FILES:
@@ -441,20 +520,7 @@ def validate_docs(repo_root: Path, result: Result) -> None:
             boundary_label="repo",
         )
 
-    plans_dir = repo_root / ".openchamber" / "plans"
-    if plans_dir.is_dir():
-        for plan in sorted(plans_dir.glob("*.md")):
-            rel = relative(plan, repo_root)
-            check_references(
-                plan.read_text(encoding="utf-8", errors="replace"),
-                [plan.parent, repo_root],
-                rel,
-                repo_root,
-                result,
-                mode="docs",
-                boundary=repo_root,
-                boundary_label="repo",
-            )
+    check_local_dirs_not_tracked(repo_root, result)
 
 
 def default_repo_root() -> Path:
@@ -468,7 +534,14 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--repo", type=Path, default=None, help="要驗證的 repo 根目錄（預設：腳本所在 repo）")
     parser.add_argument("--format", choices=("text", "json"), default="text", help="輸出格式（預設 text）")
-    parser.add_argument("--check-docs", action="store_true", help="一併檢查根層與 docs/ 文件的相對連結")
+    parser.add_argument(
+        "--check-docs",
+        action="store_true",
+        help=(
+            "一併檢查公開文件（根層與 docs/）的相對連結、必要的維護文件，"
+            "並確認 .local/、.openchamber/ 未被 Git 追蹤"
+        ),
+    )
     parser.add_argument("--strict", action="store_true", help="把警告也視為失敗（退出碼 1）")
     return parser
 

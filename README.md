@@ -1,18 +1,19 @@
 # my-agent-skills
 
-`j7708git/my-agent-skills` 是一個 **private** 的 [Agent Skills](https://agentskills.io/specification) 集合 repo。
+`j7708git/my-agent-skills` 是一個 [Agent Skills](https://agentskills.io/specification) 集合 repo。
 首版提供一個 skill：**`repo-privacy-audit`** —— 對 Git repo 做唯讀的隱私與秘密掃描，
 並附上明確安裝的 hooks、CI 範本與修復手冊。
 
 這個 repo 不做自動修復，也不替你決定任何不可逆的動作。它只負責**看清楚**、**講明白**。
 
-> **首版狀態（2026-10-03）**：已發布至此 private repo，授權採 MIT。
-> **已驗證**：格式與相對資源、四種隔離安裝、private GitHub 直接安裝、真實 hooks、完整密鑰掃描。
-> **GitHub runner**：180 個測試通過、0 skipped；見 [CI 驗收執行](https://github.com/j7708git/my-agent-skills/actions/runs/37107505017)。
+> **首版狀態**：授權採 MIT。已驗證項目包括格式與相對資源、四種隔離安裝、
+> 真實 hooks 與完整密鑰掃描；CI runner 執行全部測試、無 skipped。
 > 另有一件事從未驗證：**agent runtime 是否真的會載入並使用這個 skill**。
-> 詳見 [docs/compatibility.md](docs/compatibility.md)。
+> 逐項的可宣稱／不可宣稱範圍見 [docs/compatibility.md](docs/compatibility.md)，
+> 產品行為契約見 [docs/specification.md](docs/specification.md)。
 
-GitHub 設定檢查仍可能因方案／權限不足回報 incomplete；這與本機內容掃描及 CI 通過是不同的驗收範圍，詳見 [驗收紀錄](docs/acceptance.md)。
+GitHub 設定檢查仍可能因方案／權限不足回報 incomplete；這與本機內容掃描及 CI 通過是不同的範圍，
+不要把其中一項的通過當成另一項的通過。
 
 ## 目錄
 
@@ -30,7 +31,7 @@ GitHub 設定檢查仍可能因方案／權限不足回報 incomplete；這與�
 ## 快速開始
 
 ```bash
-# 1. 取出這個 private repo（會用到你既有的 Git／SSH 授權）
+# 1. 取出這個 repo（會用到你既有的 Git／SSH 授權）
 git clone git@github.com:j7708git/my-agent-skills.git
 cd my-agent-skills
 
@@ -52,10 +53,11 @@ bash <skill>/scripts/repo-privacy-audit.sh --staged --repo .
 這個 skill **不會無縫相容於任何 agent client**。下表是實際驗證過的安裝位置；
 「檔案放對位置」只證明格式與路徑可安裝，**不證明某個 agent 會自動載入它**。
 
-### 方式 A：skills CLI（private repo）
+### 方式 A：skills CLI
 
-本 repo 是 private，所以安裝時會用到你**既有的** Git／`gh`／SSH 授權，
-CLI 不會另外要求你貼 token 給它。
+安裝時會用到你**既有的** Git／`gh`／SSH 授權，CLI 不會另外要求你貼 token 給它。
+遠端可見度以該 repo 當下的設定為準；可見度只影響「誰能取用」，
+不影響下表的路徑與相對資源驗證結果。
 
 ```bash
 # 列出可安裝的 skill
@@ -76,7 +78,7 @@ Node.js 只在這個安裝方式需要；**掃描本身不需要 Node.js**。
 Claude Code 使用 `.claude/skills`（全域為 `~/.`、專案內為 `./`）。
 
 ```bash
-# 先取出 private repo（與快速開始第 1 步相同）
+# 先取出這個 repo（與快速開始第 1 步相同）
 git clone git@github.com:j7708git/my-agent-skills.git
 cd my-agent-skills
 
@@ -221,7 +223,7 @@ bash scripts/run-checks.sh --skip-gitleaks                  # 明確跳過秘密
 python3 scripts/validate_skills.py --check-docs --strict    # 只跑格式驗證
 ```
 
-目前合成測試共 **180 項**，全部通過；fixtures 只含合成資料，
+目前合成測試共 **191 項**，全部通過；fixtures 只含合成資料，
 不放入真實秘密、真實 email 或本機路徑。
 
 格式驗證器只用 Python 3 標準函式庫（不引入 PyYAML），並刻意只支援**首版 frontmatter 子集**；
@@ -235,12 +237,11 @@ python3 scripts/validate_skills.py --check-docs --strict    # 只跑格式驗證
 
 | 文件 | 內容 |
 | --- | --- |
+| [docs/specification.md](docs/specification.md) | 產品技術契約：CLI、退出碼、輸出格式、安全邊界 |
 | [docs/architecture.html](docs/architecture.html) | 架構圖（單一 HTML，可互動瀏覽） |
-| [docs/plan.md](docs/plan.md) | 計畫與共用技術契約（CLI、退出碼、安全邊界） |
-| [docs/research/portability.md](docs/research/portability.md) | 格式與安裝路徑的研究依據 |
-| [docs/development.md](docs/development.md) | 驗證子集、檢查腳本、CI 與固定工具版本 |
+| [docs/development.md](docs/development.md) | 驗證子集、檢查腳本、文件分流、CI 與固定工具版本 |
 | [docs/compatibility.md](docs/compatibility.md) | 可宣稱／不可宣稱的相容性 |
-| [docs/release-checklist.md](docs/release-checklist.md) | 發布前檢查清單 |
+| [docs/research/portability.md](docs/research/portability.md) | 格式與安裝路徑的研究依據 |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | 貢獻與提交流程 |
 | [SECURITY.md](SECURITY.md) | 回報方式與處理順序 |
 | [AGENTS.md](AGENTS.md) | coding agent 在本 repo 的工作規範 |
@@ -254,6 +255,10 @@ skill 自己的文件（安裝後也可用，不依賴本 repo）：
 | `skills/repo-privacy-audit/references/checks.md` | 各模式涵蓋範圍、報告欄位、政策欄位、已知不涵蓋項目 |
 | `skills/repo-privacy-audit/references/remediation.md` | 疑似外洩後的處置順序與授權邊界 |
 | `skills/repo-privacy-audit/assets/policy.example.json` | 可複製修改的政策起點 |
+
+本 repo 的 `docs/` 只放公開文件。完整計畫、todo、session 日誌、驗收紀錄與研究筆記
+是本機工作紀錄，不進版控，也不從公開文件連過去；分流規則見
+[AGENTS.md](AGENTS.md) 與 [docs/development.md](docs/development.md)。
 
 ## 授權
 

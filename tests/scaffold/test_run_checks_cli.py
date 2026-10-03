@@ -22,6 +22,7 @@ REQUIRED_DOCS = (
     "AGENTS.md",
     "CONTRIBUTING.md",
     "SECURITY.md",
+    "docs/specification.md",
     "docs/development.md",
     "docs/compatibility.md",
 )

@@ -35,10 +35,15 @@ gitleaks-report.*
 .gitleaks-report.*
 .sarif
 
-# 本機任務／工作區 metadata（PM 派工卡不屬於公開 repo 內容）
+# 本機工作紀錄與任務 metadata（不屬於公開 repo 內容，整個目錄都不進版控）
+# .local/          完整計畫、todo、session 日誌、驗收紀錄、研究筆記、視覺檢查 sidecar
+# .openchamber/    PM 派工卡（任務計畫卡）
+# 分流規則見 AGENTS.md「文件分流」；公開知識放 docs/。
+.local/
 .openchamber/
 
 # Archify 視覺檢查 sidecar（截圖與收據含本機絕對路徑，不追蹤；成品 docs/architecture.html 要進版控）
+# 產生後請移到 .local/reports/architecture/，避免留在 docs/ 混淆公開文件。
 *.visual-check.json
 *.visual-check.html
 *.visual-check.*.png

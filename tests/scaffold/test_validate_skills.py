@@ -7,6 +7,9 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
+import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -14,6 +17,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 VALIDATOR_PATH = REPO_ROOT / "scripts" / "validate_skills.py"
+TIMEOUT = 60
 
 
 def load_validator():
@@ -49,17 +53,36 @@ def make_skill(root: Path, name: str = "demo-skill", frontmatter: str | None = N
 
 
 def make_required_repo_docs(root: Path) -> None:
-    """建立 validate_docs 要求的必要維護文件（內容皆為合成文字）。"""
+    """建立 validate_docs 要求的必要公開維護文件（內容皆為合成文字）。"""
     for rel in (
         "README.md",
         "AGENTS.md",
         "CONTRIBUTING.md",
         "SECURITY.md",
+        "docs/specification.md",
         "docs/development.md",
         "docs/compatibility.md",
     ):
         write(root / rel, f"# 合成文件 {rel}\n")
     write(root / "LICENSE", "合成授權文字\n")
+
+
+def git(repo: Path, *args: str) -> subprocess.CompletedProcess:
+    """在暫存 repo 內執行唯讀／索引用的 git 指令；不碰任何真實設定。"""
+    env = dict(os.environ)
+    env.update(
+        {
+            "GIT_AUTHOR_NAME": "Synthetic Test",
+            "GIT_AUTHOR_EMAIL": "synthetic@example.invalid",
+            "GIT_COMMITTER_NAME": "Synthetic Test",
+            "GIT_COMMITTER_EMAIL": "synthetic@example.invalid",
+            "GIT_CONFIG_GLOBAL": str(repo / ".gitconfig-global"),
+            "GIT_CONFIG_SYSTEM": str(repo / ".gitconfig-system"),
+        }
+    )
+    return subprocess.run(
+        ["git", *args], cwd=repo, check=True, env=env, timeout=TIMEOUT, capture_output=True, text=True
+    )
 
 
 def run(root: Path, *extra: str) -> tuple[int, dict]:
@@ -262,6 +285,135 @@ class ValidateSkillsTests(unittest.TestCase):
         _, payload = run(self.root)
         blob = json.dumps(payload, ensure_ascii=False)
         self.assertNotIn(str(self.root), blob)
+
+
+class DocumentSplitTests(unittest.TestCase):
+    """文件分流：公開文件自足，內部工作紀錄不進版控。
+
+    這組測試守住三件事：
+    1. 沒有內部計畫／驗收紀錄時，公開文件仍然可以被完整驗證。
+    2. 公開文件引用 .local/ 或 .openchamber/ 一律被拒絕（即使那些檔案在本機存在）。
+    3. .local/ 被 Git 追蹤時被拒絕；沒有 Git 工作樹時跳過且不宣稱已檢查。
+    """
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+        self.addCleanup(self._tmp.cleanup)
+        make_skill(self.root)
+        make_required_repo_docs(self.root)
+
+    def test_check_docs_passes_without_internal_plan_or_reports(self) -> None:
+        """沒有 docs/plan.md、驗收紀錄或發布清單，公開文件仍應通過。"""
+        for rel in ("docs/plan.md", "docs/acceptance.md", "docs/release-checklist.md"):
+            self.assertFalse((self.root / rel).exists())
+        code, payload = run(self.root, "--check-docs", "--strict")
+        self.assertEqual(0, code, payload["errors"] + payload["warnings"])
+
+    def test_specification_is_a_required_public_contract(self) -> None:
+        """docs/specification.md 是必要公開契約：缺席必須明確報錯。"""
+        self.assertIn("docs/specification.md", validator.REQUIRED_REPO_FILES)
+        (self.root / "docs" / "specification.md").unlink()
+        code, payload = run(self.root, "--check-docs")
+        self.assertEqual(1, code)
+        errors = [e for e in payload["errors"] if e["path"] == "docs/specification.md"]
+        self.assertEqual(1, len(errors), payload["errors"])
+        self.assertIn("缺少必要的 repo 維護文件", errors[0]["message"])
+
+    def test_specification_empty_file_is_rejected(self) -> None:
+        """契約存在但空白等於沒有契約，與缺席同樣不可接受。"""
+        write(self.root / "docs" / "specification.md", "   \n\n")
+        code, payload = run(self.root, "--check-docs")
+        self.assertEqual(1, code)
+        self.assertTrue(
+            any(e["path"] == "docs/specification.md" and "為空檔" in e["message"] for e in payload["errors"]),
+            payload["errors"],
+        )
+
+    def test_this_repo_ships_public_specification_linked_from_public_docs(self) -> None:
+        """本 repo 必須真的提供產品契約，且公開文件把它連出來。"""
+        spec = REPO_ROOT / "docs" / "specification.md"
+        self.assertTrue(spec.is_file(), "docs/specification.md 必須存在")
+        for rel in ("README.md", "AGENTS.md", "CONTRIBUTING.md"):
+            self.assertIn("docs/specification.md", (REPO_ROOT / rel).read_text(encoding="utf-8"))
+
+    def test_public_doc_must_not_link_into_local_dir(self) -> None:
+        """.local/ 的檔案在本機存在也一樣要拒絕：對外部讀者是死連結。"""
+        write(self.root / ".local" / "plans" / "development.md", "# 內部計畫\n")
+        write(
+            self.root / "README.md",
+            "見 [內部計畫](.local/plans/development.md)。\n",
+        )
+        code, payload = run(self.root, "--check-docs")
+        self.assertEqual(1, code)
+        messages = " ".join(e["message"] for e in payload["errors"])
+        self.assertIn("不可引用本機專屬路徑", messages)
+        self.assertIn(".local", messages)
+
+    def test_docs_dir_link_with_dotdot_into_local_dir_is_rejected(self) -> None:
+        """docs/ 內的文件用 ../ 回到根再進 .local/，同樣要拒絕。"""
+        write(self.root / ".local" / "reports" / "acceptance.md", "# 內部驗收紀錄\n")
+        write(
+            self.root / "docs" / "development.md",
+            "細節見 [驗收紀錄](../.local/reports/acceptance.md)。\n",
+        )
+        code, payload = run(self.root, "--check-docs")
+        self.assertEqual(1, code)
+        self.assertTrue(
+            any("不可引用本機專屬路徑" in e["message"] for e in payload["errors"]),
+            payload["errors"],
+        )
+
+    def test_public_doc_must_not_link_into_openchamber_plan(self) -> None:
+        """派工任務卡同樣不在版控內，公開文件不得引用。"""
+        write(self.root / ".openchamber" / "plans" / "task.md", "# 內部任務卡\n")
+        write(self.root / "AGENTS.md", "見 [任務卡](.openchamber/plans/task.md)。\n")
+        code, payload = run(self.root, "--check-docs")
+        self.assertEqual(1, code)
+        self.assertTrue(
+            any("不可引用本機專屬路徑" in e["message"] for e in payload["errors"]),
+            payload["errors"],
+        )
+
+    @unittest.skipUnless(shutil.which("git"), "需要 git 才能測試被追蹤的本機路徑")
+    def test_tracked_local_file_is_rejected(self) -> None:
+        """.local/ 被 Git 追蹤就是分流失效，必須報錯。"""
+        write(self.root / ".local" / "plans" / "secret-notes.md", "# 合成內部筆記\n")
+        git(self.root, "init", "-q", ".")
+        git(self.root, "add", "-A", "--", ".local")
+        code, payload = run(self.root, "--check-docs")
+        self.assertEqual(1, code)
+        self.assertIn("local-dirs-not-tracked", payload["coverage"])
+        messages = " ".join(e["message"] for e in payload["errors"])
+        self.assertIn("本機專屬路徑被 Git 追蹤", messages)
+        self.assertIn(".local", messages)
+
+    @unittest.skipUnless(shutil.which("git"), "需要 git 才能測試未追蹤的本機路徑")
+    def test_untracked_local_file_is_allowed(self) -> None:
+        """未被追蹤的 .local/ 是預期狀態（被 .gitignore 排除），不該報錯。"""
+        write(self.root / ".local" / "plans" / "notes.md", "# 合成內部筆記\n")
+        write(self.root / ".gitignore", ".local/\n.openchamber/\n")
+        git(self.root, "init", "-q", ".")
+        code, payload = run(self.root, "--check-docs", "--strict")
+        self.assertEqual(0, code, payload["errors"] + payload["warnings"])
+        self.assertIn("local-dirs-not-tracked", payload["coverage"])
+
+    def test_tracked_check_is_skipped_and_not_claimed_without_git_repo(self) -> None:
+        """沒有 Git 工作樹時跳過這項檢查，而且不得宣稱已檢查。"""
+        self.assertIsNone(validator.tracked_paths(self.root))
+        code, payload = run(self.root, "--check-docs", "--strict")
+        self.assertEqual(0, code, payload["errors"] + payload["warnings"])
+        self.assertNotIn("local-dirs-not-tracked", payload["coverage"])
+
+    def test_local_dirs_are_git_ignored_in_this_repo(self) -> None:
+        """本 repo 的 .gitignore 必須真的排除兩個本機目錄。"""
+        patterns = [
+            line.strip()
+            for line in (REPO_ROOT / ".gitignore").read_text(encoding="utf-8").splitlines()
+            if line.strip() and not line.strip().startswith("#")
+        ]
+        for pattern in (".local/", ".openchamber/"):
+            self.assertIn(pattern, patterns)
 
 
 if __name__ == "__main__":

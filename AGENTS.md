@@ -5,7 +5,7 @@
 
 ## 這個 repo 是什麼
 
-- 標準 [Agent Skills](https://agentskills.io/specification) 的集合 repo，repo 名稱 `j7708git/my-agent-skills`（private）。
+- 標準 [Agent Skills](https://agentskills.io/specification) 的集合 repo，名稱 `j7708git/my-agent-skills`。
 - 首版只有一個 skill：`skills/repo-privacy-audit/`，做唯讀的 repo 隱私與秘密掃描。
 - 平台專屬 agent（OpenCode／Claude Code／Codex 的 agent 定義）屬於選配，首版不發行；
   `skills/` 之外的 adapters 區域刻意留白，等有真實需求再新增，不要先放空殼。
@@ -21,15 +21,49 @@
    不把 hooks 裝到使用者的其他專案。（明確的 **repo-local** hooks 安裝可以使用，
    但必須使用者明確指定目標 repo，且不得順手改全域設定。）
 5. **不下載、不安裝外部工具，除非使用者明確授權**：不下載、不安裝 Gitleaks 等工具；
-   專案已有的暫存工具（例如驗收用的 Gitleaks）可直接使用。需要新工具時說明缺少什麼、
-   退出碼為何，由使用者決定是否取得。
+   專案已有的暫存工具可以直接使用。需要新工具時說明缺少什麼、退出碼為何，
+   由使用者決定是否取得。
 6. **不新增相依套件**：掃描核心只用 Bash 與 Python 3 標準函式庫。安裝工具（skills CLI）只是可選安裝路徑。
 7. **不自動改 GitHub 設定**：CI 只用唯讀權限；branch protection、required checks 等由維護者手動設定。
 8. **不自行 commit／push，除非使用者明確授權**：
    - 未獲明確授權時，不 commit、不 push、不建立 remote、不改分支保護設定。
-   - 已獲明確授權的範圍內則照做，例如：使用者已同意的 **private** repo 首次發布
-     （建立 private repo、初始提交、push），或使用者已同意的驗收流程步驟。
-   - 授權範圍之外的動作（例如把 repo 轉 public、`--force` 推送）仍需另外取得授權。
+   - 已獲明確授權的範圍內則照做，例如：使用者已同意的首次發布流程
+     （建立 remote、初始提交、push），或使用者已同意的驗收流程步驟。
+   - 授權範圍之外的動作（例如把 repo 轉 public、`--force` 推送、歷史改寫）仍需另外取得授權。
+9. **不改 repo 的可見度**：可見度是維護者的決定。文件不要把「private」或「public」
+   寫死成永久事實，也不要聲稱已轉為某個可見度；以當下 GitHub 設定為準。
+
+## 文件分流
+
+**公開知識進 `docs/`，工作過程留在本機。** 兩條路互不混用：
+
+| 內容 | 位置 | 版控 |
+| --- | --- | --- |
+| 使用說明、產品契約、維護指南、相容性、可分享研究、架構成品 | `docs/` | 進版控 |
+| 派工用的任務計畫卡 | `.openchamber/plans/` | 忽略 |
+| 完整計畫、todo、session 日誌、驗收紀錄、研究筆記、視覺檢查 sidecar | `.local/` | 忽略 |
+
+規則：
+
+1. **預設工作筆記不發布。** 把筆記變成公開文件前先依用途審核：讀者是誰、
+   會不會連到本機路徑、會不會揭露尚未公開的資訊。然後改寫成**自足**的文件再放進 `docs/`。
+2. **公開文件不得連結 `.local/` 或 `.openchamber/` 裡的某一份內部筆記**，
+   也不得內嵌派工紀錄、個人主機路徑、session 日誌片段、舊 commit SHA
+   或指向特定歷史執行的 CI 連結。
+   **但公開文件可以談論 `.local/` 這個目錄名本身**——例如說明分流政策、
+   說明 sidecar 放哪裡。這是解釋規則，不是連到某份內部文件；
+   兩者的差別在於有沒有指向一個具體檔案。驗證器會擋下任何指向這兩個目錄的
+   Markdown 連結，所以具體連結一定會被抓到。
+   產品行為要公開，就蒸餾成契約寫進 [docs/specification.md](docs/specification.md)，
+   不要把執行日誌整份搬過去。
+3. **維護測試步驟是公開產品文件**，不要為了分流把它藏起來：怎麼跑檢查、
+   需要哪些工具版本、退出碼怎麼解讀、哪些不能宣稱——這些留在 `docs/`。
+4. **未來要升級 agent 規則的提案留在 `.local/`**，不要動全域 agent 設定檔；
+   提案成熟後再由維護者決定要不要發布或上移。
+5. **外部使用者不該被要求擁有本機工作區。** 公開文件不能說「先讀 `.local/` 的某檔案」；
+   需要引用公開知識時，引用 `docs/` 裡對應的公開文件。
+6. `.local/` 與 `.openchamber/` 已被 `.gitignore` 排除；被 Git 追蹤就是分流失效，
+   `python3 scripts/validate_skills.py --check-docs --strict` 會報錯。
 
 ## 目錄职责
 
@@ -39,14 +73,18 @@
 | `tests/` | 合成測試；fixtures 只能是合成資料，不得含真實秘密 |
 | `scripts/` | repo 層工具（格式驗證、統一檢查腳本） |
 | `.github/workflows/` | 本 repo 自己的 CI（唯讀、固定版本） |
-| `docs/` | 公開文件：計畫、研究、相容性、架構圖 |
+| `docs/` | 公開文件：規格、維護指南、相容性、架構圖、可分享研究 |
+| `.local/` | 本機工作紀錄（計畫、todo、session 日誌、驗收紀錄、研究筆記），不進版控 |
+| `.openchamber/` | 派工任務計畫卡，不進版控 |
 
 ## 動手前必讀
 
-- [docs/plan.md](docs/plan.md)：共用技術契約（CLI、退出碼、安全邊界）。
+- [docs/specification.md](docs/specification.md)：產品技術契約（CLI、退出碼、輸出、安全邊界）。
 - [docs/research/portability.md](docs/research/portability.md)：格式與安裝路徑依據。
-- [docs/development.md](docs/development.md)：frontmatter 首版子集、驗證指令、CI 與工具版本。
+- [docs/development.md](docs/development.md)：frontmatter 首版子集、驗證指令、文件分流、CI 與工具版本。
 - [docs/compatibility.md](docs/compatibility.md)：可宣稱的相容性範圍與不能宣稱的事。
+
+這四份是公開文件，足以開始工作；不需要（也不應該）讀本機工作紀錄才能理解產品。
 
 ## 提交前必跑
 

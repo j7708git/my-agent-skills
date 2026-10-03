@@ -2,12 +2,13 @@
 
 這份文件的目的，是把「可以宣稱」和「不能宣稱」分開寫清楚。
 任何驗證結果都要落在下面某一格裡；沒驗過的就寫未驗證。
+產品行為契約見 [specification.md](specification.md)；維護與驗證方式見 [development.md](development.md)。
 
 ## 已驗證的環境
 
 | 項目 | 狀態 | 依據 |
 | --- | --- | --- |
-| Linux（x86_64）+ Bash 5.1 + Python 3.10 + Git 2.34 | 已驗證 | 本 repo 的 `scripts/run-checks.sh` 與 `tests/`（合成測試 180 項） |
+| Linux（x86_64）+ Bash 5.1 + Python 3.10 + Git 2.34 | 已驗證 | 本 repo 的 `scripts/run-checks.sh` 與 `tests/`（合成測試 191 項） |
 | Gitleaks 8.30.1（linux x64） | 已驗證 | 版本與校驗和見 [development.md](development.md)；歷史與 staged 掃描皆實跑過 |
 | skills@1.7.0 安裝（global／project × copy／symlink） | 已驗證（僅安裝） | 四個 case 全部退出碼 0 且資源齊全，詳見下方「安裝路徑」 |
 | hooks 安裝／移除／實際觸發 | 已驗證 | `tests/repo-privacy-audit/test_hooks.py`：68 項，含真 `git commit`／`git push` 的擋下行為 |
@@ -104,13 +105,16 @@ CLI 退出碼 0，且 `SKILL.md` 與其相對資源都存在於安裝目標）�
 6. **本 repo 的 CI 不證明** GitHub 設定（branch protection、自訂掃描排程）已就緒。
 7. **合成 fixtures 通過掃描不等於**掃描器對真實洩漏模式的召回率已驗證。
 8. **格式驗證通過不等於** skill 的說明正確、步驟可執行。
-9. **private 發布與 CI 已驗證，不代表所有 GitHub 安全設定可查。**
-   已確認授權帳號可直接安裝、runner 執行 180 個測試且無 skip；可見度以 private 維持。
-   secret scanning／Dependabot／branch protection 無法確認的部分仍回報 incomplete。
+9. **CI 通過不代表所有 GitHub 安全設定可查。**
+   已確認的是：CI runner 執行全部測試且無 skip，且 `scripts/run-checks.sh` 完整通過。
+   secret scanning／Dependabot／branch protection 若讀不到，仍回報 incomplete，
+   不會從缺漏推論成未啟用，也不代表那些設定已就緒。
 10. **統一編號不會被比對。** 該規則未實作（特例未處理，硬做會給出錯誤判斷），
     政策寫入 `validate: "tw_uniform_number"` 會被明確拒絕。
 11. **「未啟用」與「無權限」在 GitHub 設定檢查中無法區分。**
     查不到的端點一律記為未檢查，不會從缺漏推論成未啟用。
+12. **本文件不記錄發布過程。** 遠端可見度、安裝授權與歷史改寫這類維運事實
+    會隨時間改變，也不屬於產品契約；以當下的 GitHub 設定與本機 Git 狀態為準。
 
 ## 升級與維護
 

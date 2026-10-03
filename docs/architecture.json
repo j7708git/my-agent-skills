@@ -21,7 +21,7 @@
     ]
   },
   "components": [
-    { "id": "repo", "type": "external", "label": "集合 repo", "sublabel": "skills/・private", "pos": [30, 350], "size": [120, 64] },
+    { "id": "repo", "type": "external", "label": "集合 repo", "sublabel": "skills/", "pos": [30, 350], "size": [120, 64] },
     { "id": "installer", "type": "backend", "label": "安裝工具", "sublabel": "skills CLI", "pos": [245, 350], "size": [130, 64] },
     { "id": "skilldir", "type": "database", "label": "已安裝 skill", "sublabel": "SKILL.md", "pos": [470, 350], "size": [140, 64] },
     { "id": "agent", "type": "frontend", "label": "agent runtime", "sublabel": "OpenCode", "pos": [705, 350], "size": [140, 64], "tag": "待實測" },
