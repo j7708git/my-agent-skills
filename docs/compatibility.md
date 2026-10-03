@@ -104,8 +104,9 @@ CLI 退出碼 0，且 `SKILL.md` 與其相對資源都存在於安裝目標）�
 6. **本 repo 的 CI 不證明** GitHub 設定（branch protection、自訂掃描排程）已就緒。
 7. **合成 fixtures 通過掃描不等於**掃描器對真實洩漏模式的召回率已驗證。
 8. **格式驗證通過不等於** skill 的說明正確、步驟可執行。
-9. **本 repo 尚未在 GitHub 上發布。** README 的狀態區塊標示 GitHub 發布與
-   CI runner 尚待驗收；整合測試全綠不等於遠端已就緒。
+9. **private 發布與 CI 已驗證，不代表所有 GitHub 安全設定可查。**
+   已確認授權帳號可直接安裝、runner 執行 180 個測試且無 skip；可見度以 private 維持。
+   secret scanning／Dependabot／branch protection 無法確認的部分仍回報 incomplete。
 10. **統一編號不會被比對。** 該規則未實作（特例未處理，硬做會給出錯誤判斷），
     政策寫入 `validate: "tw_uniform_number"` 會被明確拒絕。
 11. **「未啟用」與「無權限」在 GitHub 設定檢查中無法區分。**

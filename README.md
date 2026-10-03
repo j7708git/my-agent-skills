@@ -6,11 +6,13 @@
 
 這個 repo 不做自動修復，也不替你決定任何不可逆的動作。它只負責**看清楚**、**講明白**。
 
-> **驗證狀態（2026-10-03）**：本機整合驗收中。
-> **已驗證**：skill 格式與相對資源、skills CLI 安裝（4 個 case）、合成測試共 **180 項全綠**。
-> **尚未驗收**：GitHub 上是否已發布、CI 在真實 runner 上是否通過。
+> **首版狀態（2026-10-03）**：已發布至此 private repo，授權採 MIT。
+> **已驗證**：格式與相對資源、四種隔離安裝、private GitHub 直接安裝、真實 hooks、完整密鑰掃描。
+> **GitHub runner**：180 個測試通過、0 skipped；見 [CI 驗收執行](https://github.com/j7708git/my-agent-skills/actions/runs/37107505017)。
 > 另有一件事從未驗證：**agent runtime 是否真的會載入並使用這個 skill**。
 > 詳見 [docs/compatibility.md](docs/compatibility.md)。
+
+GitHub 設定檢查仍可能因方案／權限不足回報 incomplete；這與本機內容掃描及 CI 通過是不同的驗收範圍，詳見 [驗收紀錄](docs/acceptance.md)。
 
 ## 目錄
 
