@@ -1,16 +1,23 @@
 # my-agent-skills
 
 `j7708git/my-agent-skills` 是一個 [Agent Skills](https://agentskills.io/specification) 集合 repo。
-首版提供一個 skill：**`repo-privacy-audit`** —— 對 Git repo 做唯讀的隱私與秘密掃描，
-並附上明確安裝的 hooks、CI 範本與修復手冊。
+目前提供兩個 skill：
+
+- **`repo-privacy-audit`** —— 對 Git repo 做唯讀的隱私與秘密掃描，
+  並附上明確安裝的 hooks、CI 範本與修復手冊。
+- **`project-workflow`** —— 引導「公開程式碼 repo」與「獨立 private 工作紀錄 repo」
+  的規劃、拆工、驗收與同步流程。它只是**流程指引**，不是掃描器，
+  也不會自行建立 repo、push、安裝 hooks 或搬移檔案。
 
 這個 repo 不做自動修復，也不替你決定任何不可逆的動作。它只負責**看清楚**、**講明白**。
 
-> **首版狀態**：授權採 MIT。已驗證項目包括格式與相對資源、四種隔離安裝、
-> 真實 hooks 與完整密鑰掃描；CI runner 執行全部測試、無 skipped。
-> 另有一件事從未驗證：**agent runtime 是否真的會載入並使用這個 skill**。
-> 逐項的可宣稱／不可宣稱範圍見 [docs/compatibility.md](docs/compatibility.md)，
-> 產品行為契約見 [docs/specification.md](docs/specification.md)。
+> **狀態**：授權採 MIT。`repo-privacy-audit` 已驗證項目包括格式與相對資源、
+> 四種隔離安裝、真實 hooks 與完整密鑰掃描；CI runner 執行全部測試、無 skipped。
+> `project-workflow` 是純文字流程指引，已驗證格式與相對資源，但**同樣未驗證**
+> agent runtime 是否真的會載入並使用。**兩個 skill 的 agent runtime 都尚未實測。**
+> 逐項的可宣稱／不可宣稱範圍見 [docs/compatibility.md](docs/compatibility.md)；
+> 產品行為契約：掃描器見 [docs/specification.md](docs/specification.md)，
+> 流程指引見 [docs/project-workflow.md](docs/project-workflow.md)。
 
 GitHub 設定檢查仍可能因方案／權限不足回報 incomplete；這與本機內容掃描及 CI 通過是不同的範圍，
 不要把其中一項的通過當成另一項的通過。
@@ -18,6 +25,7 @@ GitHub 設定檢查仍可能因方案／權限不足回報 incomplete；這與�
 ## 目錄
 
 - [快速開始](#快速開始)
+- [project-workflow（流程指引）](#project-workflow流程指引)
 - [安裝 skill](#安裝-skill)
 - [使用掃描器](#使用掃描器)
 - [退出碼怎麼讀](#退出碼怎麼讀)
@@ -48,10 +56,34 @@ bash <skill>/scripts/repo-privacy-audit.sh --staged --repo .
 > 第 2 步的 `scripts/run-checks.sh` **只維護這個集合 repo 本身**，
 > 它不是 skill 的執行入口。掃描要另外用第 3 步的指令。
 
+## project-workflow（流程指引）
+
+第二個 skill **`project-workflow`** 不是掃描器，而是一份工作流程指引：
+把「公開程式碼 repo」與「獨立 private 工作紀錄 repo」分開管理，
+涵蓋確認兩個 repo 根、規劃或先做最小原型、撰寫自足任務簡報、派工與並行紀律、
+實際驗收，以及跨機同步與交接。
+
+它**不會**自動建立 repo、commit、push、安裝 hooks、調整可見度或搬移既有檔案；
+**載入這個 skill 也不等於授權**任何寫入或不可逆動作。
+
+- 快速了解用途與邊界：[docs/project-workflow.md](docs/project-workflow.md)
+- 完整流程與固定任務簡報區塊：[skills/project-workflow/SKILL.md](skills/project-workflow/SKILL.md)
+- 可複製的空白模板：`skills/project-workflow/assets/templates/` 內的六份檔案
+  （overview、progress、plan、task-brief、research、acceptance）
+- 各 client 的已確認與未確認狀態：
+  [references/client-compatibility.md](skills/project-workflow/references/client-compatibility.md)
+- 預設以 project scope 安裝（OpenCode `.opencode/skills`、pi `.pi/skills`、
+  DeepSeek Harness `.dsh/skills`；亦可共用通用 `.agents/skills`），
+  **載入位置來自官方文件、runtime 未實測**。
+
+這個 skill 沒有任何執行時相依，也不必搭配 `repo-privacy-audit` 才能使用。
+若你要的是隱私掃描，請看[使用掃描器](#使用掃描器)一節。
+
 ## 安裝 skill
 
-這個 skill **不會無縫相容於任何 agent client**。下表是實際驗證過的安裝位置；
-「檔案放對位置」只證明格式與路徑可安裝，**不證明某個 agent 會自動載入它**。
+這兩個 skill **不會無縫相容於任何 agent client**。下表是 `repo-privacy-audit` 實際驗證過的
+安裝位置；「檔案放對位置」只證明格式與路徑可安裝，**不證明某個 agent 會自動載入它**。
+**這些安裝實測不繼承給 `project-workflow`**；後者只有文件已記載的位置，runtime 未實測。
 
 ### 方式 A：skills CLI
 
@@ -71,6 +103,34 @@ npx skills add j7708git/my-agent-skills --skill repo-privacy-audit -g -a codex
 
 可選：關閉遙測（`DISABLE_TELEMETRY=1`）、選擇 copy 或 symlink。
 Node.js 只在這個安裝方式需要；**掃描本身不需要 Node.js**。
+
+`project-workflow` 是純文字流程指引，沒有執行時相依。**預設採 project scope**，
+在目標專案目錄安裝，讓每個 client 有獨立副本，不預設安裝到全域：
+
+| Client | project 位置（文件已確認；runtime 未實測） |
+| --- | --- |
+| OpenCode | `.opencode/skills/project-workflow` |
+| pi | `.pi/skills/project-workflow`（亦支援通用 `.agents/skills`） |
+| DeepSeek Harness | `.dsh/skills/project-workflow`（bundle 只讀一層） |
+
+```bash
+# OpenCode（已確認的指令形式；不加 -g 代表裝進當前專案）
+npx skills add <owner>/<repo> --skill project-workflow -a opencode
+
+# pi／DeepSeek Harness 的 CLI agent ID 尚未核實，不要猜：
+npx skills add <owner>/<repo> --list
+npx skills add <owner>/<repo> --skill project-workflow   # 互動選單，不加 -g
+```
+
+若 CLI 不支援你要的 client，就手動複製整個 skill bundle（含 `references` 與
+`assets`）到該 client 的 project 位置；目標同名目錄已存在就**拒絕**，不要覆蓋。
+請在**目標專案目錄**執行，不要在 skills 集合 repo 根目錄安裝。
+本 repo 的文件不代你執行 `npx`，也不修改任何真實 agent 路徑。
+
+> `project-workflow` 的載入位置來自各 client 官方文件，**未經 runtime 實測**；
+> `repo-privacy-audit` 的四種隔離安裝實測**不適用於**它。詳見
+> [docs/project-workflow.md](docs/project-workflow.md) 與
+> [docs/compatibility.md](docs/compatibility.md)。
 
 ### 方式 B：手動複製（不依賴 Node.js）
 
@@ -223,7 +283,9 @@ bash scripts/run-checks.sh --skip-gitleaks                  # 明確跳過秘密
 python3 scripts/validate_skills.py --check-docs --strict    # 只跑格式驗證
 ```
 
-目前合成測試共 **191 項**，全部通過；fixtures 只含合成資料，
+掃描核心既有合成測試涵蓋格式、CLI、hooks 與掃描核心契約；另有 `tests/project-workflow/`
+的 `project-workflow` 契約測試（模板欄位、自足引用、隔離複製、平台中立與隱私 placeholder）。
+**測試總數以測試檔為準，不在文件硬寫一個會過期的數字**；fixtures 只含合成資料，
 不放入真實秘密、真實 email 或本機路徑。
 
 格式驗證器只用 Python 3 標準函式庫（不引入 PyYAML），並刻意只支援**首版 frontmatter 子集**；
@@ -237,7 +299,8 @@ python3 scripts/validate_skills.py --check-docs --strict    # 只跑格式驗證
 
 | 文件 | 內容 |
 | --- | --- |
-| [docs/specification.md](docs/specification.md) | 產品技術契約：CLI、退出碼、輸出格式、安全邊界 |
+| [docs/specification.md](docs/specification.md) | 產品技術契約：CLI、退出碼、輸出格式、安全邊界（掃描器） |
+| [docs/project-workflow.md](docs/project-workflow.md) | project-workflow 產品契約：流程指引的邊界、檔案配置與不能宣稱的事 |
 | [docs/architecture.html](docs/architecture.html) | 架構圖（單一 HTML，可互動瀏覽） |
 | [docs/development.md](docs/development.md) | 驗證子集、檢查腳本、文件分流、CI 與固定工具版本 |
 | [docs/compatibility.md](docs/compatibility.md) | 可宣稱／不可宣稱的相容性 |
@@ -255,6 +318,11 @@ skill 自己的文件（安裝後也可用，不依賴本 repo）：
 | `skills/repo-privacy-audit/references/checks.md` | 各模式涵蓋範圍、報告欄位、政策欄位、已知不涵蓋項目 |
 | `skills/repo-privacy-audit/references/remediation.md` | 疑似外洩後的處置順序與授權邊界 |
 | `skills/repo-privacy-audit/assets/policy.example.json` | 可複製修改的政策起點 |
+| `skills/project-workflow/SKILL.md` | 流程主文與固定任務簡報區塊 |
+| `skills/project-workflow/references/workflow-details.md` | 規劃、簡報、研究、驗收與交接的細節 |
+| `skills/project-workflow/references/privacy-and-sync.md` | 公開／私有隔離、索引紀律與同步步驟 |
+| `skills/project-workflow/references/client-compatibility.md` | client 的已確認與未確認狀態、手動 fallback |
+| `skills/project-workflow/assets/templates/` | 六份空白模板（overview、progress、plan、task-brief、research、acceptance） |
 
 本 repo 的 `docs/` 只放公開文件。完整計畫、todo、session 日誌、驗收紀錄與研究筆記
 是本機工作紀錄，不進版控，也不從公開文件連過去；分流規則見

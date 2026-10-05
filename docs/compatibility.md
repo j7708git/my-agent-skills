@@ -8,7 +8,7 @@
 
 | 項目 | 狀態 | 依據 |
 | --- | --- | --- |
-| Linux（x86_64）+ Bash 5.1 + Python 3.10 + Git 2.34 | 已驗證 | 本 repo 的 `scripts/run-checks.sh` 與 `tests/`（合成測試 191 項） |
+| Linux（x86_64）+ Bash 5.1 + Python 3.10 + Git 2.34 | 已驗證 | 本 repo 的 `scripts/run-checks.sh` 與 `tests/`（掃描核心合成測試 191 項；另有 project-workflow 契約測試，見下方「project-workflow 的狀態」） |
 | Gitleaks 8.30.1（linux x64） | 已驗證 | 版本與校驗和見 [development.md](development.md)；歷史與 staged 掃描皆實跑過 |
 | skills@1.7.0 安裝（global／project × copy／symlink） | 已驗證（僅安裝） | 四個 case 全部退出碼 0 且資源齊全，詳見下方「安裝路徑」 |
 | hooks 安裝／移除／實際觸發 | 已驗證 | `tests/repo-privacy-audit/test_hooks.py`：68 項，含真 `git commit`／`git push` 的擋下行為 |
@@ -115,6 +115,30 @@ CLI 退出碼 0，且 `SKILL.md` 與其相對資源都存在於安裝目標）�
     查不到的端點一律記為未檢查，不會從缺漏推論成未啟用。
 12. **本文件不記錄發布過程。** 遠端可見度、安裝授權與歷史改寫這類維運事實
     會隨時間改變，也不屬於產品契約；以當下的 GitHub 設定與本機 Git 狀態為準。
+
+## project-workflow 的狀態
+
+第二個 skill `skills/project-workflow/` 是**流程指引**，不是掃描器：沒有掃描核心、
+不依賴 Gitleaks，也沒有 Bash／Python 執行時相依。
+
+| 項目 | 狀態 | 依據 |
+| --- | --- | --- |
+| Agent Skills 格式與相對資源 | 已驗證 | `python3 scripts/validate_skills.py --check-docs --strict` 與 `tests/project-workflow/` |
+| 隔離複製後的自足性 | 已驗證 | 契約測試把 skill 目錄複製到暫存 repo 後重新驗證 |
+| 文件已確認的載入位置（OpenCode／pi／DeepSeek Harness） | 文件已確認；**runtime 未實測** | 各 client 官方文件，整理於 skill 內 `references/client-compatibility.md` |
+| 安裝實測（本 skill） | **未實測** | 先前的四種隔離安裝只針對 `repo-privacy-audit`，**不繼承給本 skill** |
+| agent runtime 實際載入與觸發 | **未驗證** | 沒有在任何真實 client 實測 |
+
+要點：
+
+- 上面「已驗證的環境」表中的 191 項與四種安裝實測，**對象是掃描器**；
+  不要把它當成 `project-workflow` 的 runtime 或安裝實測。
+- `project-workflow` 只有契約測試（模板欄位、自足引用、隔離複製、平台中立、
+  隱私 placeholder、授權敘述），證明的是靜態性質，不是 agent 行為。
+- `description` 的**規格上限是 1024 字元**；部分 client（例如 DeepSeek Harness）的
+  catalog 另有**預設 500 字元**上限。那是 client 端建議，**不是規格上限**。
+- 任何 client 都應提供手動 fallback：直接讀取 `SKILL.md` 與 `references`；
+  各 client 的已確認／未確認狀態見 skill 內的 `references/client-compatibility.md`。
 
 ## 升級與維護
 

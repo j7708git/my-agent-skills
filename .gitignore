@@ -51,3 +51,6 @@ gitleaks-report.*
 # 暫存檔
 *.tmp
 *.bak
+
+# 統一暫存目錄（工作區慣例；不進版控）
+.tmp/

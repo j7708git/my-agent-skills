@@ -15,6 +15,7 @@
 | `.gitleaks.toml` | 使用 Gitleaks 預設規則，沒有路徑或值豁免 |
 | `tests/scaffold/` | 驗證器與檢查腳本自身的測試 |
 | `tests/repo-privacy-audit/` | 掃描核心與 hooks 的測試（全部使用合成 fixture） |
+| `tests/project-workflow/` | `project-workflow` 的契約測試（模板欄位、自足引用、隔離複製、平台中立、隱私 placeholder、授權敘述） |
 
 `scripts/run-checks.sh` **只維護這個集合 repo**，不是 skill 的執行入口；
 skill 安裝到使用者的專案後，這個腳本不會跟著走。
@@ -36,7 +37,7 @@ skill 安裝到使用者的專案後，這個腳本不會跟著走。
 
 ### 測試現況
 
-目前共 **191 項**測試，全部通過：
+掃描核心既有合成測試全部通過：
 
 | 測試檔 | 項目數 | 覆蓋對象 |
 | --- | --- | --- |
@@ -45,6 +46,10 @@ skill 安裝到使用者的專案後，這個腳本不會跟著走。
 | `tests/repo-privacy-audit/test_cli_modes.py` | 12 | CLI 模式與輸入處理 |
 | `tests/scaffold/test_validate_skills.py` | 33 | 驗證器自身與文件分流：公開文件自足、禁止引用本機路徑、禁止追蹤本機目錄 |
 | `tests/scaffold/test_run_checks_cli.py` | 14 | 檢查腳本的 CLI 與失敗聚合 |
+| `tests/project-workflow/test_skill_contract.py` | 契約測試 | `project-workflow`：模板欄位、自足引用、隔離複製、平台中立、隱私 placeholder、授權敘述 |
+
+上面掃描核心的項目數是既有數字；`tests/project-workflow/` 的契約測試**不硬寫項目數**，
+以測試檔為準，避免文件數字過期。新增測試時同步更新這張表的「覆蓋對象」即可。
 
 fixtures 全部是合成資料；完整假憑證只在暫存測試 repo 的執行期組合，原始碼保留分段字串。
 秘密掃描設定不放行任何值或目錄（理由見下方 `.gitleaks.toml`）。

@@ -6,7 +6,12 @@
 ## 這個 repo 是什麼
 
 - 標準 [Agent Skills](https://agentskills.io/specification) 的集合 repo，名稱 `j7708git/my-agent-skills`。
-- 首版只有一個 skill：`skills/repo-privacy-audit/`，做唯讀的 repo 隱私與秘密掃描。
+- 目前有兩個 skill：
+  - `skills/repo-privacy-audit/`：唯讀的 repo 隱私與秘密掃描。它的**唯讀安全邊界不變**，
+    不自動修復、不改寫歷史、不推送、不動任何 GitHub 設定。
+  - `skills/project-workflow/`：公開程式碼 repo 與獨立 private 工作紀錄 repo 的流程指引。
+    它**只提供指引**，不會自動授權或執行任何寫入、commit、push、安裝 hooks、調整可見度
+    或搬移檔案；載入它不等於授權。
 - 平台專屬 agent（OpenCode／Claude Code／Codex 的 agent 定義）屬於選配，首版不發行；
   `skills/` 之外的 adapters 區域刻意留白，等有真實需求再新增，不要先放空殼。
 
@@ -32,6 +37,9 @@
    - 授權範圍之外的動作（例如把 repo 轉 public、`--force` 推送、歷史改寫）仍需另外取得授權。
 9. **不改 repo 的可見度**：可見度是維護者的決定。文件不要把「private」或「public」
    寫死成永久事實，也不要聲稱已轉為某個可見度；以當下 GitHub 設定為準。
+10. **流程指引不等於授權，也不是掃描器**：`skills/project-workflow/` 只提供工作流程指引；
+    載入它不構成任何寫入、commit、push、hooks 安裝、可見度調整或搬移既有檔案的授權。
+    它不做隱私掃描，也不提供安全保證。舊的 `.local`／`.scratch` 不因此 skill 而自動遷移。
 
 ## 文件分流
 
@@ -80,11 +88,12 @@
 ## 動手前必讀
 
 - [docs/specification.md](docs/specification.md)：產品技術契約（CLI、退出碼、輸出、安全邊界）。
+- [docs/project-workflow.md](docs/project-workflow.md)：`project-workflow` 流程指引的公開契約與邊界。
 - [docs/research/portability.md](docs/research/portability.md)：格式與安裝路徑依據。
 - [docs/development.md](docs/development.md)：frontmatter 首版子集、驗證指令、文件分流、CI 與工具版本。
 - [docs/compatibility.md](docs/compatibility.md)：可宣稱的相容性範圍與不能宣稱的事。
 
-這四份是公開文件，足以開始工作；不需要（也不應該）讀本機工作紀錄才能理解產品。
+這些是公開文件，足以開始工作；不需要（也不應該）讀本機工作紀錄才能理解產品。
 
 ## 提交前必跑
 

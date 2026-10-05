@@ -1,12 +1,17 @@
 # 產品技術契約
 
-本文件是這個 repo 對**產品行為**的公開契約：命令介面、退出碼、輸出格式與安全邊界。
+本文件是這個 repo 對**掃描器產品行為**的公開契約：命令介面、退出碼、輸出格式與安全邊界。
 它描述的是 `skills/repo-privacy-audit/` 這個 skill 應該做什麼，不是維護流程，
 也不是某次實作的執行紀錄。
 
+> **範圍**：本文件只涵蓋掃描器 `repo-privacy-audit`。
+> 第二個 skill `project-workflow` 是流程指引、**不是掃描器**，
+> 其公開契約與邊界見 [project-workflow.md](project-workflow.md)。
+
 | 文件 | 回答的問題 |
 | --- | --- |
-| 本文件 | 產品行為契約：CLI、退出碼、輸出、安全邊界 |
+| 本文件 | 掃描器的產品行為契約：CLI、退出碼、輸出、安全邊界 |
+| [project-workflow.md](project-workflow.md) | `project-workflow` 流程指引的契約與邊界（非掃描器） |
 | [README.md](../README.md) | 我要怎麼開始用 |
 | [development.md](development.md) | 維護這個 repo：驗證、測試、CI、工具版本 |
 | [compatibility.md](compatibility.md) | 哪些已驗證、哪些不能宣稱 |
