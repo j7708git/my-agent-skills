@@ -14,8 +14,8 @@ agent 是平台專屬的角色、權限與模型設定，skill 是純文字流�
 | `agents/researcher.md` | 研究員：調查主題並把結論寫成 `project-notes/` 內部知識筆記 |
 | `agents/implementer.md` | 實作者：依自包含任務簡報實作、自我驗收並回報 |
 | `agents/tester.md` | 測試員：依任務卡的驗證方式執行驗收並回報，不改程式碼 |
-| `agents/reviewer.md` | 獨立審查者（日常階段審查）：只讀、不測試、不改檔 |
-| `agents/reviewer-deep.md` | 獨立審查者（重要節點審查，如公開到 GitHub 前）：只讀、不測試、不改檔 |
+| `agents/reviewer.md` | 獨立審查者（日常階段審查）：不改檔、不跑測試、不啟動服務 |
+| `agents/reviewer-deep.md` | 獨立審查者（重要節點審查，如公開到 GitHub 前）：不改檔、不跑測試、不啟動服務 |
 | `agents/web-search.md` | 網路研究 agent（獨立功能，與 project-workflow 無關） |
 | `agents/web-search-modules/` | web-search 的場景策略模組（除錯、學術、中文社群等） |
 | `commands/wish.md` | `/wish <願望>`：啟動 PM 的規劃先行流程 |
@@ -55,7 +55,8 @@ cp commands/*.md ~/.config/opencode/commands/
   即可，它們的工作方式是「以 docs 內的知識為準、不憑記憶猜 API」，正好抵消
   小模型知識不足的弱點。
 - **pm**：負責規劃、派工與驗收判斷，用你能取得的較強模型。
-- **reviewer／reviewer-deep**：只讀審查，不用太強也能抓大部分問題；
+- **reviewer／reviewer-deep**：審查以讀碼與分析為主（不改檔、不跑測試），
+  不用太強也能抓大部分問題；
   `reviewer` 供日常階段審查、`reviewer-deep` 供重要節點（如公開到 GitHub 前），
   後者可用比前者高一級的模型。
 
