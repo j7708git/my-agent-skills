@@ -1,7 +1,7 @@
 # OpenCode adapters：PM 工作流的 agent 與指令定義
 
 這裡收錄 `skills/project-workflow/` 作者實際在用的 OpenCode 設定：
-三個工作流 agent、一個獨立的網路研究 agent，以及三個斜線指令。
+六個 agent（工作流配套與獨立審查）、一個獨立的網路研究 agent，以及三個斜線指令。
 agent 定義與 skill 分開發行（原因見
 [docs/research/portability.md](../../docs/research/portability.md)）：
 agent 是平台專屬的角色、權限與模型設定，skill 是純文字流程指引。
@@ -75,11 +75,13 @@ cp commands/*.md ~/.config/opencode/commands/
 
 ## 相依關係
 
-- `pm.md`／`researcher.md`／`implementer.md` 與 `commands/*.md` 預設採用
-  [skills/project-workflow](../../skills/project-workflow/SKILL.md) 的
+- `pm.md`／`researcher.md`／`implementer.md`／`tester.md` 與 `commands/*.md`
+  預設採用 [skills/project-workflow](../../skills/project-workflow/SKILL.md) 的
   慣例（內部紀錄放 `project-notes/`、公開知識進程式碼 repo 的 `docs/`、
   自包含任務簡報等）。**建議一併安裝該 skill**，否則這些 agent 的指引
   會引用到不存在的流程文件。
+- `reviewer.md`／`reviewer-deep.md` 審查時以任務卡的驗收條件逐條對照，
+  同樣引用該 workflow 的慣例；獨立使用時可不安裝 skill，但對照會失準。
 - `researcher.md` 的 edit 權限只允許寫 `project-notes/` 下的研究筆記；
   若你的工作區不用這個慣例，需自行調整它的 permissions。
 - `web-search.md` 是自足的，不依賴 project-workflow；它會在執行期讀取

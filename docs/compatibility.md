@@ -158,6 +158,7 @@ CLI 退出碼 0，且 `SKILL.md` 與其相對資源都存在於安裝目標）�
   未實測**——「作者的日常使用」不等於「任何環境裝上就會正常運作」。
 - `pm`／`researcher`／`implementer`／`tester` 預設採用 `project-workflow` 的
   慣例（`project-notes/`、自包含簡報等），建議與該 skill 一併安裝；
+  `reviewer`／`reviewer-deep` 審查時對照任務卡驗收條件，同樣引用該慣例；
   `web-search` 為自足，不依賴任何 skill。
 - `agents/web-search-modules/*.md` 帶 `hidden: true` frontmatter：OpenCode 會把
   `agents/` 下巢狀目錄的 `.md` 當成 agent，此欄位（v2.0.27 實測會解析）讓
