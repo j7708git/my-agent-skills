@@ -12,8 +12,12 @@
   - `skills/project-workflow/`：公開程式碼 repo 與獨立 private 工作紀錄 repo 的流程指引。
     它**只提供指引**，不會自動授權或執行任何寫入、commit、push、安裝 hooks、調整可見度
     或搬移檔案；載入它不等於授權。
-- 平台專屬 agent（OpenCode／Claude Code／Codex 的 agent 定義）屬於選配，首版不發行；
-  `skills/` 之外的 adapters 區域刻意留白，等有真實需求再新增，不要先放空殼。
+- 平台專屬 agent（OpenCode 的 agent／command 定義）屬於**選配**，收錄在
+  `adapters/opencode/`：目前包含 `project-workflow` 配套的 `pm`／`researcher`／
+  `implementer` 三個 agent、獨立的 `web-search` agent，與 `/wish`／`/proto`／
+  `/research` 指令；發行版本刻意移除所有 `model:` 綁定，安裝者依自己環境
+  自選模型。安裝說明見 `adapters/opencode/README.md`。其他平台
+  （Claude Code／Codex）的 adapters 尚未收錄，等有真實需求再新增，不要先放空殼。
 
 ## 硬性規則
 

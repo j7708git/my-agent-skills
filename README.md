@@ -11,6 +11,13 @@
 
 這個 repo 不做自動修復，也不替你決定任何不可逆的動作。它只負責**看清楚**、**講明白**。
 
+`skills/` 之外另有選配的 **`adapters/opencode/`**：`project-workflow` 配套的
+OpenCode agent 定義（`pm`／`researcher`／`implementer`）、獨立的 `web-search`
+agent，與 `/wish`／`/proto`／`/research` 指令。發行版本已移除所有模型綁定，
+安裝者依自己環境自選。格式層面僅保證 OpenCode（`pm`／`implementer` 的部分
+指引另假設 OpenChamber 提供的工具），說明見
+[adapters/opencode/README.md](adapters/opencode/README.md)。
+
 > **狀態**：授權採 MIT。`repo-privacy-audit` 已驗證項目包括格式與相對資源、
 > 四種隔離安裝、真實 hooks 與完整密鑰掃描；CI runner 執行全部測試、無 skipped。
 > `project-workflow` 是純文字流程指引，已驗證格式與相對資源，但**同樣未驗證**
@@ -26,6 +33,7 @@ GitHub 設定檢查仍可能因方案／權限不足回報 incomplete；這與�
 
 - [快速開始](#快速開始)
 - [project-workflow（流程指引）](#project-workflow流程指引)
+- [OpenCode agent adapters](#opencode-agent-adapters)
 - [安裝 skill](#安裝-skill)
 - [使用掃描器](#使用掃描器)
 - [退出碼怎麼讀](#退出碼怎麼讀)
@@ -78,6 +86,18 @@ bash <skill>/scripts/repo-privacy-audit.sh --staged --repo .
 
 這個 skill 沒有任何執行時相依，也不必搭配 `repo-privacy-audit` 才能使用。
 若你要的是隱私掃描，請看[使用掃描器](#使用掃描器)一節。
+
+## OpenCode agent adapters
+
+`adapters/opencode/` 收錄這套流程的**選配** OpenCode 設定：`pm`／`researcher`／
+`implementer` 三個 agent、獨立的 `web-search` agent，與 `/wish`／`/proto`／
+`/research` 指令。把檔案複製到 `~/.config/opencode/` 對應目錄即可使用；
+發行版本刻意移除所有 `model:` 綁定，安裝後請依自己環境選模型。
+**格式僅保證 OpenCode 相容**（Claude Code／Codex 格式不同，未收錄）；
+`pm`／`implementer` 的部分指引假設 OpenChamber 工具（`tools.openchamber`、
+瀏覽器面板），純 OpenCode 環境需自行變通。且「作者的日常使用」不等於
+「任何環境安裝即正常運作」。安裝步驟、檔案說明與模型選擇建議見
+[adapters/opencode/README.md](adapters/opencode/README.md)。
 
 ## 安裝 skill
 

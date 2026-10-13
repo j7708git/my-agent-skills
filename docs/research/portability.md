@@ -18,6 +18,14 @@
 - 原生 global skill：`~/.config/opencode/skills`；原生 project：`.opencode/skills`。
 - 相容 `.agents/skills`、`.claude/skills`；也能透過 config 的 skills sources 指向本 repo 的 skills 目錄。
 - Agent 是平台專屬角色、權限與模型設定，與 skill 分開；首版先不發行 agent adapters。
+  > 2026-10-13 更新：已發行 OpenCode 版 agent adapters 至 `adapters/opencode/`
+  > （pm／researcher／implementer、web-search 與 `/wish` 等指令），
+  > 發行版本移除所有 `model:` 綁定，安裝者自選模型。格式層面僅宣稱 OpenCode
+  > 相容（實測 v2.0.27），且 `pm`／`implementer` 的指引假設 OpenChamber
+  > 提供的工具（`tools.openchamber`、瀏覽器面板），純 OpenCode 需自行變通；
+  > Claude Code／Codex 版仍未收錄。格式依據同頁上方 OpenCode V2 文件；
+  > `web-search.md` 保留 legacy 欄位 `temperature:`／`tools:`（V2 文件標示
+  > 不建議新設定使用，實測 v2.0.27 仍正確轉譯），為忠實呈現作者現行設定。
 - OpenChamber 使用底層 OpenCode；不需獨立 SKILL.md 格式。
 
 ## 現成安裝工具

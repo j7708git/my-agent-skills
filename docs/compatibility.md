@@ -140,6 +140,31 @@ CLI 退出碼 0，且 `SKILL.md` 與其相對資源都存在於安裝目標）�
 - 任何 client 都應提供手動 fallback：直接讀取 `SKILL.md` 與 `references`；
   各 client 的已確認／未確認狀態見 skill 內的 `references/client-compatibility.md`。
 
+## OpenCode adapters（`adapters/opencode/`）
+
+`adapters/opencode/` 收錄作者實際在用的 OpenCode agent／command 定義：
+`project-workflow` 配套的 `pm`／`researcher`／`implementer`、獨立的 `web-search`
+agent，以及 `/wish`／`/proto`／`/research` 指令。與 skill 的差別：
+
+- 這些是**平台專屬設定檔**，使用 OpenCode 的 agent／command frontmatter 格式
+  （實測版本 OpenCode v2.0.27）；不宣稱 Claude Code、Codex 或其他平台可用。
+  另外 `pm.md` 引用 `tools.openchamber` 工具、`pm.md`／`implementer.md` 提到
+  瀏覽器面板，這些是 **OpenChamber** 提供的工具：純 OpenCode（TUI）可載入
+  這些 agent，但相關指引在該環境沒有對應工具，需自行變通。
+- 發行版本**移除所有 `model:` 綁定**（作者的 provider／模型是個人設定）；
+  安裝者需依自己環境補上模型選擇，選擇建議見 `adapters/opencode/README.md`。
+- 這些定義在作者的 OpenCode 環境中日常使用；但**對其他使用者的安裝與執行
+  未實測**——「作者的日常使用」不等於「任何環境裝上就會正常運作」。
+- `pm`／`researcher`／`implementer` 預設採用 `project-workflow` 的慣例
+  （`project-notes/`、自包含簡報等），建議與該 skill 一併安裝；
+  `web-search` 為自足，不依賴任何 skill。
+- `agents/web-search-modules/*.md` 帶 `hidden: true` frontmatter：OpenCode 會把
+  `agents/` 下巢狀目錄的 `.md` 當成 agent，此欄位（v2.0.27 實測會解析）讓
+  模組檔不進使用者的 agent 選擇。
+- 驗證器（`scripts/validate_skills.py`）**不掃描 `adapters/`**：它只檢查
+  `skills/` 與 `docs/` 的指定檔案。adapters 內 Markdown 的連結正確性
+  靠人工複查，這是已知未自動化的檢查項。
+
 ## 升級與維護
 
 - 行動與工具版本升級時，同步更新 [development.md](development.md) 的表格與校驗和。

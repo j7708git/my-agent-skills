@@ -1,0 +1,97 @@
+# OpenCode adapters：PM 工作流的 agent 與指令定義
+
+這裡收錄 `skills/project-workflow/` 作者實際在用的 OpenCode 設定：
+三個工作流 agent、一個獨立的網路研究 agent，以及三個斜線指令。
+agent 定義與 skill 分開發行（原因見
+[docs/research/portability.md](../../docs/research/portability.md)）：
+agent 是平台專屬的角色、權限與模型設定，skill 是純文字流程指引。
+
+## 目錄結構
+
+| 檔案 | 說明 |
+| --- | --- |
+| `agents/pm.md` | 專案 PM（技術長）：接收願望、安排研究、規劃、派工與驗收 |
+| `agents/researcher.md` | 研究員：調查主題並把結論寫成 `project-notes/` 內部知識筆記 |
+| `agents/implementer.md` | 實作者：依自包含任務簡報實作、自我驗收並回報 |
+| `agents/web-search.md` | 網路研究 agent（獨立功能，與 project-workflow 無關） |
+| `agents/web-search-modules/` | web-search 的場景策略模組（除錯、學術、中文社群等） |
+| `commands/wish.md` | `/wish <願望>`：啟動 PM 的規劃先行流程 |
+| `commands/proto.md` | `/proto <願望>`：啟動原型優先流程 |
+| `commands/research.md` | `/research <主題>`：直接派研究員調查 |
+
+## 安裝
+
+先進到 `adapters/opencode/`（以下指令用相對路徑，從 repo 根目錄跑會找不到檔案），
+再把檔案複製到 OpenCode 的使用者設定目錄（不存在就先建立）：
+
+```bash
+cd adapters/opencode
+mkdir -p ~/.config/opencode/agents/web-search-modules ~/.config/opencode/commands
+cp agents/*.md ~/.config/opencode/agents/
+cp agents/web-search-modules/*.md ~/.config/opencode/agents/web-search-modules/
+cp commands/*.md ~/.config/opencode/commands/
+```
+
+之後在 OpenCode 裡即可用 `/wish`、`/proto`、`/research` 指令，
+或直接指定 `agent: pm`／`researcher`／`implementer`。
+
+> **模組檔為什麼帶 frontmatter**：OpenCode 會把 `agents/` 底下巢狀目錄的
+> `.md` 一律當成 agent，五個 web-search 模組檔因此會以 `web-search-modules/*`
+> 的名義出現在你的 agent 清單（實測 v2.0.27 會列為可選的 primary agent）。
+> 發行版本在每個模組檔加了 `hidden: true`——OpenCode 實測會解析此欄位
+> （與內建隱藏 agent 同一標記），讓它們不該出現在 agent 選擇裡。
+> 刪掉 frontmatter 不影響 web-search 讀取模組，只會讓清單多五個雜項。
+
+## 模型設定（刻意移除）
+
+發行版本**移除了所有 `model:` 綁定**：作者的 provider 與模型選擇是個人環境
+設定，寫死對其他使用者沒有意義。安裝後請依自己的環境加上 `model:` 行
+（或用 OpenCode 的模型設定 UI 選）。選擇建議：
+
+- **researcher／implementer**：世界知識有限但便宜快速的 flash 級模型即可，
+  它們的工作方式是「以 docs 內的知識為準、不憑記憶猜 API」，正好抵消
+  小模型知識不足的弱點。
+- **pm**：負責規劃、派工與驗收判斷，用你能取得的較強模型。
+
+## 與作者本機設定的差異
+
+發行副本與作者的本機原檔有下列**刻意差異**；日後同步新版本時請保留：
+
+- 四個 agent 定義移除 `model:` 綁定（作者的 provider／模型是個人設定）。
+- `agents/web-search-modules/*.md` 加上 `hidden: true` frontmatter，並移除
+  指向未收錄來源檔（`web-search-agent.md`）的標題註記——否則 OpenCode 會把
+  這五個模組檔當成可選 agent 列出。
+- `commands/research.md` 的無效鍵 `subagent: true` 改為文件記載的 `subtask: true`
+  （兩者實測行為相同，`agent: researcher` 本身就會以 subtask 執行）。
+- `agents/web-search.md` 保留 legacy 欄位 `temperature:`／`tools:`（作者現行
+  設定原樣；OpenCode V2 文件標示不建議新設定使用，實測 v2.0.27 仍正確轉譯）。
+
+## 相依關係
+
+- `pm.md`／`researcher.md`／`implementer.md` 與 `commands/*.md` 預設採用
+  [skills/project-workflow](../../skills/project-workflow/SKILL.md) 的
+  慣例（內部紀錄放 `project-notes/`、公開知識進程式碼 repo 的 `docs/`、
+  自包含任務簡報等）。**建議一併安裝該 skill**，否則這些 agent 的指引
+  會引用到不存在的流程文件。
+- `researcher.md` 的 edit 權限只允許寫 `project-notes/` 下的研究筆記；
+  若你的工作區不用這個慣例，需自行調整它的 permissions。
+- `web-search.md` 是自足的，不依賴 project-workflow；它會在執行期讀取
+  安裝位置的 `~/.config/opencode/agents/web-search-modules/` 下的模組檔，
+  所以模組檔必須與 agent 檔一起安裝。
+- `pm.md` 的 permissions 允許呼叫名為 `researcher`／`implementer`／
+  `explore` 的 subagent；`explore` 是 OpenCode 內建 subagent，不需另裝。
+
+## 相容性範圍
+
+這些檔案使用 OpenCode 的 agent／command frontmatter 格式
+（`description`、`mode`、`permissions`、`tools`、`agent`、`$ARGUMENTS`），
+**格式層面只保證 OpenCode**；Claude Code、Codex 等其他平台的格式不同，
+本 repo 不宣稱相容。詳細的來源依據見
+[docs/research/portability.md](../../docs/research/portability.md)。
+
+另外要注意：`pm.md` 引用 `tools.openchamber` 的模型查詢與 session 工具、
+`pm.md` 與 `implementer.md` 提到用瀏覽器面板驗證成果——這些是 **OpenChamber**
+（以 OpenCode 為底的工作台）提供的工具，純 OpenCode（TUI）沒有。agent 在
+純 OpenCode 可以載入並運作，但走到這些指引時模型需要自行變通
+（例如改用 CLI 指令或口頭回報）；`/wish` 的完整 PM 流程以 OpenChamber
+環境為預設。
