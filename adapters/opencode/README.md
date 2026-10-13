@@ -13,6 +13,9 @@ agent 是平台專屬的角色、權限與模型設定，skill 是純文字流�
 | `agents/pm.md` | 專案 PM（技術長）：接收願望、安排研究、規劃、派工與驗收 |
 | `agents/researcher.md` | 研究員：調查主題並把結論寫成 `project-notes/` 內部知識筆記 |
 | `agents/implementer.md` | 實作者：依自包含任務簡報實作、自我驗收並回報 |
+| `agents/tester.md` | 測試員：依任務卡的驗證方式執行驗收並回報，不改程式碼 |
+| `agents/reviewer.md` | 獨立審查者（日常階段審查）：只讀、不測試、不改檔 |
+| `agents/reviewer-deep.md` | 獨立審查者（重要節點審查，如公開到 GitHub 前）：只讀、不測試、不改檔 |
 | `agents/web-search.md` | 網路研究 agent（獨立功能，與 project-workflow 無關） |
 | `agents/web-search-modules/` | web-search 的場景策略模組（除錯、學術、中文社群等） |
 | `commands/wish.md` | `/wish <願望>`：啟動 PM 的規劃先行流程 |
@@ -48,16 +51,19 @@ cp commands/*.md ~/.config/opencode/commands/
 設定，寫死對其他使用者沒有意義。安裝後請依自己的環境加上 `model:` 行
 （或用 OpenCode 的模型設定 UI 選）。選擇建議：
 
-- **researcher／implementer**：世界知識有限但便宜快速的 flash 級模型即可，
-  它們的工作方式是「以 docs 內的知識為準、不憑記憶猜 API」，正好抵消
+- **researcher／implementer／tester**：世界知識有限但便宜快速的 flash 級模型
+  即可，它們的工作方式是「以 docs 內的知識為準、不憑記憶猜 API」，正好抵消
   小模型知識不足的弱點。
 - **pm**：負責規劃、派工與驗收判斷，用你能取得的較強模型。
+- **reviewer／reviewer-deep**：只讀審查，不用太強也能抓大部分問題；
+  `reviewer` 供日常階段審查、`reviewer-deep` 供重要節點（如公開到 GitHub 前），
+  後者可用比前者高一級的模型。
 
 ## 與作者本機設定的差異
 
 發行副本與作者的本機原檔有下列**刻意差異**；日後同步新版本時請保留：
 
-- 四個 agent 定義移除 `model:` 綁定（作者的 provider／模型是個人設定）。
+- 所有 agent 定義移除 `model:` 綁定（作者的 provider／模型是個人設定）。
 - `agents/web-search-modules/*.md` 加上 `hidden: true` frontmatter，並移除
   指向未收錄來源檔（`web-search-agent.md`）的標題註記——否則 OpenCode 會把
   這五個模組檔當成可選 agent 列出。
@@ -78,7 +84,7 @@ cp commands/*.md ~/.config/opencode/commands/
 - `web-search.md` 是自足的，不依賴 project-workflow；它會在執行期讀取
   安裝位置的 `~/.config/opencode/agents/web-search-modules/` 下的模組檔，
   所以模組檔必須與 agent 檔一起安裝。
-- `pm.md` 的 permissions 允許呼叫名為 `researcher`／`implementer`／
+- `pm.md` 的 permissions 允許呼叫名為 `researcher`／`implementer`／`tester`／
   `explore` 的 subagent；`explore` 是 OpenCode 內建 subagent，不需另裝。
 
 ## 相容性範圍
