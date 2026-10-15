@@ -89,6 +89,9 @@ cp commands/*.md ~/.config/opencode/commands/
   所以模組檔必須與 agent 檔一起安裝。
 - `pm.md` 的 permissions 允許呼叫名為 `researcher`／`implementer`／`tester`／
   `explore` 的 subagent；`explore` 是 OpenCode 內建 subagent，不需另裝。
+- **選配工具（GitHub CLI）**：建議安裝並登入 `gh`（`gh auth login`）。`researcher.md`
+  在尋找現成的 Agent Skills、開源工具、範例 repo 或查閱 GitHub Issues 時，會優先使用
+  `gh` CLI 直接查詢結構化資料；若環境未安裝或未認證 `gh`，則自動退回一般網路搜尋。
 
 ## 相容性範圍
 

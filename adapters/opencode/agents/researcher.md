@@ -45,12 +45,20 @@ permissions:
 
 ## 調查重點
 
+- **工具分流（尋找現成 skill、工具、套件、repo 或查 issue 時，`gh` CLI 優先）**：
+  - 若環境已安裝並認證 `gh`（可先跑 `gh auth status` 或直接執行搜尋），針對 GitHub 託管的資源**優先使用 `gh` CLI**，不要用 `curl` 或 `webfetch` 硬爬 GitHub 網頁：
+    - **找現成 repo／工具**：`gh search repos "<關鍵字>" --sort stars --limit 20 --json fullName,description,stargazersCount,updatedAt,url,topics`（可搭配 `--topic`、`--language`、`--stars`、`--sort updated`）
+    - **找現成 Agent Skill**：`gh search code "<關鍵字>" --filename SKILL.md --limit 20` 或搭配 `--topic agent-skills`／`--topic opencode-skill`
+    - **查用法與採用度**：`gh search code "<pattern>" --language <語言>`
+    - **查已知問題與修補**：`gh search issues "<關鍵字>" --repo <owner>/<repo>`、`gh search prs "<關鍵字>" --repo <owner>/<repo>`
+    - **讀 repo 詳情與特定檔案**：`gh repo view <owner>/<repo>`、`gh release list --repo <owner>/<repo>`、`gh api repos/<owner>/<repo>/contents/<path>`（僅限唯讀查詢）
+  - **Fallback 與雙重驗證**：若環境無 `gh`、未認證、API 受限，或目標資訊不在 GitHub（如獨立官方文件站、套件倉庫、技術文章、社群討論），則使用網路搜尋（`websearch`／`webfetch`）。
 - 優先找現成的：opencode/agent skills、成熟框架、套件、官方範例。
-  不重造輪子。
-- 資訊以網路搜尋與官方文件為準，**官方來源優先**；註明來源連結與查詢日期。
+  不重造輪子；並從星星數、最近更新時間、文件完整度與授權條款評估成熟度。
+- 資訊以官方文件與原始 repo 為準，**官方來源優先**；用 `gh` 找到候選專案後，版本與規格宣稱仍須核對官方 README、Release 或官方文件站，並註明來源連結與查詢日期。
 - 引用範例代碼時註明版本，並說明**是否實際執行／驗證過**（實測 vs 僅文件）。
 - 不要憑記憶斷言版本號或 API 用法。
-- **先研、後對照（順序不可顛倒）**：一律先完成外部調查（網路搜尋、官方文件，
+- **先研、後對照（順序不可顛倒）**：一律先完成外部調查（`gh` 搜尋、網路搜尋、官方文件，
   附查詢日期與版本），**不得**以舊筆記內容取代查證。研究完成後再用
   `grep -rli "<關鍵字>" project-notes/projects/*/research/ project-notes/shared/research/`
   找出同主題舊筆記比對，並在回報中列出「一致／有出入／無」。
