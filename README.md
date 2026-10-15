@@ -18,8 +18,9 @@
 這個 repo 不做自動修復，也不替你決定任何不可逆的動作。它只負責**看清楚**、**講明白**。
 
 `skills/` 之外另有選配的 **`adapters/opencode/`**：`project-workflow` 配套的
-OpenCode agent 定義（`pm`／`researcher`／`implementer`）、獨立的 `web-search`
-agent，與 `/wish`／`/proto`／`/research` 指令。發行版本已移除所有模型綁定，
+OpenCode agent 定義（`pm`／`researcher`／`implementer`／`tester`、獨立審查者
+`reviewer`／`reviewer-deep`、`workflow-optimizer` 健檢）、獨立的 `web-search`
+agent，與 `/wish`／`/proto`／`/research`／`/optimize` 指令。發行版本已移除所有模型綁定，
 安裝者依自己環境自選。格式層面僅保證 OpenCode（`pm`／`implementer` 的部分
 指引另假設 OpenChamber 提供的工具），說明見
 [adapters/opencode/README.md](adapters/opencode/README.md)。
@@ -75,7 +76,7 @@ bash <skill>/scripts/repo-privacy-audit.sh --staged --repo .
 
 ## project-workflow（流程指引）
 
-第二個 skill **`project-workflow`** 不是掃描器，而是一份工作流程指引：
+**`project-workflow`** 不是掃描器，而是一份工作流程指引：
 把「公開程式碼 repo」與「獨立 private 工作紀錄 repo」分開管理，
 涵蓋確認兩個 repo 根、規劃或先做最小原型、撰寫自足任務簡報、派工與並行紀律、
 實際驗收，以及跨機同步與交接。
@@ -129,9 +130,11 @@ bash <skill>/scripts/repo-privacy-audit.sh --staged --repo .
 
 ## OpenCode agent adapters
 
-`adapters/opencode/` 收錄這套流程的**選配** OpenCode 設定：`pm`／`researcher`／
-`implementer` 三個 agent、獨立的 `web-search` agent，與 `/wish`／`/proto`／
-`/research` 指令。把檔案複製到 `~/.config/opencode/` 對應目錄即可使用；
+`adapters/opencode/` 收錄這套流程的**選配** OpenCode 設定：`project-workflow`
+配套的 `pm`／`researcher`／`implementer`／`tester`、獨立審查者 `reviewer`／
+`reviewer-deep`、`workflow-optimizer` 健檢 agent、獨立的 `web-search` agent，
+與 `/wish`／`/proto`／`/research`／`/optimize` 指令。把檔案複製到
+`~/.config/opencode/` 對應目錄即可使用；
 發行版本刻意移除所有 `model:` 綁定，安裝後請依自己環境選模型。
 **格式僅保證 OpenCode 相容**（Claude Code／Codex 格式不同，未收錄）；
 `pm`／`implementer` 的部分指引假設 OpenChamber 工具（`tools.openchamber`、

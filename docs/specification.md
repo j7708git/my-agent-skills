@@ -5,7 +5,7 @@
 也不是某次實作的執行紀錄。
 
 > **範圍**：本文件只涵蓋掃描器 `repo-privacy-audit`。
-> 第二個 skill `project-workflow` 是流程指引、**不是掃描器**，
+> skill `project-workflow` 是流程指引、**不是掃描器**，
 > 其公開契約與邊界見 [project-workflow.md](project-workflow.md)。
 
 | 文件 | 回答的問題 |

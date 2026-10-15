@@ -18,6 +18,10 @@ permissions:
   - action: edit
     resource: "my-agent-skills/.local/proposals/*.md"
     effect: allow
+  # Location 相對形態（session 位於 my-agent-skills/ 時命中）
+  - action: edit
+    resource: ".local/proposals/*.md"
+    effect: allow
   - action: shell
     resource: "*"
     effect: deny
@@ -39,6 +43,24 @@ permissions:
     effect: allow
   - action: shell
     resource: "git diff *"
+    effect: allow
+  - action: shell
+    resource: "git -C * log"
+    effect: allow
+  - action: shell
+    resource: "git -C * log *"
+    effect: allow
+  - action: shell
+    resource: "git -C * status"
+    effect: allow
+  - action: shell
+    resource: "git -C * status *"
+    effect: allow
+  - action: shell
+    resource: "git -C * diff"
+    effect: allow
+  - action: shell
+    resource: "git -C * diff *"
     effect: allow
   - action: subagent
     resource: "*"

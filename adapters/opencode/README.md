@@ -37,8 +37,8 @@ cp agents/web-search-modules/*.md ~/.config/opencode/agents/web-search-modules/
 cp commands/*.md ~/.config/opencode/commands/
 ```
 
-之後在 OpenCode 裡即可用 `/wish`、`/proto`、`/research` 指令，
-或直接指定 `agent: pm`／`researcher`／`implementer`。
+之後在 OpenCode 裡即可用 `/wish`、`/proto`、`/research`、`/optimize` 指令，
+或直接指定 `agent: pm`／`researcher`／`implementer`／`workflow-optimizer`。
 
 > **模組檔為什麼帶 frontmatter**：OpenCode 會把 `agents/` 底下巢狀目錄的
 > `.md` 一律當成 agent，五個 web-search 模組檔因此會以 `web-search-modules/*`

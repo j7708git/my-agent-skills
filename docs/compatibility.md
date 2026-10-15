@@ -118,7 +118,7 @@ CLI 退出碼 0，且 `SKILL.md` 與其相對資源都存在於安裝目標）�
 
 ## project-workflow 的狀態
 
-第二個 skill `skills/project-workflow/` 是**流程指引**，不是掃描器：沒有掃描核心、
+`skills/project-workflow/` 是**流程指引**，不是掃描器：沒有掃描核心、
 不依賴 Gitleaks，也沒有 Bash／Python 執行時相依。
 
 | 項目 | 狀態 | 依據 |
@@ -144,8 +144,9 @@ CLI 退出碼 0，且 `SKILL.md` 與其相對資源都存在於安裝目標）�
 
 `adapters/opencode/` 收錄作者實際在用的 OpenCode agent／command 定義：
 `project-workflow` 配套的 `pm`／`researcher`／`implementer`／`tester`、獨立
-審查者 `reviewer`／`reviewer-deep`、獨立的 `web-search` agent，以及
-`/wish`／`/proto`／`/research` 指令。與 skill 的差別：
+審查者 `reviewer`／`reviewer-deep`、`workflow-optimizer` 健檢 agent、獨立的
+`web-search` agent，以及 `/wish`／`/proto`／`/research`／`/optimize` 指令。
+與 skill 的差別：
 
 - 這些是**平台專屬設定檔**，使用 OpenCode 的 agent／command frontmatter 格式
   （實測版本 OpenCode v2.0.27）；不宣稱 Claude Code、Codex 或其他平台可用。

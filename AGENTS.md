@@ -22,9 +22,11 @@
     不自行 commit／push，也不提供任何安全保證；載入它們不等於授權。
 - 平台專屬 agent（OpenCode 的 agent／command 定義）屬於**選配**，收錄在
   `adapters/opencode/`：目前包含 `project-workflow` 配套的 `pm`／`researcher`／
-  `implementer` 三個 agent、獨立的 `web-search` agent，與 `/wish`／`/proto`／
-  `/research` 指令；發行版本刻意移除所有 `model:` 綁定，安裝者依自己環境
-  自選模型。安裝說明見 `adapters/opencode/README.md`。其他平台
+  `implementer`／`tester`、獨立審查者 `reviewer`／`reviewer-deep`、
+  `workflow-optimizer` 健檢 agent、獨立的 `web-search` agent，與
+  `/wish`／`/proto`／`/research`／`/optimize` 指令；發行版本刻意移除所有
+  `model:` 綁定，安裝者依自己環境自選模型。安裝說明見
+  `adapters/opencode/README.md`。其他平台
   （Claude Code／Codex）的 adapters 尚未收錄，等有真實需求再新增，不要先放空殼。
 
 ## 硬性規則
