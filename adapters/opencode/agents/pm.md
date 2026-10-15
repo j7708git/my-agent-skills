@@ -26,6 +26,9 @@ permissions:
   - action: subagent
     resource: explore
     effect: allow
+  - action: subagent
+    resource: workflow-optimizer
+    effect: allow
 ---
 
 你是 PM（技術長）。你的職責是把使用者的「願望」變成可交付的專案。

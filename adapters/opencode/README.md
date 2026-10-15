@@ -1,7 +1,7 @@
 # OpenCode adapters：PM 工作流的 agent 與指令定義
 
 這裡收錄 `skills/project-workflow/` 作者實際在用的 OpenCode 設定：
-六個 agent（工作流配套與獨立審查）、一個獨立的網路研究 agent，以及三個斜線指令。
+七個 agent（工作流配套與獨立審查）、一個獨立的網路研究 agent，以及四個斜線指令。
 agent 定義與 skill 分開發行（原因見
 [docs/research/portability.md](../../docs/research/portability.md)）：
 agent 是平台專屬的角色、權限與模型設定，skill 是純文字流程指引。
@@ -16,11 +16,13 @@ agent 是平台專屬的角色、權限與模型設定，skill 是純文字流�
 | `agents/tester.md` | 測試員：依任務卡的驗證方式執行驗收並回報，不改程式碼 |
 | `agents/reviewer.md` | 獨立審查者（日常階段審查）：不改檔、不跑測試、不啟動服務 |
 | `agents/reviewer-deep.md` | 獨立審查者（重要節點審查，如公開到 GitHub 前）：不改檔、不跑測試、不啟動服務 |
+| `agents/workflow-optimizer.md` | 工作流優化：專案階段健檢流程並探勘 skill 提案（提案制、唯讀，只寫報告與提案） |
 | `agents/web-search.md` | 網路研究 agent（獨立功能，與 project-workflow 無關） |
 | `agents/web-search-modules/` | web-search 的場景策略模組（除錯、學術、中文社群等） |
 | `commands/wish.md` | `/wish <願望>`：啟動 PM 的規劃先行流程 |
 | `commands/proto.md` | `/proto <願望>`：啟動原型優先流程 |
 | `commands/research.md` | `/research <主題>`：直接派研究員調查 |
+| `commands/optimize.md` | `/optimize <專案id[,專案id...]>`：一專案派一個 `workflow-optimizer` 平行健檢並彙整（缺省回問） |
 
 ## 安裝
 
@@ -55,6 +57,8 @@ cp commands/*.md ~/.config/opencode/commands/
   即可，它們的工作方式是「以 docs 內的知識為準、不憑記憶猜 API」，正好抵消
   小模型知識不足的弱點。
 - **pm**：負責規劃、派工與驗收判斷，用你能取得的較強模型。
+- **workflow-optimizer**：健檢以讀文件與分析為主（唯讀、不改檔、不跑測試），
+  flash 級模型即可；它的價值在對照既有紀錄找證據，而非知識廣度。
 - **reviewer／reviewer-deep**：審查以讀碼與分析為主（不改檔、不跑測試），
   不用太強也能抓大部分問題；
   `reviewer` 供日常階段審查、`reviewer-deep` 供重要節點（如公開到 GitHub 前），
@@ -84,6 +88,10 @@ cp commands/*.md ~/.config/opencode/commands/
   同樣引用該 workflow 的慣例；獨立使用時可不安裝 skill，但對照會失準。
 - `researcher.md` 的 edit 權限只允許寫 `project-notes/` 下的研究筆記；
   若你的工作區不用這個慣例，需自行調整它的 permissions。
+- `workflow-optimizer.md` 的 edit 權限只允許寫健檢報告
+  （`project-notes/shared/workflow/`）與 skill 提案（程式碼 repo 的
+  `.local/proposals/`），shell 只開放唯讀 git；它同樣採用 project-workflow 的
+  紀錄慣例，建議一併安裝該 skill，否則健檢會找不到可對照的紀錄。
 - `web-search.md` 是自足的，不依賴 project-workflow；它會在執行期讀取
   安裝位置的 `~/.config/opencode/agents/web-search-modules/` 下的模組檔，
   所以模組檔必須與 agent 檔一起安裝。
