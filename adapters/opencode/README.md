@@ -98,9 +98,9 @@ cp commands/*.md ~/.config/opencode/commands/
 本 repo 不宣稱相容。詳細的來源依據見
 [docs/research/portability.md](../../docs/research/portability.md)。
 
-另外要注意：`pm.md` 引用 `tools.openchamber` 的模型查詢與 session 工具、
-`pm.md` 與 `implementer.md` 提到用瀏覽器面板驗證成果——這些是 **OpenChamber**
-（以 OpenCode 為底的工作台）提供的工具，純 OpenCode（TUI）沒有。agent 在
-純 OpenCode 可以載入並運作，但走到這些指引時模型需要自行變通
-（例如改用 CLI 指令或口頭回報）；`/wish` 的完整 PM 流程以 OpenChamber
-環境為預設。
+另外要注意：`pm.md` 引用 `tools.openchamber` 的模型查詢與 session 工具及
+`openchamber_knowledge` 專案知識面板工具、`pm.md` 與 `implementer.md` 提到用
+瀏覽器面板驗證成果——這些是 **OpenChamber**（以 OpenCode 為底的工作台）提供的
+工具，純 OpenCode（TUI）沒有。agent 在純 OpenCode 可以載入並運作，但走到這些
+指引時模型需要自行變通（例如改用 CLI 指令或口頭回報）；`/wish` 的完整 PM 流程
+以 OpenChamber 環境為預設。

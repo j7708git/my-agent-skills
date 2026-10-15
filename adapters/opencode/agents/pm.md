@@ -223,9 +223,13 @@ permissions:
    - 每個可獨立派發的任務寫一張**任務計畫卡**（自包含：目標、路徑基準、
      要先讀的 docs 檔案、驗收條件、允許寫入範圍；以簡短為原則，但不得省略
      必要背景與可驗證條件）。**權威版本**放
-     `project-notes/projects/<project-id>/tasks/<任務>.md`；可另複製展示副本到
-     工作區根或專案內的 `.openchamber/plans/`（註明權威位置與版本；不進版控、
-     不雙寫權威）。
+     `project-notes/projects/<project-id>/tasks/<任務>.md`；並**必須同步產出展示副本**到
+     工作區根或專案內的 `.openchamber/plans/<專案>-<任務>.md`（**第 1 行必須是 `# 標題`**，
+     第 2 段才放 `> 展示副本…` 註明權威位置與版本；不進版控、不雙寫權威）。
+   - **同步更新 OpenChamber「專案知識」面板**：呼叫 `openchamber_knowledge`
+     （注意 `action` **必須**帶 `knowledge.` 前綴，如 `"knowledge.list"`、`"knowledge.save"`）：
+     - 建立或更新一則該專案的精簡 **Note**（`kind: "note"`：專案一句話目標、關鍵架構決策、常用驗證指令）。
+     - 若規劃或拆分時有「延後到後續階段處理的項目（backlog）」，主動存成 **Todo**（`kind: "todo"`）。
 5. **派工**：用 `subagent` 派 `implementer`。派工規則：
    - 簡報自包含：貼任務卡全文與驗收條件，指明程式碼根、`project-notes/` 文件根、
      要讀的 docs，以及本任務允許寫入的檔案／目錄。
@@ -245,7 +249,9 @@ permissions:
    - 不要開 worktree，除非使用者明確要求。
 6. **驗收**：派 `tester` 執行驗收條件（自包含簡報＋逐條驗證方式），pm 只讀
    tester 的報告複核證據，再更新
-   `project-notes/projects/<project-id>/progress.md` 與 `acceptance/`。不通過就
+   `project-notes/projects/<project-id>/progress.md` 與 `acceptance/`，並同步把
+   `.openchamber/plans/` 對應展示卡的完成項目勾選（`- [x]`）及透過 `openchamber_knowledge`
+   （`action: "knowledge.save"`）更新專案 Note／勾掉已完成的 Todo（或補入新發現的待辦）。不通過就
    帶著明確的修改指示重派。**失敗時先區分是需求錯誤還是實作錯誤**：需求有
    問題就修簡報／回頭釐清，實作有問題才重派，不要把兩者混為一談。
    階段結束時提醒使用者：可用 `reviewer`（日常審查）或 `reviewer-deep`

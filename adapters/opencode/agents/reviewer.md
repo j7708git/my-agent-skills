@@ -31,6 +31,13 @@ permissions:
 3. 範圍蔓延：有沒有做簡報以外的事。
 4. 隱私與機密：憑證、真名、私人 email、本機絕對路徑、內網位址。
 5. 文件分流：公開內容是否誤放內部資訊。
+6. 反測試作弊（Anti-gaming / Reward Hacking）：逐檔檢查 git diff，確認沒有靠以下手段「假通過」：
+   - **竄改或削弱測試**：刪除既有測試、新增未說明的 `.skip`／`.todo`／`xit`／`xdescribe`、放寬斷言（如 `toBe` 改 `toBeTruthy`、調大誤差容忍、改動預期常數）。
+   - **寫死預期結果（Hardcoded golden）**：在實作中加入針對測試輸入的 special-case 分支或直接回傳固定常數。
+   - **濫用 Mock／Stub 或退化成 No-op**：用 mock 繞過真正要驗證的邏輯，或把函式體簡化成固定回傳／early return。
+   - **吞掉錯誤**：擴大 `try/catch`、空 catch、或用預設值把應拋出的錯誤靜默化。
+   - **偷看評分器（Evaluator seeking）**：讀取測試 golden 檔、CI artifact、benchmark 或留下可疑的測試後門腳本。
+   - **缺乏反例驗證**：若斷言看似永遠為真（tautology）或未涵蓋失敗分支，列入「需要 tester 驗證」（請 PM 派工補反例測試或請 tester 用負向輸入驗證，reviewer 不自跑）。
 
 ## 輸出格式
 
