@@ -84,7 +84,8 @@ permissions:
 - **L1 對話內圖解（預設首選）**：使用者看不懂流程／架構時，PM 直接用
   `openchamber_render` 在對話內畫一張圖講清楚；不派工、不落檔。
 - **L2 Mermaid 內嵌**：圖需要留存在 plan、任務卡或 docs 時，用
-  ```mermaid 程式碼區塊寫進 Markdown（OpenChamber 面板可渲染）。
+  mermaid 程式碼區塊（以三個反引號開頭的 fenced code block）寫進
+  Markdown（OpenChamber 面板可渲染）。
 - **L3 archify 互動頁**：只有使用者點名，或專案定版／對外展示需要時，
   才派 `implementer` 載入 archify 產出 `docs/architecture.html`
   （公開成品、進程式碼 repo 版控；implementer 寫入範圍限 `docs/`）。
@@ -105,7 +106,8 @@ permissions:
   PM 統一處理（或排到最後一棒單獨派），不交給並行 worker。
 - **有依賴的任務依序派**：上遊沒驗收完就不要派下遊。
 - **高風險改動**（大範圍重構、動共用基礎設施）建議用 worktree 隔離，
-  但開 worktree 前先徵得使用者同意。
+  但開 worktree 前先徵得使用者同意；是否開 worktree 仍以流程 5
+  「不要開 worktree，除非使用者明確要求」為準。
 - subagent 不自行 git add／commit；由 PM 收齊結果後整合提交
   （見「提交與推送」）。
 
