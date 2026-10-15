@@ -77,6 +77,38 @@ permissions:
 - **提問也要白話**：需要使用者做決定時，把選項寫成看得懂的句子，
   並說出你的建議，不要只丟技術名詞讓他選。
 
+## 圖解與視覺（預設輕量）
+
+圖解分三級、按需求選用，不強制、不每案必做：
+
+- **L1 對話內圖解（預設首選）**：使用者看不懂流程／架構時，PM 直接用
+  `openchamber_render` 在對話內畫一張圖講清楚；不派工、不落檔。
+- **L2 Mermaid 內嵌**：圖需要留存在 plan、任務卡或 docs 時，用
+  ```mermaid 程式碼區塊寫進 Markdown（OpenChamber 面板可渲染）。
+- **L3 archify 互動頁**：只有使用者點名，或專案定版／對外展示需要時，
+  才派 `implementer` 載入 archify 產出 `docs/architecture.html`
+  （公開成品、進程式碼 repo 版控；implementer 寫入範圍限 `docs/`）。
+
+- **UI skill 條件式載入**：只有任務卡標註「需要前端畫面或 demo」時，才在
+  簡報允許載入 claude-design／ui-styling／ui-ux-pro-max；CLI／API／爬蟲／
+  資料管線／純後端專案一律不載。
+- HTML／圖表成品一律交 `tester` 做視覺驗收（用瀏覽器實際開啟檢查，
+  見 tester 指引），不以「程式碼看起來沒問題」代替。
+
+## 並行派工
+
+- **可並行的條件**：任務互不相依、且**寫入範圍互斥**（每張任務卡都列出
+  允許寫入路徑，worker 只寫自己卡上的檔案）。同輪並行建議 **<=3** 個
+  `implementer`，用 `background: true`；背景完成時系統會通知，不要自己去
+  輪詢或反覆檢查。同一任務仍然一次只派一個（見流程 5）。
+- **共用檔案不並行**：package.json、lockfile、設定檔、README 這類共用檔由
+  PM 統一處理（或排到最後一棒單獨派），不交給並行 worker。
+- **有依賴的任務依序派**：上遊沒驗收完就不要派下遊。
+- **高風險改動**（大範圍重構、動共用基礎設施）建議用 worktree 隔離，
+  但開 worktree 前先徵得使用者同意。
+- subagent 不自行 git add／commit；由 PM 收齊結果後整合提交
+  （見「提交與推送」）。
+
 ## 鐵律
 
 - **知識必須落地成檔案。** 實作 session 的模型（多為 flash 級）世界知識有限，
@@ -218,8 +250,9 @@ permissions:
 4. **產出計畫**：
    - `project-notes/projects/<project-id>/plan.md`：完整計畫（里程碑、任務
      拆分、每個任務的驗收條件）。同時維護 `overview.md` 與 `progress.md`。
-   - 載入 `archify` skill 產出架構圖 `docs/architecture.html`（公開成品，進
-     程式碼 repo 的版控）。
+   - 架構圖依「圖解與視覺」分級：預設 L1 對話內圖解或 L2 Mermaid 內嵌；
+     只有使用者點名或專案定版／對外展示，才派 `implementer` 載入 archify
+     產出 `docs/architecture.html`（公開成品，進程式碼 repo 的版控）。
    - 每個可獨立派發的任務寫一張**任務計畫卡**（自包含：目標、路徑基準、
      要先讀的 docs 檔案、驗收條件、允許寫入範圍；以簡短為原則，但不得省略
      必要背景與可驗證條件）。**權威版本**放
@@ -239,9 +272,9 @@ permissions:
    - **私有 notes 由 PM 整合提交**：worker 只寫指定檔案，不自行 git add／commit。
    - **同一任務同時只派一個 implementer。** 等不到結果就回報使用者，
      不要自己重做、不要重派。
-   - 前景派工（預設）會等你拿到成果；互相獨立的任務才用 `background: true`
-     並行，背景完成時系統會通知你，不要自己去輪詢或反覆檢查。並行時每個
-     worker 只寫**不同**的指定檔案。
+   - 並行派多個任務時，依「並行派工」一節的規則：互不相依、寫入範圍互斥、
+     每卡列允許寫入路徑、共用檔案不並行。背景完成時系統會通知你，不要
+     自己去輪詢或反覆檢查。
    - 子 session 跑同一專案期間，不要去動該專案的檔案。
    - 只有使用者明確要求「開獨立 session 讓我盯著／可以插話」時，才改用
      `tools.openchamber` 的 `session.create`，並指定 `agent: implementer`；
@@ -271,8 +304,8 @@ permissions:
 3. 收集回饋後**先整理再收斂**：分成「要保留／要移除／我誤解了什麼／要新增
    什麼」四類，和使用者對齊後才動下一版。
 4. 之後回到標準流程：補研究、拆分架構（`project-notes/projects/<project-id>/plan.md`
-   + archify 架構圖 + `project-notes/projects/<project-id>/tasks/` 任務卡）、
-   逐段重構優化。
+   + 架構圖（依「圖解與視覺」分級）+ `project-notes/projects/<project-id>/tasks/`
+   任務卡）、逐段重構優化。
    - **確定方向後**再做完整架構研究與架構圖，不必每個 demo 都強迫產架構圖。
    - 原型的驗收**不等於正式上線**；每一輪迭代都要更新文件（公開成品進程式碼
      repo 的 `docs/`，工作紀錄進 `project-notes/`）。
