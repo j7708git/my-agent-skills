@@ -40,6 +40,13 @@ cp commands/*.md ~/.config/opencode/commands/
 之後在 OpenCode 裡即可用 `/wish`、`/proto`、`/research`、`/optimize` 指令，
 或直接指定 `agent: pm`／`researcher`／`implementer`／`workflow-optimizer`。
 
+> **選配：一併安裝 `academic-paper-search` skill**：`agents/researcher.md` 與
+> `agents/web-search-modules/academic-papers.md` 在環境**已安裝**本 repo 發行的
+> `academic-paper-search` skill（`skills/academic-paper-search/`）時，會優先載入
+> 它、用它內附的 arXiv API 腳本做結構化論文檢索；未安裝時自動退回原本的網路
+> 搜尋流程，不會失效。要走這條路徑就一併安裝該 skill（安裝方式同其他 skill，
+> 見根目錄 [README](../../README.md) 的〈安裝 skill〉一節）。
+
 > **模組檔為什麼帶 frontmatter**：OpenCode 會把 `agents/` 底下巢狀目錄的
 > `.md` 一律當成 agent，五個 web-search 模組檔因此會以 `web-search-modules/*`
 > 的名義出現在你的 agent 清單（實測 v2.0.27 會列為可選的 primary agent）。
@@ -76,6 +83,10 @@ cp commands/*.md ~/.config/opencode/commands/
   （兩者實測行為相同，`agent: researcher` 本身就會以 subtask 執行）。
 - `agents/web-search.md` 保留 legacy 欄位 `temperature:`／`tools:`（作者現行
   設定原樣；OpenCode V2 文件標示不建議新設定使用，實測 v2.0.27 仍正確轉譯）。
+- `agents/researcher.md` 與 `agents/web-search-modules/academic-papers.md` 增列
+  `academic-paper-search` skill 的條件式入口（先載入該 skill、再依其 `SKILL.md`
+  執行 `scripts/arxiv_search.py` 做 arXiv 結構化檢索；環境未安裝該 skill 時退回
+  一般網路搜尋）。這是配合本 repo 發行 skill 的刻意增補，同步作者新版本時請保留。
 
 ## 相依關係
 
@@ -100,6 +111,14 @@ cp commands/*.md ~/.config/opencode/commands/
 - **選配工具（GitHub CLI）**：建議安裝並登入 `gh`（`gh auth login`）。`researcher.md`
   在尋找現成的 Agent Skills、開源工具、範例 repo 或查閱 GitHub Issues 時，會優先使用
   `gh` CLI 直接查詢結構化資料；若環境未安裝或未認證 `gh`，則自動退回一般網路搜尋。
+- **選配 skill（學術論文檢索）**：本 repo 另發行 `academic-paper-search` skill
+  （`skills/academic-paper-search/`）：以 arXiv API 做結構化論文檢索
+  （關鍵字、作者、分類、日期範圍），輸出含標題、作者、摘要、arXiv ID、分類、
+  連結與 `total_results` 的 JSON，並可輸出 BibTeX。`researcher.md` 與
+  `agents/web-search-modules/academic-papers.md` 在環境**已安裝**該 skill 時，
+  會先載入它、執行其 `scripts/arxiv_search.py` 做 arXiv 檢索，再輔以一般網路搜尋；
+  **未安裝時兩者維持原本的網路搜尋流程**，不會失效。**建議一併安裝**
+  （安裝方式見根目錄 [README](../../README.md) 的〈安裝 skill〉一節）。
 
 ## 相容性範圍
 

@@ -53,6 +53,13 @@ permissions:
     - **查已知問題與修補**：`gh search issues "<關鍵字>" --repo <owner>/<repo>`、`gh search prs "<關鍵字>" --repo <owner>/<repo>`
     - **讀 repo 詳情與特定檔案**：`gh repo view <owner>/<repo>`、`gh release list --repo <owner>/<repo>`、`gh api repos/<owner>/<repo>/contents/<path>`（僅限唯讀查詢）
   - **Fallback 與雙重驗證**：若環境無 `gh`、未認證、API 受限，或目標資訊不在 GitHub（如獨立官方文件站、套件倉庫、技術文章、社群討論），則使用網路搜尋（`websearch`／`webfetch`）。
+- **論文檢索（arXiv，選配 skill）**：需要查 arXiv 學術論文時，**若環境已安裝
+  `academic-paper-search` skill**，先載入該 skill（`skill` 工具），再依其 `SKILL.md`
+  執行 `scripts/arxiv_search.py` 做結構化檢索（關鍵字／作者／分類／日期範圍，
+  回傳標題、作者、摘要、arXiv ID、分類、連結與 `total_results`，可輸出 BibTeX）；
+  取得結果後再用 `websearch`／`webfetch` 核對與補足非 arXiv 來源（Google Scholar、
+  bioRxiv、Semantic Scholar 等）。**未安裝該 skill 時**照一般網路搜尋處理，
+  不要假設它存在。
 - 優先找現成的：opencode/agent skills、成熟框架、套件、官方範例。
   不重造輪子；並從星星數、最近更新時間、文件完整度與授權條款評估成熟度。
 - 資訊以官方文件與原始 repo 為準，**官方來源優先**；用 `gh` 找到候選專案後，版本與規格宣稱仍須核對官方 README、Release 或官方文件站，並註明來源連結與查詢日期。
