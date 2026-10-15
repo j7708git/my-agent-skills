@@ -6,7 +6,7 @@
 ## 這個 repo 是什麼
 
 - 標準 [Agent Skills](https://agentskills.io/specification) 的集合 repo，名稱 `j7708git/my-agent-skills`。
-- 目前有五個 skill：
+- 目前有六個 skill：
   - `skills/repo-privacy-audit/`：唯讀的 repo 隱私與秘密掃描。它的**唯讀安全邊界不變**，
     不自動修復、不改寫歷史、不推送、不動任何 GitHub 設定。
   - `skills/project-workflow/`：公開程式碼 repo 與獨立 private 工作紀錄 repo 的流程指引。
@@ -18,8 +18,14 @@
     修前重現、對照組證明斷言抓得到 bug、還原一致）。
   - `skills/review-fix-round/`：審查修復輪協定的流程指引（findings 分級、逐項裁決、
     限定範圍修復、含對照組的驗收、複審與裁決紀錄）。
-  - 後面三個與 `project-workflow` 一樣是**純文字流程指引**：不下載或安裝工具、
-    不自行 commit／push，也不提供任何安全保證；載入它們不等於授權。
+  - `skills/academic-paper-search/`：以 arXiv API 做結構化論文檢索的**選配**工具
+    （純 Python 3 標準庫，附 `scripts/arxiv_search.py` 與兩份 references）。
+    它只提供檢索，不下載或解析全文、不自動 commit／push，也不提供安全保證；
+    由 `adapters/opencode/` 的 `researcher` 與 `web-search` **條件式引用**
+    （環境已安裝本 skill 才載入，未安裝退回一般網路搜尋）。
+  - `project-workflow` 與 `web-ui-e2e-smoke`／`independent-rerun-verify`／
+    `review-fix-round` 都是**純文字流程指引**：不下載或安裝工具、不自行 commit／push，
+    也不提供任何安全保證；載入它們不等於授權。
 - 平台專屬 agent（OpenCode 的 agent／command 定義）屬於**選配**，收錄在
   `adapters/opencode/`：目前包含 `project-workflow` 配套的 `pm`／`researcher`／
   `implementer`／`tester`、獨立審查者 `reviewer`／`reviewer-deep`、

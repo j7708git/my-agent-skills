@@ -1,7 +1,7 @@
 # my-agent-skills
 
 `j7708git/my-agent-skills` 是一個 [Agent Skills](https://agentskills.io/specification) 集合 repo。
-目前提供五個 skill：
+目前提供六個 skill：
 
 - **`repo-privacy-audit`** —— 對 Git repo 做唯讀的隱私與秘密掃描，
   並附上明確安裝的 hooks、CI 範本與修復手冊。
@@ -14,6 +14,8 @@
   並以對照組證明斷言真的抓得到 bug。
 - **`review-fix-round`** —— 「findings 分級 → 逐項裁決 → 限定範圍修復 → 驗收 →
   複審 → 裁決紀錄」的審查修復輪協定。
+- **`academic-paper-search`** —— 以 arXiv 官方 API 做結構化論文檢索，
+  輸出 `json`／`text`／`bibtex`；只做檢索，不下載或解析全文。
 
 這個 repo 不做自動修復，也不替你決定任何不可逆的動作。它只負責**看清楚**、**講明白**。
 
@@ -27,8 +29,12 @@ agent，與 `/wish`／`/proto`／`/research`／`/optimize` 指令。發行版本
 
 > **狀態**：授權採 MIT。`repo-privacy-audit` 已驗證項目包括格式與相對資源、
 > 四種隔離安裝、真實 hooks 與完整密鑰掃描；CI runner 執行全部測試、無 skipped。
-> `project-workflow` 是純文字流程指引，已驗證格式與相對資源，但**同樣未驗證**
-> agent runtime 是否真的會載入並使用。**五個 skill 的 agent runtime 都尚未實測。**
+> `project-workflow` 是純文字流程指引，已驗證格式與相對資源。
+> skill 檔案通過驗證與安裝測試，**不代表 agent runtime 一定會載入並使用**。
+> `academic-paper-search` 的路由已在 OpenChamber 環境實測（2026-10-15）：researcher
+> subagent 的 skill 清單含本 skill、`skill` 工具載入成功、`scripts/arxiv_search.py`
+> 兩次 API 呼叫均成功；web-search agent 為 subagent 模式無法直接派發，依同一 skill
+> 發現機制推定可見，**未單獨實測**。**其餘五個 skill 的 agent runtime 尚未實測。**
 > 逐項的可宣稱／不可宣稱範圍見 [docs/compatibility.md](docs/compatibility.md)；
 > 產品行為契約：掃描器見 [docs/specification.md](docs/specification.md)，
 > 流程指引見 [docs/project-workflow.md](docs/project-workflow.md)。
@@ -43,6 +49,7 @@ GitHub 設定檢查仍可能因方案／權限不足回報 incomplete；這與�
 - [web-ui-e2e-smoke（Web UI 端到端冒煙）](#web-ui-e2e-smokeweb-ui-端到端冒煙)
 - [independent-rerun-verify（獨立重跑驗證）](#independent-rerun-verify獨立重跑驗證)
 - [review-fix-round（審查修復輪）](#review-fix-round審查修復輪)
+- [academic-paper-search（學術論文檢索）](#academic-paper-search學術論文檢索)
 - [OpenCode agent adapters](#opencode-agent-adapters)
 - [安裝 skill](#安裝-skill)
 - [使用掃描器](#使用掃描器)
@@ -128,6 +135,21 @@ bash <skill>/scripts/repo-privacy-audit.sh --staged --repo .
 - 它把裁決權與修復權分開：修復者不自裁，複審只回前輪項與新發現。
 - 完整內容：[skills/review-fix-round/SKILL.md](skills/review-fix-round/SKILL.md)
 
+## academic-paper-search（學術論文檢索）
+
+`academic-paper-search` 以 arXiv 官方 API 做**結構化**論文檢索：給一段查詢
+（關鍵字、作者、分類、日期範圍），回傳每篇的標題、作者、摘要、arXiv ID、分類與連結，
+輸出 `json`（工具串接）、`text`（人看）或 `bibtex`（文獻清單）。
+
+- **載入時機**：要找論文、查 arXiv 前置印本、建立文獻清單、產生 BibTeX，
+  或需要可重複、可排序的檢索結果時。
+- **與 `hf-cli` 的界線**：本 skill 只管 arXiv 本身的檢索結果；要 Hugging Face Hub 的
+  熱門論文與社群訊號（按讚、下載數）請改用 `hf-cli` skill 的 `hf papers` 子命令。
+- 它是**選配**檢索 skill：不下載或解析全文、不自動 commit／push。
+  `adapters/opencode/` 的 `researcher` 與 `web-search` 有條件式入口
+  （環境已安裝本 skill 才載入，未安裝退回一般網路搜尋）。
+- 完整內容：[skills/academic-paper-search/SKILL.md](skills/academic-paper-search/SKILL.md)
+
 ## OpenCode agent adapters
 
 `adapters/opencode/` 收錄這套流程的**選配** OpenCode 設定：`project-workflow`
@@ -144,11 +166,13 @@ bash <skill>/scripts/repo-privacy-audit.sh --staged --repo .
 
 ## 安裝 skill
 
-這五個 skill **不會無縫相容於任何 agent client**。下表是 `repo-privacy-audit` 實際驗證過的
+這六個 skill **不會無縫相容於任何 agent client**。下表是 `repo-privacy-audit` 實際驗證過的
 安裝位置；「檔案放對位置」只證明格式與路徑可安裝，**不證明某個 agent 會自動載入它**。
-**這些安裝實測不繼承給 `project-workflow` 與三個流程指引 skill**
-（`web-ui-e2e-smoke`、`independent-rerun-verify`、`review-fix-round`）；
-它們只有文件已記載的位置，runtime 未實測。
+**這些安裝實測不繼承給 `project-workflow`、三個流程指引 skill**
+（`web-ui-e2e-smoke`、`independent-rerun-verify`、`review-fix-round`）與
+`academic-paper-search`：它們都只有文件已記載的位置。其中 `academic-paper-search`
+已在 OpenChamber 的 researcher subagent 實測過路由（見上方狀態）；`project-workflow`
+與三個流程指引 skill 的 runtime 仍未實測。
 
 ### 方式 A：skills CLI
 
@@ -391,6 +415,9 @@ skill 自己的文件（安裝後也可用，不依賴本 repo）：
 | `skills/web-ui-e2e-smoke/SKILL.md` | Web UI 端到端冒煙驗收的固定步驟與證據欄位 |
 | `skills/independent-rerun-verify/SKILL.md` | 獨立重跑驗證與對照組的四類必備證據 |
 | `skills/review-fix-round/SKILL.md` | 審查修復輪協定、紀錄欄位與收斂條件 |
+| `skills/academic-paper-search/SKILL.md` | arXiv 結構化論文檢索：CLI、三種輸出格式與退出碼 |
+| `skills/academic-paper-search/references/arxiv-query-syntax.md` | arXiv 查詢語法、分類代碼與分頁／禮貌規範 |
+| `skills/academic-paper-search/references/bibtex-generation.md` | BibTeX 輸出欄位對應與注意事項 |
 
 本 repo 的 `docs/` 只放公開文件。完整計畫、todo、session 日誌、驗收紀錄與研究筆記
 是本機工作紀錄，不進版控，也不從公開文件連過去；分流規則見
