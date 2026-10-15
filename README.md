@@ -1,13 +1,19 @@
 # my-agent-skills
 
 `j7708git/my-agent-skills` 是一個 [Agent Skills](https://agentskills.io/specification) 集合 repo。
-目前提供兩個 skill：
+目前提供五個 skill：
 
 - **`repo-privacy-audit`** —— 對 Git repo 做唯讀的隱私與秘密掃描，
   並附上明確安裝的 hooks、CI 範本與修復手冊。
 - **`project-workflow`** —— 引導「公開程式碼 repo」與「獨立 private 工作紀錄 repo」
   的規劃、拆工、驗收與同步流程。它只是**流程指引**，不是掃描器，
   也不會自行建立 repo、push、安裝 hooks 或搬移檔案。
+- **`web-ui-e2e-smoke`** —— 把「真實建置的 Web UI ＋ 可達後端 ＋ 真實瀏覽器驅動
+  ＋ 截圖留證」的端到端冒煙驗收固定成可重複的步驟。
+- **`independent-rerun-verify`** —— 驗收時自行建置、自行重跑，不採信實作方產物，
+  並以對照組證明斷言真的抓得到 bug。
+- **`review-fix-round`** —— 「findings 分級 → 逐項裁決 → 限定範圍修復 → 驗收 →
+  複審 → 裁決紀錄」的審查修復輪協定。
 
 這個 repo 不做自動修復，也不替你決定任何不可逆的動作。它只負責**看清楚**、**講明白**。
 
@@ -21,7 +27,7 @@ agent，與 `/wish`／`/proto`／`/research` 指令。發行版本已移除所�
 > **狀態**：授權採 MIT。`repo-privacy-audit` 已驗證項目包括格式與相對資源、
 > 四種隔離安裝、真實 hooks 與完整密鑰掃描；CI runner 執行全部測試、無 skipped。
 > `project-workflow` 是純文字流程指引，已驗證格式與相對資源，但**同樣未驗證**
-> agent runtime 是否真的會載入並使用。**兩個 skill 的 agent runtime 都尚未實測。**
+> agent runtime 是否真的會載入並使用。**五個 skill 的 agent runtime 都尚未實測。**
 > 逐項的可宣稱／不可宣稱範圍見 [docs/compatibility.md](docs/compatibility.md)；
 > 產品行為契約：掃描器見 [docs/specification.md](docs/specification.md)，
 > 流程指引見 [docs/project-workflow.md](docs/project-workflow.md)。
@@ -33,6 +39,9 @@ GitHub 設定檢查仍可能因方案／權限不足回報 incomplete；這與�
 
 - [快速開始](#快速開始)
 - [project-workflow（流程指引）](#project-workflow流程指引)
+- [web-ui-e2e-smoke（Web UI 端到端冒煙）](#web-ui-e2e-smokeweb-ui-端到端冒煙)
+- [independent-rerun-verify（獨立重跑驗證）](#independent-rerun-verify獨立重跑驗證)
+- [review-fix-round（審查修復輪）](#review-fix-round審查修復輪)
 - [OpenCode agent adapters](#opencode-agent-adapters)
 - [安裝 skill](#安裝-skill)
 - [使用掃描器](#使用掃描器)
@@ -87,6 +96,37 @@ bash <skill>/scripts/repo-privacy-audit.sh --staged --repo .
 這個 skill 沒有任何執行時相依，也不必搭配 `repo-privacy-audit` 才能使用。
 若你要的是隱私掃描，請看[使用掃描器](#使用掃描器)一節。
 
+## web-ui-e2e-smoke（Web UI 端到端冒煙）
+
+`web-ui-e2e-smoke` 把「真實建置的 Web UI ＋ 可達後端 ＋ 真實瀏覽器驅動 ＋ 截圖留證」
+的端到端冒煙驗收固定成可重複的步驟，取代每個任務臨場重配環境。
+
+- **載入時機**：驗收條件包含只有真實瀏覽器能確認的 UI 行為（進度會動、可取消、
+  下載按鈕、雙擊不誤報），或待測服務只綁 loopback、內建瀏覽器面板連不到時。
+- 它是流程指引，不是測試框架：不下載或安裝瀏覽器與驅動；環境缺少必要工具時，
+  要求如實回報「未測」，不得用其他方式冒充已驗證。
+- 完整內容：[skills/web-ui-e2e-smoke/SKILL.md](skills/web-ui-e2e-smoke/SKILL.md)
+
+## independent-rerun-verify（獨立重跑驗證）
+
+`independent-rerun-verify` 把獨立重跑的驗收手法固定下來：以現行原始碼自行建置、
+自行重跑，不採信實作方的產物或結論，並以對照組證明斷言真的抓得到 bug。
+
+- **載入時機**：修復輪或高風險改動（競態、取消、錯誤處理、契約變更）要驗收，
+  或需要排除測試空過、避免沿用作業產物而落入同錯盲區時。
+- 它同時要求四類證據：自建產物、修前重現、對照組失敗、還原一致。
+- 完整內容：[skills/independent-rerun-verify/SKILL.md](skills/independent-rerun-verify/SKILL.md)
+
+## review-fix-round（審查修復輪）
+
+`review-fix-round` 是「findings 分級 → 逐項裁決 → 限定範圍修復 → 驗收 → 複審 →
+裁決紀錄」的審查修復輪協定，讓每一項 finding 的處置與理由都可追溯。
+
+- **載入時機**：獨立審查產出 findings 之後要決定修什麼，或需要多輪「修復→複審」
+  並留下每項處置與理由時。
+- 它把裁決權與修復權分開：修復者不自裁，複審只回前輪項與新發現。
+- 完整內容：[skills/review-fix-round/SKILL.md](skills/review-fix-round/SKILL.md)
+
 ## OpenCode agent adapters
 
 `adapters/opencode/` 收錄這套流程的**選配** OpenCode 設定：`pm`／`researcher`／
@@ -101,9 +141,11 @@ bash <skill>/scripts/repo-privacy-audit.sh --staged --repo .
 
 ## 安裝 skill
 
-這兩個 skill **不會無縫相容於任何 agent client**。下表是 `repo-privacy-audit` 實際驗證過的
+這五個 skill **不會無縫相容於任何 agent client**。下表是 `repo-privacy-audit` 實際驗證過的
 安裝位置；「檔案放對位置」只證明格式與路徑可安裝，**不證明某個 agent 會自動載入它**。
-**這些安裝實測不繼承給 `project-workflow`**；後者只有文件已記載的位置，runtime 未實測。
+**這些安裝實測不繼承給 `project-workflow` 與三個流程指引 skill**
+（`web-ui-e2e-smoke`、`independent-rerun-verify`、`review-fix-round`）；
+它們只有文件已記載的位置，runtime 未實測。
 
 ### 方式 A：skills CLI
 
@@ -343,6 +385,9 @@ skill 自己的文件（安裝後也可用，不依賴本 repo）：
 | `skills/project-workflow/references/privacy-and-sync.md` | 公開／私有隔離、索引紀律與同步步驟 |
 | `skills/project-workflow/references/client-compatibility.md` | client 的已確認與未確認狀態、手動 fallback |
 | `skills/project-workflow/assets/templates/` | 六份空白模板（overview、progress、plan、task-brief、research、acceptance） |
+| `skills/web-ui-e2e-smoke/SKILL.md` | Web UI 端到端冒煙驗收的固定步驟與證據欄位 |
+| `skills/independent-rerun-verify/SKILL.md` | 獨立重跑驗證與對照組的四類必備證據 |
+| `skills/review-fix-round/SKILL.md` | 審查修復輪協定、紀錄欄位與收斂條件 |
 
 本 repo 的 `docs/` 只放公開文件。完整計畫、todo、session 日誌、驗收紀錄與研究筆記
 是本機工作紀錄，不進版控，也不從公開文件連過去；分流規則見
