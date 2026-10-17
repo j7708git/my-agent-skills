@@ -140,6 +140,24 @@ CLI 退出碼 0，且 `SKILL.md` 與其相對資源都存在於安裝目標）�
 - 任何 client 都應提供手動 fallback：直接讀取 `SKILL.md` 與 `references`；
   各 client 的已確認／未確認狀態見 skill 內的 `references/client-compatibility.md`。
 
+## 其他流程指引 skill 的狀態
+
+`web-ui-e2e-smoke`、`independent-rerun-verify`、`review-fix-round`、`native-crash-triage`
+與 `release-prep` 同樣是**純文字流程指引**，沒有掃描核心、沒有執行時相依，
+也不依賴 Gitleaks 或 Bash／Python。
+
+| 項目 | 狀態 | 依據 |
+| --- | --- | --- |
+| Agent Skills 格式與相對資源 | 已驗證 | `python3 scripts/validate_skills.py --check-docs --strict` |
+| 專屬契約測試 | **無** | `tests/` 目前只有 `repo-privacy-audit`、`project-workflow` 與 `academic-paper-search` 的測試 |
+| agent runtime 實際載入與觸發 | **未驗證** | 沒有在任何真實 client 實測 |
+
+要點：
+
+- 格式驗證只證明 frontmatter、命名與相對資源可解析，**不證明流程步驟正確或可執行**。
+- 這些 skill 的驗證結果**不繼承** `repo-privacy-audit` 的四種安裝實測或 runtime 行為；
+  反向亦然。
+
 ## OpenCode adapters（`adapters/opencode/`）
 
 `adapters/opencode/` 收錄作者實際在用的 OpenCode agent／command 定義：

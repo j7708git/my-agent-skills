@@ -1,7 +1,7 @@
 # my-agent-skills
 
 `j7708git/my-agent-skills` 是一個 [Agent Skills](https://agentskills.io/specification) 集合 repo。
-目前提供六個 skill：
+目前提供八個 skill：
 
 - **`repo-privacy-audit`** —— 對 Git repo 做唯讀的隱私與秘密掃描，
   並附上明確安裝的 hooks、CI 範本與修復手冊。
@@ -16,6 +16,10 @@
   複審 → 裁決紀錄」的審查修復輪協定。
 - **`academic-paper-search`** —— 以 arXiv 官方 API 做結構化論文檢索，
   輸出 `json`／`text`／`bibtex`；只做檢索，不下載或解析全文。
+- **`native-crash-triage`** —— 原生崩潰報告（macOS `.ips`、診斷 JSON、Apple 崩潰全文）
+  的證據處理流程：去識別、符號還原、跨案比對、機制驗證與分層筆記。
+- **`release-prep`** —— 發版整備清單：版本號同源、文件同步、本地基準、掃描、
+  標籤、CI、Release 驗證與發版紀錄。
 
 這個 repo 不做自動修復，也不替你決定任何不可逆的動作。它只負責**看清楚**、**講明白**。
 
@@ -34,7 +38,7 @@ agent，與 `/wish`／`/proto`／`/research`／`/optimize` 指令。發行版本
 > `academic-paper-search` 的路由已在 OpenChamber 環境實測（2026-10-15）：researcher
 > subagent 的 skill 清單含本 skill、`skill` 工具載入成功、`scripts/arxiv_search.py`
 > 兩次 API 呼叫均成功；web-search agent 為 subagent 模式無法直接派發，依同一 skill
-> 發現機制推定可見，**未單獨實測**。**其餘五個 skill 的 agent runtime 尚未實測。**
+> 發現機制推定可見，**未單獨實測**。**其餘七個 skill 的 agent runtime 尚未實測。**
 > 逐項的可宣稱／不可宣稱範圍見 [docs/compatibility.md](docs/compatibility.md)；
 > 產品行為契約：掃描器見 [docs/specification.md](docs/specification.md)，
 > 流程指引見 [docs/project-workflow.md](docs/project-workflow.md)。
@@ -50,6 +54,8 @@ GitHub 設定檢查仍可能因方案／權限不足回報 incomplete；這與�
 - [independent-rerun-verify（獨立重跑驗證）](#independent-rerun-verify獨立重跑驗證)
 - [review-fix-round（審查修復輪）](#review-fix-round審查修復輪)
 - [academic-paper-search（學術論文檢索）](#academic-paper-search學術論文檢索)
+- [native-crash-triage（原生崩潰歸因）](#native-crash-triage原生崩潰歸因)
+- [release-prep（發版整備）](#release-prep發版整備)
 - [OpenCode agent adapters](#opencode-agent-adapters)
 - [安裝 skill](#安裝-skill)
 - [使用掃描器](#使用掃描器)
@@ -150,6 +156,31 @@ bash <skill>/scripts/repo-privacy-audit.sh --staged --repo .
   （環境已安裝本 skill 才載入，未安裝退回一般網路搜尋）。
 - 完整內容：[skills/academic-paper-search/SKILL.md](skills/academic-paper-search/SKILL.md)
 
+## native-crash-triage（原生崩潰歸因）
+
+`native-crash-triage` 把「崩潰報告 → 符號還原 → 跨案比對 → 機制驗證 → 分層筆記」
+固定成可重複套用的證據處理流程，讓每次歸因都能被別人照著複核。
+
+- **載入時機**：使用者回報原生閃退（macOS `.ips`、診斷 JSON、Apple 崩潰全文）、
+  需要比較新舊崩潰案，或要驗證某個修法是否真的移除了致命配置點時。
+- 它是流程指引，不是除錯器：不自動解析或下載符號檔；缺官方符號、或 frames 被截斷時，
+  要求在該步停下來回報「未知」，不得用未符號化的位址猜函式名。
+- 崩潰報告屬使用者資料：只放版控之外的暫存位置，寫成筆記前要先去識別。
+- 完整內容：[skills/native-crash-triage/SKILL.md](skills/native-crash-triage/SKILL.md)
+
+## release-prep（發版整備）
+
+`release-prep` 把「版本號 → 文件 → 基準 → 掃描 → 提交與推送 → 標籤 → CI →
+Release 驗證 → 紀錄」固定成一份可重複套用的發版清單，讓每次發版的漏項被同一份
+清單擋下來。
+
+- **載入時機**：使用者已核准發版、要在打標籤前逐項確認，或要補驗既有 Release
+  頁面（摘要亂碼、附件缺漏、授權資料）時。
+- 它是清單與流程，不是發版腳本：不自動 bump 版本、commit、push、打標籤或建立
+  Release；提交、推送、標籤與 Release 各自需要明確授權。
+- 掃描結果照抄退出碼語意（0 通過、1 有發現、2 未掃完），2 不當成通過。
+- 完整內容：[skills/release-prep/SKILL.md](skills/release-prep/SKILL.md)
+
 ## OpenCode agent adapters
 
 `adapters/opencode/` 收錄這套流程的**選配** OpenCode 設定：`project-workflow`
@@ -166,13 +197,14 @@ bash <skill>/scripts/repo-privacy-audit.sh --staged --repo .
 
 ## 安裝 skill
 
-這六個 skill **不會無縫相容於任何 agent client**。下表是 `repo-privacy-audit` 實際驗證過的
+這八個 skill **不會無縫相容於任何 agent client**。下表是 `repo-privacy-audit` 實際驗證過的
 安裝位置；「檔案放對位置」只證明格式與路徑可安裝，**不證明某個 agent 會自動載入它**。
-**這些安裝實測不繼承給 `project-workflow`、三個流程指引 skill**
-（`web-ui-e2e-smoke`、`independent-rerun-verify`、`review-fix-round`）與
+**這些安裝實測不繼承給 `project-workflow`、五個流程指引 skill**
+（`web-ui-e2e-smoke`、`independent-rerun-verify`、`review-fix-round`、
+`native-crash-triage`、`release-prep`）與
 `academic-paper-search`：它們都只有文件已記載的位置。其中 `academic-paper-search`
 已在 OpenChamber 的 researcher subagent 實測過路由（見上方狀態）；`project-workflow`
-與三個流程指引 skill 的 runtime 仍未實測。
+與五個流程指引 skill 的 runtime 仍未實測。
 
 ### 方式 A：skills CLI
 
@@ -418,6 +450,8 @@ skill 自己的文件（安裝後也可用，不依賴本 repo）：
 | `skills/academic-paper-search/SKILL.md` | arXiv 結構化論文檢索：CLI、三種輸出格式與退出碼 |
 | `skills/academic-paper-search/references/arxiv-query-syntax.md` | arXiv 查詢語法、分類代碼與分頁／禮貌規範 |
 | `skills/academic-paper-search/references/bibtex-generation.md` | BibTeX 輸出欄位對應與注意事項 |
+| `skills/native-crash-triage/SKILL.md` | 原生崩潰歸因的證據處理流程、紀錄欄位與停止條件 |
+| `skills/release-prep/SKILL.md` | 發版整備清單、失敗處理與紀錄欄位 |
 
 本 repo 的 `docs/` 只放公開文件。完整計畫、todo、session 日誌、驗收紀錄與研究筆記
 是本機工作紀錄，不進版控，也不從公開文件連過去；分流規則見
