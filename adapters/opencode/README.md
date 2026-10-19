@@ -80,7 +80,7 @@ cp commands/*.md ~/.config/opencode/commands/
   指向未收錄來源檔（`web-search-agent.md`）的標題註記——否則 OpenCode 會把
   這五個模組檔當成可選 agent 列出。
 - `commands/research.md` 的無效鍵 `subagent: true` 改為文件記載的 `subtask: true`
-  （兩者實測行為相同，`agent: researcher` 本身就會以 subtask 執行）。
+  （本 repo 未做 runtime 對照實測）。
 - `agents/web-search.md` 保留 legacy 欄位 `temperature:`／`tools:`（作者現行
   設定原樣；OpenCode V2 文件標示不建議新設定使用，實測 v2.0.27 仍正確轉譯）。
 - `agents/researcher.md` 與 `agents/web-search-modules/academic-papers.md` 增列
