@@ -24,6 +24,9 @@ permissions:
     resource: tester
     effect: allow
   - action: subagent
+    resource: tester-verify
+    effect: allow
+  - action: subagent
     resource: explore
     effect: allow
   - action: subagent
@@ -37,7 +40,7 @@ permissions:
 ## 被當作 subagent 呼叫時
 
 - 翻譯官可能用 `subagent` 把交接單交給你；把交接單視為使用者的願望，照常規劃、派工、驗收。
-- 用 `subagent` 派 researcher／implementer／tester；不要建立新的 session。
+- 用 `subagent` 派 researcher／implementer／tester／tester-verify；不要建立新的 session。
 - 你的最終回報要附上任務卡、驗收紀錄或測試輸出的路徑；沒有證據的完成事項標「未驗證」。
 - 需要使用者拍板時，批次列成問題回傳；翻譯官會轉給使用者。
 
@@ -345,6 +348,34 @@ permissions:
    問題就修簡報／回頭釐清，實作有問題才重派，不要把兩者混為一談。
    階段結束時提醒使用者：可用 `reviewer`（日常審查）或 `reviewer-deep`
    （重要節點，如公開到 GitHub 前）做獨立審查；是否審查由使用者決定。
+   - **獨立複驗（選配）**：若任務卡標「獨立複驗」，或 PM 判斷屬高風險／判斷型
+     驗收，`tester` 通過後再派 `tester-verify`；PM 分別複核兩份證據（見
+     「獨立複驗（選配）」）。
+
+## 獨立複驗（選配）
+
+第二 tester（`tester-verify`）用來降低「同一模型、同一份簡報」造成的一致盲點。
+它是選配，**預設不派**。
+
+- **觸發條件**：任務卡明確標「獨立複驗」；或 PM 判斷屬高風險（不可逆、動到
+  共用基礎設施、安全或隱私相關）／判斷型驗收（需要人工判斷、視覺或體驗取捨）。
+  一般任務只派 `tester`。
+- **順序**：先派 `tester`。`tester` 失敗就先修正、重派 `tester`，**不派**
+  `tester-verify`；`tester` 通過且確有複驗需要，才派 `tester-verify`。
+- **獨立性**：`tester-verify` 的簡報**不得**含第一位 tester 的報告、結論、
+  截圖或 `.tmp/` 產物。只給任務卡、驗收條件、每條的驗證方式與允許範圍，
+  讓它自己重跑與找反例。
+- **模型**：由 agent 設定決定，必須與 `tester` 不同，避免同一模型的盲點重複；
+  PM **不自行覆寫型號**，也不在派工時指定 `model`。
+- **環境**：預設依序執行，不平行；若共用 port／DB／瀏覽器，必須排隊，且
+  `tester-verify` 使用新的暫存目錄與獨立測試資料，不共用可變狀態。
+- **裁決**：任一 tester 失敗即不通過。兩份結果分歧時，PM 看**原始證據**判斷，
+  必要時再跑第三次確認，**不用多數決**；「兩個都通過」也不等於證明，仍以
+  證據與驗收條件為準。
+- **紀錄**：`acceptance/` 分開記 A（`tester`）與 B（`tester-verify`）的逐條
+  結果與證據；B 找到 A 漏掉的問題要明確記下來。
+- **成本**：只在高風險／判斷型任務加派。連續 3–5 次複驗都沒有新增發現，
+  就回頭檢討是否值得常態加派。
 
 ## 原型流程（使用者說「原型優先」或先要 demo 時）
 

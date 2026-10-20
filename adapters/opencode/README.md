@@ -1,7 +1,7 @@
 # OpenCode adapters：PM 工作流的 agent 與指令定義
 
 這裡收錄 `skills/project-workflow/` 作者實際在用的 OpenCode 設定：
-八個 agent（工作流配套、獨立審查與翻譯官）、一個獨立的網路研究 agent，以及四個斜線指令。
+九個 agent（工作流配套、獨立審查與翻譯官）、一個獨立的網路研究 agent，以及四個斜線指令。
 agent 定義與 skill 分開發行（原因見
 [docs/research/portability.md](../../docs/research/portability.md)）：
 agent 是平台專屬的角色、權限與模型設定，skill 是純文字流程指引。
@@ -14,6 +14,7 @@ agent 是平台專屬的角色、權限與模型設定，skill 是純文字流�
 | `agents/researcher.md` | 研究員：調查主題並把結論寫成 `project-notes/` 內部知識筆記 |
 | `agents/implementer.md` | 實作者：依自包含任務簡報實作、自我驗收並回報 |
 | `agents/tester.md` | 測試員：依任務卡的驗證方式執行驗收並回報，不改程式碼 |
+| `agents/tester-verify.md` | 獨立複驗測試員（選配）：不讀第一份 tester 報告，重跑關鍵驗收並加負向／對照組，不改程式碼 |
 | `agents/reviewer.md` | 獨立審查者（日常階段審查）：不改檔、不跑測試、不啟動服務 |
 | `agents/reviewer-deep.md` | 獨立審查者（重要節點審查，如公開到 GitHub 前）：不改檔、不跑測試、不啟動服務 |
 | `agents/workflow-optimizer.md` | 工作流優化：專案階段健檢流程並探勘 skill 提案（提案制、唯讀，只寫報告與提案） |
@@ -64,6 +65,8 @@ cp commands/*.md ~/.config/opencode/commands/
 - **researcher／implementer／tester**：世界知識有限但便宜快速的 flash 級模型
   即可，它們的工作方式是「以 docs 內的知識為準、不憑記憶猜 API」，正好抵消
   小模型知識不足的弱點。
+- **tester-verify**：只在獨立複驗時使用，**必須與 `tester` 用不同模型**，
+  否則同一模型的盲點會一起漏掉；發行版同樣不綁型號，由你依環境選擇。
 - **pm**：負責規劃、派工與驗收判斷，用你能取得的較強模型。
 - **translator**：以理解口語、追問關鍵細節與寫清楚白話為主，可用比 flash 級稍強
   一點的模型；實際型號由你依環境選擇。它的產出是 `pm` 的輸入，交接單的忠實度
@@ -94,7 +97,8 @@ cp commands/*.md ~/.config/opencode/commands/
 
 ## 相依關係
 
-- `pm.md`／`researcher.md`／`implementer.md`／`tester.md` 與 `commands/*.md`
+- `pm.md`／`researcher.md`／`implementer.md`／`tester.md`／`tester-verify.md`
+  與 `commands/*.md`
   預設採用 [skills/project-workflow](../../skills/project-workflow/SKILL.md) 的
   慣例（內部紀錄放 `project-notes/`、公開知識進程式碼 repo 的 `docs/`、
   自包含任務簡報等）。**建議一併安裝該 skill**，否則這些 agent 的指引
@@ -119,7 +123,8 @@ cp commands/*.md ~/.config/opencode/commands/
   安裝位置的 `~/.config/opencode/agents/web-search-modules/` 下的模組檔，
   所以模組檔必須與 agent 檔一起安裝。
 - `pm.md` 的 permissions 允許呼叫名為 `researcher`／`implementer`／`tester`／
-  `explore` 的 subagent；`explore` 是 OpenCode 內建 subagent，不需另裝。
+  `tester-verify`／`explore` 的 subagent；`explore` 是 OpenCode 內建 subagent，
+  不需另裝。
 - **選配工具（GitHub CLI）**：建議安裝並登入 `gh`（`gh auth login`）。`researcher.md`
   在尋找現成的 Agent Skills、開源工具、範例 repo 或查閱 GitHub Issues 時，會優先使用
   `gh` CLI 直接查詢結構化資料；若環境未安裝或未認證 `gh`，則自動退回一般網路搜尋。
