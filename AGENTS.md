@@ -36,7 +36,8 @@
 - 平台專屬 agent（OpenCode 的 agent／command 定義）屬於**選配**，收錄在
   `adapters/opencode/`：目前包含 `project-workflow` 配套的 `pm`／`researcher`／
   `implementer`／`tester`、獨立審查者 `reviewer`／`reviewer-deep`、
-  `workflow-optimizer` 健檢 agent、獨立的 `web-search` agent，與
+  `workflow-optimizer` 健檢 agent、`translator` 翻譯官（把抽象願望問成 brief、
+  核可後交給 PM，並把 PM 的回覆翻成白話）、獨立的 `web-search` agent，與
   `/wish`／`/proto`／`/research`／`/optimize` 指令；發行版本刻意移除所有
   `model:` 綁定，安裝者依自己環境自選模型。安裝說明見
   `adapters/opencode/README.md`。其他平台

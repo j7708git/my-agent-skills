@@ -1,7 +1,7 @@
 # OpenCode adapters：PM 工作流的 agent 與指令定義
 
 這裡收錄 `skills/project-workflow/` 作者實際在用的 OpenCode 設定：
-七個 agent（工作流配套與獨立審查）、一個獨立的網路研究 agent，以及四個斜線指令。
+八個 agent（工作流配套、獨立審查與翻譯官）、一個獨立的網路研究 agent，以及四個斜線指令。
 agent 定義與 skill 分開發行（原因見
 [docs/research/portability.md](../../docs/research/portability.md)）：
 agent 是平台專屬的角色、權限與模型設定，skill 是純文字流程指引。
@@ -17,6 +17,7 @@ agent 是平台專屬的角色、權限與模型設定，skill 是純文字流�
 | `agents/reviewer.md` | 獨立審查者（日常階段審查）：不改檔、不跑測試、不啟動服務 |
 | `agents/reviewer-deep.md` | 獨立審查者（重要節點審查，如公開到 GitHub 前）：不改檔、不跑測試、不啟動服務 |
 | `agents/workflow-optimizer.md` | 工作流優化：專案階段健檢流程並探勘 skill 提案（提案制、唯讀，只寫報告與提案） |
+| `agents/translator.md` | 翻譯官（選配）：把抽象願望問成自包含交接單，核可後交給 `pm`，並把 PM 的回覆翻成三段式白話 |
 | `agents/web-search.md` | 網路研究 agent（獨立功能，與 project-workflow 無關） |
 | `agents/web-search-modules/` | web-search 的場景策略模組（除錯、學術、中文社群等） |
 | `commands/wish.md` | `/wish <願望>`：啟動 PM 的規劃先行流程 |
@@ -38,7 +39,7 @@ cp commands/*.md ~/.config/opencode/commands/
 ```
 
 之後在 OpenCode 裡即可用 `/wish`、`/proto`、`/research`、`/optimize` 指令，
-或直接指定 `agent: pm`／`researcher`／`implementer`／`workflow-optimizer`。
+或直接指定 `agent: pm`／`researcher`／`implementer`／`workflow-optimizer`／`translator`。
 
 > **選配：一併安裝 `academic-paper-search` skill**：`agents/researcher.md` 與
 > `agents/web-search-modules/academic-papers.md` 在環境**已安裝**本 repo 發行的
@@ -64,6 +65,9 @@ cp commands/*.md ~/.config/opencode/commands/
   即可，它們的工作方式是「以 docs 內的知識為準、不憑記憶猜 API」，正好抵消
   小模型知識不足的弱點。
 - **pm**：負責規劃、派工與驗收判斷，用你能取得的較強模型。
+- **translator**：以理解口語、追問關鍵細節與寫清楚白話為主，可用比 flash 級稍強
+  一點的模型；實際型號由你依環境選擇。它的產出是 `pm` 的輸入，交接單的忠實度
+  比文采重要；模型太小容易漏掉假設或問錯問題。
 - **workflow-optimizer**：健檢以讀文件與分析為主（唯讀、不改檔、不跑測試），
   flash 級模型即可；它的價值在對照既有紀錄找證據，而非知識廣度。
 - **reviewer／reviewer-deep**：審查以讀碼與分析為主（不改檔、不跑測試），
@@ -103,6 +107,14 @@ cp commands/*.md ~/.config/opencode/commands/
   （`project-notes/shared/workflow/`）與 skill 提案（程式碼 repo 的
   `.local/proposals/`），shell 只開放唯讀 git；它同樣採用 project-workflow 的
   紀錄慣例，建議一併安裝該 skill，否則健檢會找不到可對照的紀錄。
+- `translator.md` 是意圖層的選配 primary agent：它把使用者的口語願望整理成
+  自包含交接單，經核可後交給 `pm`。edit 權限只開偏好檔
+  （`project-notes/shared/preferences/`），不寫程式、不跑 shell、不派其他 subagent
+  （只允許呼叫 `pm`）；
+  偏好檔與交接單沿用 `project-notes/` 慣例。要完整走「交接給 PM」的流程，
+  需同時安裝 `pm`，把 `pm` 設為 `mode: all`，並在 workspace 設定
+  `experimental.subagent_depth: 2`；翻譯官用 `subagent` 呼叫 `pm`，不使用
+  session 工具。
 - `web-search.md` 是自足的，不依賴 project-workflow；它會在執行期讀取
   安裝位置的 `~/.config/opencode/agents/web-search-modules/` 下的模組檔，
   所以模組檔必須與 agent 檔一起安裝。
@@ -131,6 +143,8 @@ cp commands/*.md ~/.config/opencode/commands/
 另外要注意：`pm.md` 引用 `tools.openchamber` 的模型查詢與 session 工具及
 `openchamber_knowledge` 專案知識面板工具、`pm.md` 與 `implementer.md` 提到用
 瀏覽器面板驗證成果——這些是 **OpenChamber**（以 OpenCode 為底的工作台）提供的
-工具，純 OpenCode（TUI）沒有。agent 在純 OpenCode 可以載入並運作，但走到這些
-指引時模型需要自行變通（例如改用 CLI 指令或口頭回報）；`/wish` 的完整 PM 流程
-以 OpenChamber 環境為預設。
+工具，純 OpenCode（TUI）沒有。`translator.md` 用 `subagent` 呼叫 `pm`；需要
+`pm` 設為 `mode: all` 與 workspace 的 `experimental.subagent_depth: 2`。
+沒有這兩個條件時，它會退回「輸出交接單，請使用者切到 `pm` agent 貼上」。agent 在純 OpenCode 可以載入並運作，但走到這些指引時模型需要
+自行變通（例如改用 CLI 指令或口頭回報）；`/wish` 的完整 PM 流程以 OpenChamber
+環境為預設。
