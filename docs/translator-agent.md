@@ -182,7 +182,8 @@ project-notes/shared/preferences/communication.md
 
 - `pm` agent 設為 `mode: all`，才能同時當 primary 與 subagent。
 - workspace 設定 `experimental.subagent_depth: 2`，允許 PM 再開
-  implementer／tester／tester-verify。預設值是 1，PM 只能被呼叫、不能再派工。
+  implementer／tester／tester-verify／plan-reviewer。預設值是 1，PM 只能被呼叫、
+  不能再派工。
 
 - 翻譯官**不憑記憶寫死工具 ID**：工具名稱與參數以 harness 當下注入的描述為準。
   平台換版或工具改名時，以實際描述為準，不要照抄文件。
@@ -256,7 +257,7 @@ permissions:
   「格式正確」不等於「模型一定會照著做」。
 - **工具依賴與環境條件**：完整交接需要 `pm` 設為 `mode: all`，以及 workspace 的
   `experimental.subagent_depth: 2`；否則 PM 無法再開 implementer／tester／
-  tester-verify。
+  tester-verify／plan-reviewer。
   沒有 `subagent` 或 `pm` 時走 fallback。工具名稱與參數可能隨版本改變，以當時
   harness 的描述為準。
 - **模型影響**：翻譯官的追問品質、假設標記與白話程度會受模型能力影響；模型由

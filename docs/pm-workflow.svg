@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="720" height="1344" viewBox="0 0 720 1344" role="img" aria-labelledby="svg-title svg-desc" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans TC', 'Microsoft JhengHei', sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="1594" viewBox="0 0 720 1594" role="img" aria-labelledby="svg-title svg-desc" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans TC', 'Microsoft JhengHei', sans-serif" style="max-width:100%;height:auto">
   <title id="svg-title">PM 的標準工作流程</title>
-  <desc id="svg-desc">從使用者願望、研究、規劃、實作到驗收：預設一次驗收只有一個 tester，tester-verify 獨立複驗是選配。</desc>
+  <desc id="svg-desc">從使用者願望、研究、規劃、實作到驗收：預設一次驗收只有一個 tester；tester-verify 獨立複驗與跨模型計畫審查都是選配，先問使用者才加派。</desc>
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
       <path d="M0,0 L10,5 L0,10 z" fill="#59636e"/>
@@ -11,9 +11,12 @@
     <marker id="arrow-opt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
       <path d="M0,0 L10,5 L0,10 z" fill="#b45309"/>
     </marker>
+    <marker id="arrow-plan" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#0d9488"/>
+    </marker>
   </defs>
 
-  <rect x="0" y="0" width="720" height="1344" fill="#f6f8fa"/>
+  <rect x="0" y="0" width="720" height="1594" fill="#f6f8fa"/>
 
   <!-- 標題與圖例 -->
   <text x="56" y="38" font-size="20" font-weight="700" fill="#1f2328">PM 的標準工作流程</text>
@@ -21,20 +24,23 @@
 
   <circle cx="60" cy="80" r="3.5" fill="#6d5efc"/>
   <text x="68" y="84" font-size="10.5" fill="#59636e">PM（協調者）</text>
-  <circle cx="152" cy="80" r="3.5" fill="#2f81f7"/>
-  <text x="160" y="84" font-size="10.5" fill="#59636e">researcher</text>
-  <circle cx="250" cy="80" r="3.5" fill="#1a9e6f"/>
-  <text x="258" y="84" font-size="10.5" fill="#59636e">implementer</text>
-  <circle cx="350" cy="80" r="3.5" fill="#d97706"/>
-  <text x="358" y="84" font-size="10.5" fill="#59636e">tester</text>
-  <circle cx="412" cy="80" r="3.5" fill="#b45309"/>
-  <text x="420" y="84" font-size="10.5" fill="#59636e">tester-verify</text>
-  <circle cx="520" cy="80" r="3.5" fill="#59636e"/>
-  <text x="528" y="84" font-size="10.5" fill="#59636e">產出</text>
-  <text x="580" y="84" font-size="10.5" fill="#59636e">虛線框＝選配</text>
+  <circle cx="144" cy="80" r="3.5" fill="#2f81f7"/>
+  <text x="152" y="84" font-size="10.5" fill="#59636e">researcher</text>
+  <circle cx="219" cy="80" r="3.5" fill="#1a9e6f"/>
+  <text x="227" y="84" font-size="10.5" fill="#59636e">implementer</text>
+  <circle cx="304" cy="80" r="3.5" fill="#d97706"/>
+  <text x="312" y="84" font-size="10.5" fill="#59636e">tester</text>
+  <circle cx="356" cy="80" r="3.5" fill="#b45309"/>
+  <text x="364" y="84" font-size="10.5" fill="#59636e">tester-verify</text>
+  <circle cx="438" cy="80" r="3.5" fill="#0d9488"/>
+  <text x="446" y="84" font-size="10.5" fill="#59636e">plan-reviewer</text>
+  <circle cx="528" cy="80" r="3.5" fill="#59636e"/>
+  <text x="536" y="84" font-size="10.5" fill="#59636e">產出</text>
+  <text x="570" y="84" font-size="10.5" fill="#59636e">虛線框＝選配</text>
 
-  <rect x="56" y="98" width="648" height="32" rx="6" fill="#fff4e5" stroke="#d97706" stroke-width="1"/>
-  <text x="72" y="118" font-size="11.3" fill="#8a4b00">預設：一次驗收 ＝ 一個 tester；tester-verify 獨立複驗是選配，只在任務卡標「獨立複驗」或高風險時加派。</text>
+  <rect x="56" y="98" width="648" height="44" rx="6" fill="#fff4e5" stroke="#d97706" stroke-width="1"/>
+  <text x="72" y="114" font-size="11.3" fill="#8a4b00">預設：一次驗收 ＝ 一個 tester；tester-verify 獨立複驗是選配，任務卡標「獨立複驗」或高風險才加派。</text>
+  <text x="72" y="131" font-size="11.3" fill="#8a4b00">計畫審查也是選配：計畫與任務卡完成後，PM 先問使用者要不要做跨模型審查；不審查就直接派工。</text>
 
   <!-- 01 接收 -->
   <rect x="56" y="150" width="360" height="54" rx="10" fill="#ffffff" stroke="#d0d7de" stroke-width="1.2"/>
@@ -97,122 +103,155 @@
   <text x="472" y="584" font-size="11" fill="#59636e">知識面板 Note／Todo</text>
   <path d="M416 538 H453" fill="none" stroke="#59636e" stroke-width="1.2" stroke-dasharray="4 4" marker-end="url(#arrow)"/>
 
-  <!-- 06 實作 -->
-  <rect x="56" y="596" width="360" height="70" rx="10" fill="#ffffff" stroke="#d0d7de" stroke-width="1.2"/>
-  <rect x="68" y="606" width="34" height="16" rx="8" fill="#6d5efc" fill-opacity="0.13"/>
-  <text x="85" y="618" text-anchor="middle" font-size="9.5" font-weight="700" fill="#4f46e5">PM</text>
-  <text x="110" y="618" font-size="13.5" font-weight="600" fill="#1f2328">派 implementer</text>
-  <text x="72" y="636" font-size="11.3" fill="#59636e">每任務一個；簡報自包含＋允許寫入範圍</text>
-  <text x="72" y="652" font-size="11.3" fill="#59636e">可平行：互不相依、範圍互斥、最多 5 個</text>
+  <!-- 05.5 計畫審查閘門（選配，先問使用者） -->
+  <path d="M236 580 V594" fill="none" stroke="#59636e" stroke-width="1.4" marker-end="url(#arrow)"/>
+  <polygon points="236,596 356,631 236,666 116,631" fill="#ffffff" stroke="#0d9488" stroke-width="1.5"/>
+  <text x="236" y="628" text-anchor="middle" font-size="13" font-weight="600" fill="#1f2328">PM 先問：要不要審查計畫？</text>
+  <text x="236" y="645" text-anchor="middle" font-size="10" fill="#59636e">選配；不預設每次審查</text>
 
-  <path d="M416 626 H453" fill="none" stroke="#59636e" stroke-width="1.4" marker-end="url(#arrow)"/>
-  <rect x="456" y="604" width="248" height="90" rx="10" fill="#ffffff" stroke="#d0d7de" stroke-width="1.2"/>
-  <rect x="466" y="606" width="228" height="3" rx="1.5" fill="#1a9e6f"/>
-  <text x="472" y="626" font-size="13" font-weight="600" fill="#0f6b4a">implementer</text>
-  <text x="472" y="644" font-size="11" fill="#59636e">依簡報實作＋自我檢查</text>
-  <text x="472" y="660" font-size="11" fill="#59636e">只寫指定檔案，不自行 commit</text>
-  <text x="472" y="676" font-size="11" fill="#59636e">葉節點：不能再派子 agent</text>
-  <path d="M580 694 V706 H416" fill="none" stroke="#59636e" stroke-width="1.2" stroke-dasharray="4 4" marker-end="url(#arrow)"/>
-  <text x="466" y="702" font-size="10.5" fill="#59636e">回報</text>
+  <path d="M356 631 H453" fill="none" stroke="#0d9488" stroke-width="1.5" marker-end="url(#arrow-plan)"/>
+  <text x="398" y="623" font-size="10.5" font-weight="600" fill="#0f766e">要</text>
+  <path d="M236 666 V842" fill="none" stroke="#59636e" stroke-width="1.4" marker-end="url(#arrow)"/>
+  <text x="244" y="700" font-size="10.5" fill="#59636e">不用：直接派工</text>
+
+  <!-- 05.6 選配：plan-reviewer -->
+  <rect x="456" y="600" width="248" height="132" rx="10" fill="#ffffff" stroke="#0d9488" stroke-width="1.6"/>
+  <rect x="466" y="602" width="228" height="3" rx="1.5" fill="#0d9488"/>
+  <rect x="660" y="608" width="36" height="15" rx="7.5" fill="#0d9488" fill-opacity="0.12"/>
+  <text x="678" y="619" text-anchor="middle" font-size="9" font-weight="700" fill="#0f766e">選配</text>
+  <text x="472" y="622" font-size="13" font-weight="600" fill="#0f766e">plan-reviewer（只派一位）</text>
+  <text x="472" y="640" font-size="11" fill="#59636e">不同模型；只讀、不改檔、不跑測試</text>
+  <text x="472" y="656" font-size="11" fill="#59636e">讀 plan／overview／progress／任務卡</text>
+  <text x="472" y="672" font-size="11" fill="#59636e">　與研究；只審計畫，不是程式碼審查</text>
+  <text x="472" y="688" font-size="11" fill="#59636e">抓矛盾、漏項、不可驗證的驗收</text>
+  <text x="472" y="704" font-size="11" fill="#59636e">回報：必須修／建議修</text>
+  <text x="472" y="720" font-size="11" fill="#59636e">　　　需使用者決定／未涵蓋</text>
+
+  <!-- 05.7 PM 修正後回到主線 -->
+  <path d="M580 732 V744" fill="none" stroke="#0d9488" stroke-width="1.4" marker-end="url(#arrow-plan)"/>
+  <rect x="456" y="748" width="248" height="64" rx="10" fill="#ffffff" stroke="#6d5efc" stroke-width="1.4"/>
+  <rect x="466" y="750" width="228" height="3" rx="1.5" fill="#6d5efc"/>
+  <text x="472" y="770" font-size="13" font-weight="600" fill="#4f46e5">PM 修正計畫／任務卡</text>
+  <text x="472" y="789" font-size="10.5" fill="#59636e">PM 修正後才派工；不帶著未解的必須修</text>
+  <path d="M456 780 H390 V842" fill="none" stroke="#0d9488" stroke-width="1.4" marker-end="url(#arrow-plan)"/>
+
+  <!-- 06 實作 -->
+  <rect x="56" y="846" width="360" height="70" rx="10" fill="#ffffff" stroke="#d0d7de" stroke-width="1.2"/>
+  <rect x="68" y="856" width="34" height="16" rx="8" fill="#6d5efc" fill-opacity="0.13"/>
+  <text x="85" y="868" text-anchor="middle" font-size="9.5" font-weight="700" fill="#4f46e5">PM</text>
+  <text x="110" y="868" font-size="13.5" font-weight="600" fill="#1f2328">派 implementer</text>
+  <text x="72" y="886" font-size="11.3" fill="#59636e">每任務一個；簡報自包含＋允許寫入範圍</text>
+  <text x="72" y="902" font-size="11.3" fill="#59636e">可平行：互不相依、範圍互斥、最多 5 個</text>
+
+  <path d="M416 876 H453" fill="none" stroke="#59636e" stroke-width="1.4" marker-end="url(#arrow)"/>
+  <rect x="456" y="854" width="248" height="90" rx="10" fill="#ffffff" stroke="#d0d7de" stroke-width="1.2"/>
+  <rect x="466" y="856" width="228" height="3" rx="1.5" fill="#1a9e6f"/>
+  <text x="472" y="876" font-size="13" font-weight="600" fill="#0f6b4a">implementer</text>
+  <text x="472" y="894" font-size="11" fill="#59636e">依簡報實作＋自我檢查</text>
+  <text x="472" y="910" font-size="11" fill="#59636e">只寫指定檔案，不自行 commit</text>
+  <text x="472" y="926" font-size="11" fill="#59636e">葉節點：不能再派子 agent</text>
+  <path d="M580 944 V956 H416" fill="none" stroke="#59636e" stroke-width="1.2" stroke-dasharray="4 4" marker-end="url(#arrow)"/>
+  <text x="466" y="952" font-size="10.5" fill="#59636e">回報</text>
 
   <!-- 07 PM 複核 -->
-  <rect x="56" y="684" width="360" height="50" rx="10" fill="#ffffff" stroke="#d0d7de" stroke-width="1.2"/>
-  <text x="72" y="704" font-size="13.5" font-weight="600" fill="#1f2328">PM 複核回報；必要時修正簡報</text>
-  <text x="72" y="720" font-size="11.3" fill="#59636e">不改程式碼；先分辨是需求錯還是實作錯</text>
-  <path d="M236 734 V749" fill="none" stroke="#59636e" stroke-width="1.4" marker-end="url(#arrow)"/>
+  <rect x="56" y="934" width="360" height="50" rx="10" fill="#ffffff" stroke="#d0d7de" stroke-width="1.2"/>
+  <text x="72" y="954" font-size="13.5" font-weight="600" fill="#1f2328">PM 複核回報；必要時修正簡報</text>
+  <text x="72" y="970" font-size="11.3" fill="#59636e">不改程式碼；先分辨是需求錯還是實作錯</text>
+  <path d="M236 984 V996" fill="none" stroke="#59636e" stroke-width="1.4" marker-end="url(#arrow)"/>
 
   <!-- 08 驗收：tester -->
-  <rect x="56" y="750" width="360" height="86" rx="10" fill="#ffffff" stroke="#d97706" stroke-width="1.6"/>
-  <rect x="68" y="760" width="66" height="16" rx="8" fill="#d97706" fill-opacity="0.14"/>
-  <text x="101" y="772" text-anchor="middle" font-size="9" font-weight="700" fill="#9a4c00">PM → TESTER</text>
-  <text x="142" y="772" font-size="13.5" font-weight="600" fill="#1f2328">派 tester 執行驗收</text>
-  <text x="72" y="790" font-size="11.3" fill="#59636e">逐條驗收條件＋每條的驗證方式</text>
-  <text x="72" y="806" font-size="11.3" fill="#59636e">一次驗收預設只派一個 tester</text>
-  <text x="72" y="822" font-size="11.3" fill="#59636e">UI 成品用瀏覽器實際開啟檢查</text>
+  <rect x="56" y="1000" width="360" height="86" rx="10" fill="#ffffff" stroke="#d97706" stroke-width="1.6"/>
+  <rect x="68" y="1010" width="66" height="16" rx="8" fill="#d97706" fill-opacity="0.14"/>
+  <text x="101" y="1022" text-anchor="middle" font-size="9" font-weight="700" fill="#9a4c00">PM → TESTER</text>
+  <text x="142" y="1022" font-size="13.5" font-weight="600" fill="#1f2328">派 tester 執行驗收</text>
+  <text x="72" y="1040" font-size="11.3" fill="#59636e">逐條驗收條件＋每條的驗證方式</text>
+  <text x="72" y="1056" font-size="11.3" fill="#59636e">一次驗收預設只派一個 tester</text>
+  <text x="72" y="1072" font-size="11.3" fill="#59636e">UI 成品用瀏覽器實際開啟檢查</text>
 
-  <path d="M416 776 H453" fill="none" stroke="#59636e" stroke-width="1.4" marker-end="url(#arrow)"/>
-  <rect x="456" y="742" width="248" height="96" rx="10" fill="#ffffff" stroke="#d97706" stroke-width="1.4"/>
-  <rect x="466" y="744" width="228" height="3" rx="1.5" fill="#d97706"/>
-  <text x="472" y="764" font-size="13" font-weight="600" fill="#9a4c00">tester（葉節點）</text>
-  <text x="472" y="782" font-size="11" fill="#59636e">跑指令／開瀏覽器／比對證據</text>
-  <text x="472" y="798" font-size="11" fill="#59636e">回報：通過／失敗／未測／需人工</text>
-  <text x="472" y="814" font-size="11" fill="#59636e">不改程式碼、不再派子 agent</text>
+  <path d="M416 1043 H453" fill="none" stroke="#59636e" stroke-width="1.4" marker-end="url(#arrow)"/>
+  <rect x="456" y="992" width="248" height="96" rx="10" fill="#ffffff" stroke="#d97706" stroke-width="1.4"/>
+  <rect x="466" y="994" width="228" height="3" rx="1.5" fill="#d97706"/>
+  <text x="472" y="1014" font-size="13" font-weight="600" fill="#9a4c00">tester（葉節點）</text>
+  <text x="472" y="1032" font-size="11" fill="#59636e">跑指令／開瀏覽器／比對證據</text>
+  <text x="472" y="1048" font-size="11" fill="#59636e">回報：通過／失敗／未測／需人工</text>
+  <text x="472" y="1064" font-size="11" fill="#59636e">不改程式碼、不再派子 agent</text>
 
   <!-- 09 選配：tester-verify（A 通過後的側分支；B 的證據回到同一個裁決鑽石） -->
-  <rect x="456" y="872" width="248" height="142" rx="10" fill="#fffaf2" stroke="#b45309" stroke-width="1.6" stroke-dasharray="6 4"/>
-  <rect x="466" y="874" width="228" height="3" rx="1.5" fill="#b45309"/>
-  <rect x="660" y="880" width="36" height="15" rx="7.5" fill="#b45309" fill-opacity="0.12"/>
-  <text x="678" y="891" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e">選配</text>
-  <text x="472" y="896" font-size="13" font-weight="600" fill="#92400e">tester-verify（選配）</text>
-  <text x="472" y="914" font-size="11" fill="#59636e">tester 通過後才派：任務卡標「獨立複驗」</text>
-  <text x="472" y="930" font-size="11" fill="#59636e">或 PM 判斷屬高風險／判斷型驗收</text>
-  <text x="472" y="946" font-size="11" fill="#59636e">不同模型；B 不看 A 的報告與截圖</text>
-  <text x="472" y="962" font-size="11" fill="#59636e">重跑關鍵項＋負向／對照組</text>
-  <text x="472" y="978" font-size="11" fill="#59636e">任一 tester 失敗即不通過</text>
-  <text x="472" y="994" font-size="11" fill="#59636e">分歧看原始證據，不用多數決</text>
+  <rect x="456" y="1122" width="248" height="142" rx="10" fill="#fffaf2" stroke="#b45309" stroke-width="1.6" stroke-dasharray="6 4"/>
+  <rect x="466" y="1124" width="228" height="3" rx="1.5" fill="#b45309"/>
+  <rect x="660" y="1130" width="36" height="15" rx="7.5" fill="#b45309" fill-opacity="0.12"/>
+  <text x="678" y="1141" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e">選配</text>
+  <text x="472" y="1146" font-size="13" font-weight="600" fill="#92400e">tester-verify（選配）</text>
+  <text x="472" y="1164" font-size="11" fill="#59636e">tester 通過後才派：任務卡標「獨立複驗」</text>
+  <text x="472" y="1180" font-size="11" fill="#59636e">或 PM 判斷屬高風險／判斷型驗收</text>
+  <text x="472" y="1196" font-size="11" fill="#59636e">不同模型；B 不看 A 的報告與截圖</text>
+  <text x="472" y="1212" font-size="11" fill="#59636e">重跑關鍵項＋負向／對照組</text>
+  <text x="472" y="1228" font-size="11" fill="#59636e">任一 tester 失敗即不通過</text>
+  <text x="472" y="1244" font-size="11" fill="#59636e">分歧看原始證據，不用多數決</text>
 
-  <path d="M580 838 V872" fill="none" stroke="#b45309" stroke-width="1.4" stroke-dasharray="4 4" marker-end="url(#arrow-opt)"/>
-  <text x="568" y="858" text-anchor="end" font-size="10" fill="#8a4b00">選配：A 通過後複驗</text>
-  <path d="M456 945 H336" fill="none" stroke="#b45309" stroke-width="1.4" stroke-dasharray="4 4" marker-end="url(#arrow-opt)"/>
-  <text x="380" y="938" font-size="10" fill="#8a4b00">B 的證據</text>
+  <path d="M580 1088 V1118" fill="none" stroke="#b45309" stroke-width="1.4" stroke-dasharray="4 4" marker-end="url(#arrow-opt)"/>
+  <text x="568" y="1108" text-anchor="end" font-size="10" fill="#8a4b00">選配：A 通過後複驗</text>
+  <path d="M456 1195 H336" fill="none" stroke="#b45309" stroke-width="1.4" stroke-dasharray="4 4" marker-end="url(#arrow-opt)"/>
+  <text x="380" y="1188" font-size="10" fill="#8a4b00">B 的證據</text>
 
   <!-- 10 裁決 -->
-  <path d="M236 836 V912" fill="none" stroke="#59636e" stroke-width="1.4" marker-end="url(#arrow)"/>
-  <polygon points="236,915 336,945 236,975 136,945" fill="#ffffff" stroke="#d0d7de" stroke-width="1.4"/>
-  <text x="236" y="941" text-anchor="middle" font-size="13" font-weight="600" fill="#1f2328">驗收通過？</text>
-  <text x="236" y="957" text-anchor="middle" font-size="10.5" fill="#59636e">逐條證據為準</text>
+  <path d="M236 1086 V1161" fill="none" stroke="#59636e" stroke-width="1.4" marker-end="url(#arrow)"/>
+  <polygon points="236,1165 336,1195 236,1225 136,1195" fill="#ffffff" stroke="#d0d7de" stroke-width="1.4"/>
+  <text x="236" y="1191" text-anchor="middle" font-size="13" font-weight="600" fill="#1f2328">驗收通過？</text>
+  <text x="236" y="1207" text-anchor="middle" font-size="10.5" fill="#59636e">逐條證據為準</text>
 
   <!-- 失敗回圈（需求錯修簡報／實作錯重派） -->
-  <path d="M136 945 H36 V622 H53" fill="none" stroke="#d1242f" stroke-width="1.3" stroke-dasharray="4 4" marker-end="url(#arrow-fail)"/>
-  <text transform="rotate(-90 32 783)" x="32" y="783" text-anchor="middle" font-size="10" fill="#d1242f">失敗：先分辨需求錯或實作錯 → 修簡報或重派 implementer</text>
+  <path d="M136 1195 H36 V872 H53" fill="none" stroke="#d1242f" stroke-width="1.3" stroke-dasharray="4 4" marker-end="url(#arrow-fail)"/>
+  <text transform="rotate(-90 32 1033)" x="32" y="1033" text-anchor="middle" font-size="10" fill="#d1242f">失敗：先分辨需求錯或實作錯 → 修簡報或重派 implementer</text>
 
   <!-- 11 收尾 -->
-  <path d="M236 975 V996" fill="none" stroke="#59636e" stroke-width="1.4" marker-end="url(#arrow)"/>
-  <text x="210" y="988" text-anchor="end" font-size="10.5" fill="#59636e">通過</text>
-  <rect x="56" y="999" width="360" height="84" rx="10" fill="#ffffff" stroke="#d0d7de" stroke-width="1.2"/>
-  <rect x="68" y="1009" width="34" height="16" rx="8" fill="#6d5efc" fill-opacity="0.13"/>
-  <text x="85" y="1021" text-anchor="middle" font-size="9.5" font-weight="700" fill="#4f46e5">PM</text>
-  <text x="110" y="1021" font-size="13.5" font-weight="600" fill="#1f2328">更新紀錄與提交</text>
-  <text x="72" y="1039" font-size="11.3" fill="#59636e">progress.md＋acceptance/；勾計畫、更新知識面板</text>
-  <text x="72" y="1055" font-size="11.3" fill="#59636e">PM 分開提交 private notes 與可公開 docs</text>
-  <text x="72" y="1071" font-size="11.3" fill="#59636e">push 前掃描＋人工確認（不 force、不改歷史）</text>
-  <path d="M236 1083 V1096" fill="none" stroke="#59636e" stroke-width="1.4" marker-end="url(#arrow)"/>
+  <path d="M236 1225 V1246" fill="none" stroke="#59636e" stroke-width="1.4" marker-end="url(#arrow)"/>
+  <text x="210" y="1242" text-anchor="end" font-size="10.5" fill="#59636e">通過</text>
+  <rect x="56" y="1249" width="360" height="84" rx="10" fill="#ffffff" stroke="#d0d7de" stroke-width="1.2"/>
+  <rect x="68" y="1259" width="34" height="16" rx="8" fill="#6d5efc" fill-opacity="0.13"/>
+  <text x="85" y="1271" text-anchor="middle" font-size="9.5" font-weight="700" fill="#4f46e5">PM</text>
+  <text x="110" y="1271" font-size="13.5" font-weight="600" fill="#1f2328">更新紀錄與提交</text>
+  <text x="72" y="1289" font-size="11.3" fill="#59636e">progress.md＋acceptance/；勾計畫、更新知識面板</text>
+  <text x="72" y="1305" font-size="11.3" fill="#59636e">PM 分開提交 private notes 與可公開 docs</text>
+  <text x="72" y="1321" font-size="11.3" fill="#59636e">push 前掃描＋人工確認（不 force、不改歷史）</text>
+  <path d="M236 1333 V1346" fill="none" stroke="#59636e" stroke-width="1.4" marker-end="url(#arrow)"/>
 
   <!-- 12 還有任務？ -->
-  <polygon points="236,1099 336,1129 236,1159 136,1129" fill="#ffffff" stroke="#d0d7de" stroke-width="1.4"/>
-  <text x="236" y="1125" text-anchor="middle" font-size="13" font-weight="600" fill="#1f2328">還有任務？</text>
-  <text x="236" y="1141" text-anchor="middle" font-size="10.5" fill="#59636e">同一階段</text>
-  <path d="M236 1159 V1178" fill="none" stroke="#59636e" stroke-width="1.4" marker-end="url(#arrow)"/>
-  <text x="244" y="1172" font-size="10.5" fill="#59636e">沒有</text>
+  <polygon points="236,1349 336,1379 236,1409 136,1379" fill="#ffffff" stroke="#d0d7de" stroke-width="1.4"/>
+  <text x="236" y="1375" text-anchor="middle" font-size="13" font-weight="600" fill="#1f2328">還有任務？</text>
+  <text x="236" y="1391" text-anchor="middle" font-size="10.5" fill="#59636e">同一階段</text>
+  <path d="M236 1409 V1428" fill="none" stroke="#59636e" stroke-width="1.4" marker-end="url(#arrow)"/>
+  <text x="244" y="1422" font-size="10.5" fill="#59636e">沒有</text>
 
   <!-- 13 三段式回報 -->
-  <rect x="56" y="1181" width="360" height="84" rx="10" fill="#ffffff" stroke="#d0d7de" stroke-width="1.2"/>
-  <text x="72" y="1203" font-size="13.5" font-weight="600" fill="#1f2328">三段式回報使用者</text>
-  <text x="72" y="1221" font-size="11.3" fill="#59636e">做到哪／接下來／需要你決定什麼</text>
-  <text x="72" y="1237" font-size="11.3" fill="#59636e">階段結束可選 reviewer／reviewer-deep</text>
-  <text x="72" y="1253" font-size="11.3" fill="#59636e">是否審查由使用者決定，不是 PM 自動派</text>
+  <rect x="56" y="1431" width="360" height="84" rx="10" fill="#ffffff" stroke="#d0d7de" stroke-width="1.2"/>
+  <text x="72" y="1453" font-size="13.5" font-weight="600" fill="#1f2328">三段式回報使用者</text>
+  <text x="72" y="1471" font-size="11.3" fill="#59636e">做到哪／接下來／需要你決定什麼</text>
+  <text x="72" y="1487" font-size="11.3" fill="#59636e">階段結束可選 reviewer／reviewer-deep</text>
+  <text x="72" y="1503" font-size="11.3" fill="#59636e">是否審查由使用者決定，不是 PM 自動派</text>
 
   <!-- 回派工（還有任務） -->
-  <rect x="32" y="638" width="8" height="8" fill="#f6f8fa"/>
-  <path d="M136 1129 H20 V642 H53" fill="none" stroke="#59636e" stroke-width="1.2" stroke-dasharray="4 4" marker-end="url(#arrow)"/>
-  <text x="100" y="1123" font-size="10.5" fill="#59636e">還有</text>
+  <rect x="32" y="888" width="8" height="8" fill="#f6f8fa"/>
+  <path d="M136 1379 H20 V892 H53" fill="none" stroke="#59636e" stroke-width="1.2" stroke-dasharray="4 4" marker-end="url(#arrow)"/>
+  <text x="100" y="1373" font-size="10.5" fill="#59636e">還有</text>
 
   <!-- 右側規則卡 -->
-  <rect x="456" y="1046" width="248" height="132" rx="10" fill="#ffffff" stroke="#d0d7de" stroke-width="1"/>
-  <text x="472" y="1068" font-size="13" font-weight="600" fill="#1f2328">不變的鐵律</text>
-  <text x="472" y="1086" font-size="11" fill="#59636e">• PM 不跑測試、不啟動服務</text>
-  <text x="472" y="1102" font-size="11" fill="#59636e">• tester 不改程式碼、不再派工</text>
-  <text x="472" y="1118" font-size="11" fill="#59636e">• 一次驗收預設只有一個 tester</text>
-  <text x="472" y="1134" font-size="11" fill="#59636e">• 同時最多 5 個子 agent</text>
-  <text x="472" y="1150" font-size="11" fill="#59636e">• 子 agent 不自行 commit；PM 管索引</text>
-  <text x="472" y="1166" font-size="11" fill="#59636e">• 模型綁在 agent 設定，不寫死流程</text>
+  <rect x="456" y="1290" width="248" height="148" rx="10" fill="#ffffff" stroke="#d0d7de" stroke-width="1"/>
+  <text x="472" y="1312" font-size="13" font-weight="600" fill="#1f2328">不變的鐵律</text>
+  <text x="472" y="1330" font-size="11" fill="#59636e">• PM 不跑測試、不啟動服務</text>
+  <text x="472" y="1346" font-size="11" fill="#59636e">• tester 不改程式碼、不再派工</text>
+  <text x="472" y="1362" font-size="11" fill="#59636e">• 一次驗收預設只有一個 tester</text>
+  <text x="472" y="1378" font-size="11" fill="#59636e">• 同時最多 5 個子 agent</text>
+  <text x="472" y="1394" font-size="11" fill="#59636e">• 子 agent 不自行 commit；PM 管索引</text>
+  <text x="472" y="1410" font-size="11" fill="#59636e">• 模型綁在 agent 設定，不寫死流程</text>
+  <text x="472" y="1426" font-size="11" fill="#59636e">• 計畫審查只讀；PM 修正後才派工</text>
 
-  <rect x="456" y="1196" width="248" height="100" rx="10" fill="#ffffff" stroke="#d0d7de" stroke-width="1"/>
-  <text x="472" y="1218" font-size="13" font-weight="600" fill="#1f2328">失敗回圈怎麼走</text>
-  <text x="472" y="1236" font-size="11" fill="#59636e">需求錯 → 先修簡報／回頭釐清</text>
-  <text x="472" y="1252" font-size="11" fill="#59636e">實作錯 → 帶明確指示重派</text>
-  <text x="472" y="1268" font-size="11" fill="#59636e">修完再走一次 tester，不跳過</text>
-  <text x="472" y="1284" font-size="11" fill="#59636e">需求與實作不要混為一談</text>
+  <rect x="456" y="1446" width="248" height="100" rx="10" fill="#ffffff" stroke="#d0d7de" stroke-width="1"/>
+  <text x="472" y="1468" font-size="13" font-weight="600" fill="#1f2328">失敗回圈怎麼走</text>
+  <text x="472" y="1486" font-size="11" fill="#59636e">需求錯 → 先修簡報／回頭釐清</text>
+  <text x="472" y="1502" font-size="11" fill="#59636e">實作錯 → 帶明確指示重派</text>
+  <text x="472" y="1518" font-size="11" fill="#59636e">修完再走一次 tester，不跳過</text>
+  <text x="472" y="1534" font-size="11" fill="#59636e">需求與實作不要混為一談</text>
 
-  <text x="56" y="1330" font-size="10.5" fill="#59636e">＊這是制度上的標準流程；實際派工與驗收方式會依專案調整。預設單一 tester，獨立複驗是選配。</text>
+  <text x="56" y="1580" font-size="10.5" fill="#59636e">＊這是制度上的標準流程；實際派工與驗收方式會依專案調整。預設單一 tester，獨立複驗與計畫審查都是選配。</text>
 </svg>

@@ -162,7 +162,7 @@ CLI 退出碼 0，且 `SKILL.md` 與其相對資源都存在於安裝目標）�
 
 `adapters/opencode/` 收錄作者實際在用的 OpenCode agent／command 定義：
 `project-workflow` 配套的 `pm`／`researcher`／`implementer`／`tester`、
-可選的獨立複驗 `tester-verify`、獨立
+可選的獨立複驗 `tester-verify`、派工前的選配計畫審查 `plan-reviewer`、獨立
 審查者 `reviewer`／`reviewer-deep`、`workflow-optimizer` 健檢 agent、
 `translator` 翻譯官、獨立的 `web-search` agent，以及
 `/wish`／`/proto`／`/research`／`/optimize` 指令。
@@ -180,7 +180,7 @@ CLI 退出碼 0，且 `SKILL.md` 與其相對資源都存在於安裝目標）�
   安裝者需依自己環境補上模型選擇，選擇建議見 `adapters/opencode/README.md`。
 - 這些定義在作者的 OpenCode 環境中日常使用；但**對其他使用者的安裝與執行
   未實測**——「作者的日常使用」不等於「任何環境裝上就會正常運作」。
-- `pm`／`researcher`／`implementer`／`tester`／`tester-verify` 預設採用 `project-workflow` 的
+- `pm`／`researcher`／`implementer`／`tester`／`tester-verify`／`plan-reviewer` 預設採用 `project-workflow` 的
   慣例（`project-notes/`、自包含簡報等），建議與該 skill 一併安裝；
   `reviewer`／`reviewer-deep` 審查時對照任務卡驗收條件，同樣引用該慣例；
   `web-search` 為自足，不依賴任何 skill。

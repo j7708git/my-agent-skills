@@ -25,7 +25,7 @@
 
 `skills/` 之外另有選配的 **`adapters/opencode/`**：`project-workflow` 配套的
 OpenCode agent 定義（`pm`／`researcher`／`implementer`／`tester`／可選的
-獨立複驗 `tester-verify`、獨立審查者
+獨立複驗 `tester-verify`、派工前的選配計畫審查 `plan-reviewer`、獨立審查者
 `reviewer`／`reviewer-deep`、`workflow-optimizer` 健檢、把抽象願望整理成
 brief 的 `translator` 翻譯官）、獨立的 `web-search`
 agent，與 `/wish`／`/proto`／`/research`／`/optimize` 指令。發行版本已移除所有模型綁定，
@@ -187,7 +187,7 @@ Release 驗證 → 紀錄」固定成一份可重複套用的發版清單，讓�
 
 `adapters/opencode/` 收錄這套流程的**選配** OpenCode 設定：`project-workflow`
 配套的 `pm`／`researcher`／`implementer`／`tester`／可選的獨立複驗
-`tester-verify`、獨立審查者 `reviewer`／
+`tester-verify`、派工前的選配計畫審查 `plan-reviewer`、獨立審查者 `reviewer`／
 `reviewer-deep`、`workflow-optimizer` 健檢 agent、把抽象願望整理成 brief、
 核可後交給 `pm` 的 `translator` 翻譯官、獨立的 `web-search` agent，
 與 `/wish`／`/proto`／`/research`／`/optimize` 指令。把檔案複製到
@@ -201,10 +201,12 @@ Release 驗證 → 紀錄」固定成一份可重複套用的發版清單，讓�
 「任何環境安裝即正常運作」。安裝步驟、檔案說明與模型選擇建議見
 [adapters/opencode/README.md](adapters/opencode/README.md)。
 
-<p align="center"><img src="docs/pm-workflow.svg" alt="PM 標準工作流程：研究、規劃、實作、單一 tester 與可選的獨立複驗" width="720"></p>
+<p align="center"><img src="docs/pm-workflow.svg" alt="PM 標準工作流程：研究、規劃、選配的跨模型計畫審查、實作、單一 tester 與可選的獨立複驗" width="720"></p>
 
 上圖是制度上的標準流程：預設單一 tester，`tester-verify` 獨立複驗是選配，
 只在任務卡標「獨立複驗」或高風險／判斷型驗收時加派；實際執行會依專案調整。
+計畫卡完成後、派工之前，PM 會先問要不要做跨模型計畫審查；要的話由
+`plan-reviewer` 讀計畫與任務卡，PM 修正後才派工，不審查則記在 `progress.md`。
 
 ## 安裝 skill
 
@@ -435,7 +437,7 @@ python3 scripts/validate_skills.py --check-docs --strict    # 只跑格式驗證
 | [docs/project-workflow.md](docs/project-workflow.md) | project-workflow 產品契約：流程指引的邊界、檔案配置與不能宣稱的事 |
 | [docs/translator-agent.md](docs/translator-agent.md) | translator 翻譯官的行為契約：意圖層流程、交接單、核可閘門與 OpenChamber 依賴 |
 | [docs/architecture.html](docs/architecture.html) | 架構圖（單一 HTML，可互動瀏覽） |
-| [docs/pm-workflow.svg](docs/pm-workflow.svg) | PM 標準工作流程圖：研究、規劃、實作、預設單一 tester 與選配的獨立複驗 |
+| [docs/pm-workflow.svg](docs/pm-workflow.svg) | PM 標準工作流程圖：研究、規劃、選配的計畫審查、實作、預設單一 tester 與選配的獨立複驗 |
 | [docs/development.md](docs/development.md) | 驗證子集、檢查腳本、文件分流、CI 與固定工具版本 |
 | [docs/compatibility.md](docs/compatibility.md) | 可宣稱／不可宣稱的相容性 |
 | [docs/research/portability.md](docs/research/portability.md) | 格式與安裝路徑的研究依據 |
