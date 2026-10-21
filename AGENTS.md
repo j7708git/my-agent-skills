@@ -6,7 +6,7 @@
 ## 這個 repo 是什麼
 
 - 標準 [Agent Skills](https://agentskills.io/specification) 的集合 repo，名稱 `j7708git/my-agent-skills`。
-- 目前有八個 skill：
+- 目前有九個 skill：
   - `skills/repo-privacy-audit/`：唯讀的 repo 隱私與秘密掃描。它的**唯讀安全邊界不變**，
     不自動修復、不改寫歷史、不推送、不動任何 GitHub 設定。
   - `skills/project-workflow/`：公開程式碼 repo 與獨立 private 工作紀錄 repo 的流程指引。
@@ -29,9 +29,11 @@
   - `skills/release-prep/`：發版整備清單（版本號同源、文件同步、本地基準比對、
     推送前掃描、標籤、CI 監看、Release 驗證與紀錄）；提交、推送、標籤、Release
     各自需要明確授權。
+  - `skills/handoff-refresh/`：交接與現況文件的重生對帳（以進度紀錄與 Git 事實逐條比對
+    宣稱、只改現況段、回報差異與未解項）；它不改歷史段，也不 commit／push。
   - `project-workflow` 與 `web-ui-e2e-smoke`／`independent-rerun-verify`／
-    `review-fix-round`／`native-crash-triage`／`release-prep` 都是**純文字流程指引**：
-    不下載或安裝工具、不自行 commit／push，
+    `review-fix-round`／`native-crash-triage`／`release-prep`／`handoff-refresh`
+    都是**純文字流程指引**：不下載或安裝工具、不自行 commit／push，
     也不提供任何安全保證；載入它們不等於授權。
 - 平台專屬 agent（OpenCode 的 agent／command 定義）屬於**選配**，收錄在
   `adapters/opencode/`：目前包含 `project-workflow` 配套的 `pm`／`researcher`／

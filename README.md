@@ -1,7 +1,7 @@
 # my-agent-skills
 
 `j7708git/my-agent-skills` 是一個 [Agent Skills](https://agentskills.io/specification) 集合 repo。
-目前提供八個 skill：
+目前提供九個 skill：
 
 - **`repo-privacy-audit`** —— 對 Git repo 做唯讀的隱私與秘密掃描，
   並附上明確安裝的 hooks、CI 範本與修復手冊。
@@ -20,6 +20,8 @@
   的證據處理流程：去識別、符號還原、跨案比對、機制驗證與分層筆記。
 - **`release-prep`** —— 發版整備清單：版本號同源、文件同步、本地基準、掃描、
   標籤、CI、Release 驗證與發版紀錄。
+- **`handoff-refresh`** —— 交接與現況文件的重生對帳：以進度紀錄與兩個 repo 的 Git 事實
+  逐條比對交接檔、總覽與計畫的宣稱，只改「現況／下一步」段並回報差異。
 
 這個 repo 不做自動修復，也不替你決定任何不可逆的動作。它只負責**看清楚**、**講明白**。
 
@@ -58,6 +60,7 @@ GitHub 設定檢查仍可能因方案／權限不足回報 incomplete；這與�
 - [academic-paper-search（學術論文檢索）](#academic-paper-search學術論文檢索)
 - [native-crash-triage（原生崩潰歸因）](#native-crash-triage原生崩潰歸因)
 - [release-prep（發版整備）](#release-prep發版整備)
+- [handoff-refresh（交接與現況對帳）](#handoff-refresh交接與現況對帳)
 - [OpenCode agent adapters](#opencode-agent-adapters)
 - [安裝 skill](#安裝-skill)
 - [使用掃描器](#使用掃描器)
@@ -183,6 +186,18 @@ Release 驗證 → 紀錄」固定成一份可重複套用的發版清單，讓�
 - 掃描結果照抄退出碼語意（0 通過、1 有發現、2 未掃完），2 不當成通過。
 - 完整內容：[skills/release-prep/SKILL.md](skills/release-prep/SKILL.md)
 
+## handoff-refresh（交接與現況對帳）
+
+`handoff-refresh` 把「交接文件重生」固定成一份可重複的清單：取進度紀錄最新段與兩個 repo
+的 Git 事實 → 逐條比對三份文件的宣稱 → 只改「現況／下一步」段 → 每條附證據 →
+標快照時間 → 回報差異與未解項。
+
+- **載入時機**：session 收尾要交接、里程碑或 PR 合併／發版後要更新現況，或發現交接檔、
+  總覽與計畫的說法互相矛盾時。
+- 它只改現況段：歷史段、流水帳與已收案敘述不動；也不是 Git 工具，不 commit、不 push。
+- 現況只寫一處：狀態留在進度紀錄，三份文件只保留指標與最小快照，避免同一天漂移。
+- 完整內容：[skills/handoff-refresh/SKILL.md](skills/handoff-refresh/SKILL.md)
+
 ## OpenCode agent adapters
 
 `adapters/opencode/` 收錄這套流程的**選配** OpenCode 設定：`project-workflow`
@@ -210,14 +225,14 @@ Release 驗證 → 紀錄」固定成一份可重複套用的發版清單，讓�
 
 ## 安裝 skill
 
-這八個 skill **不會無縫相容於任何 agent client**。下表是 `repo-privacy-audit` 實際驗證過的
+這九個 skill **不會無縫相容於任何 agent client**。下表是 `repo-privacy-audit` 實際驗證過的
 安裝位置；「檔案放對位置」只證明格式與路徑可安裝，**不證明某個 agent 會自動載入它**。
-**這些安裝實測不繼承給 `project-workflow`、五個流程指引 skill**
+**這些安裝實測不繼承給 `project-workflow`、六個流程指引 skill**
 （`web-ui-e2e-smoke`、`independent-rerun-verify`、`review-fix-round`、
-`native-crash-triage`、`release-prep`）與
+`native-crash-triage`、`release-prep`、`handoff-refresh`）與
 `academic-paper-search`：它們都只有文件已記載的位置。其中 `academic-paper-search`
 已在 OpenChamber 的 researcher subagent 實測過路由（見上方狀態）；`project-workflow`
-與五個流程指引 skill 的 runtime 仍未實測。
+與六個流程指引 skill 的 runtime 仍未實測。
 
 ### 方式 A：skills CLI
 
@@ -467,6 +482,7 @@ skill 自己的文件（安裝後也可用，不依賴本 repo）：
 | `skills/academic-paper-search/references/bibtex-generation.md` | BibTeX 輸出欄位對應與注意事項 |
 | `skills/native-crash-triage/SKILL.md` | 原生崩潰歸因的證據處理流程、紀錄欄位與停止條件 |
 | `skills/release-prep/SKILL.md` | 發版整備清單、失敗處理與紀錄欄位 |
+| `skills/handoff-refresh/SKILL.md` | 交接文件的現況重生、逐條對帳與差異回報 |
 
 本 repo 的 `docs/` 只放公開文件。完整計畫、todo、session 日誌、驗收紀錄與研究筆記
 是本機工作紀錄，不進版控，也不從公開文件連過去；分流規則見

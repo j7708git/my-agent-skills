@@ -47,7 +47,12 @@ notes repo 內以 `<project-id>` 命名的專案目錄，主幹為 overview、pr
 code repo 的 `.gitignore` 應排除暫存；公開的 code repo 放程式碼、測試、README 與對外
 docs，**不得**含 private 工作筆記。workspace 或 code repo 內的 `.tmp` 都應被 ignore，
 且**絕不自動清理**。
-**跨機接手時，先讀 plan、overview、progress**，需要時再讀 research，才開始工作。
+**跨機接手時**，入口是 `HANDOFF.md`（速查快照），權威是 `progress.md` 的**最新段**
+（依日期與標題判定，不是檔案裡的最後一段）。閱讀順序為：progress 最新段 → acceptance
+→ HANDOFF → plan／任務卡，需要時再讀 research，才開始工作。三處敘述有出入時，以
+progress 最新段加上**兩個 repo 的 `git log`** 為準。要重生現況段（交接、里程碑、
+合併之後）時用 `handoff-refresh` skill 對帳：以進度紀錄與 Git 事實逐條比對宣稱，
+只改現況段並回報差異。
 
 ## 隱私分流（公開與私有嚴格隔離）
 
@@ -188,10 +193,12 @@ docs，**不得**含 private 工作筆記。workspace 或 code repo 內的 `.tmp
 
 這個 skill 不綁定任何模型、provider 或特定 agent 工具名稱；沒有步驟要求某個專有工具。
 
-- 「文件**已確認支援**的載入位置」與「**實際 runtime 尚未測試**」必須分開寫。
-- 官方文件已記載的 project 位置（runtime 皆未實測）：OpenCode 用 .opencode/skills、
-  pi 用 .pi/skills 與通用 .agents/skills、DeepSeek Harness 用 .dsh/skills 與通用
-  .agents/skills。詳細來源、手動觸發與限制見 `references/client-compatibility.md`。
+- 「文件**已確認支援**的載入位置」與「**實際 runtime 已測試**」必須分開寫。
+- **OpenCode** 的 project `.opencode/skills/` 已於 **2026-10-21 實測**會載入
+  （`handoff-refresh`、`release-prep` 皆成功載入並讀到新內容）。
+- 其餘 client 仍為文件記載、**未實測**：pi 用 .pi/skills 與通用 .agents/skills、
+  DeepSeek Harness 用 .dsh/skills 與通用 .agents/skills。詳細來源、手動觸發與限制
+  見 `references/client-compatibility.md`。
 - 任何 client 都應有 fallback：**手動讀取 `SKILL.md` 與 `references`**，並自行複製
   模板；但這不保證 fallback 一定被正確執行。
 - 格式通過不保證模型會精確遵守，也不保證會自動配置權限。

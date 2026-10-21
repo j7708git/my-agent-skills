@@ -19,11 +19,11 @@
   把整個 skill 目錄單獨複製走，也不會依賴本集合 repo 的其他檔案。
 - **這是文件層級的確認，不代表任何 client 已實際載入過本 skill。**
 
-## 2. Client 現況（載入位置為文件已確認；runtime 皆未測試）
+## 2. Client 現況（載入位置為文件已確認；OpenCode project 位置已實測，其餘 runtime 未測試）
 
 | Client | 文件已確認的載入位置 | 手動觸發 | runtime |
 | --- | --- | --- | --- |
-| OpenCode | 原生 global `~/.config/opencode/skills`、project `.opencode/skills`；相容 `~/.agents/skills`、`.agents/skills` | `@project-workflow` | **未實測** |
+| OpenCode | 原生 global `~/.config/opencode/skills`、project `.opencode/skills`；相容 `~/.agents/skills`、`.agents/skills` | `@project-workflow` | **已實測**（2026-10-21，project 位置） |
 | pi | 通用 `~/.agents/skills`、project `.agents/skills`（遞迴目錄，從當前工作目錄往父層搜尋直到 Git 根）；原生 user `~/.pi/agent/skills`、project `.pi/skills` | `/skill:project-workflow`；`/reload` 更新 | **未實測** |
 | DeepSeek Harness | project `.dsh/skills`、`.agents/skills`（取最接近的 Git 根）；bundle 只讀一層、不遞迴 | 空白分隔輸入 `/project-workflow` | **未實測** |
 
@@ -32,7 +32,9 @@
 - 來源：<https://opencode.ai/v2/docs/skills>。
 - 文件提及原生 global／project 位置，以及相容的通用目錄 `.agents/skills`。
 - 手動觸發為 `@project-workflow`。
-- 上述是**文件已記載**的資訊；這個 skill 沒有在 OpenCode runtime 中實測過。
+- 上述載入位置為**文件已記載**；project `.opencode/skills/` 的載入機制已於
+  **2026-10-21 實測**（把 `handoff-refresh`、`release-prep` 放進該目錄，皆成功載入
+  並讀到新內容），本 skill 本身未逐一重測。
 
 ### pi
 

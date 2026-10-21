@@ -142,8 +142,8 @@ CLI 退出碼 0，且 `SKILL.md` 與其相對資源都存在於安裝目標）�
 
 ## 其他流程指引 skill 的狀態
 
-`web-ui-e2e-smoke`、`independent-rerun-verify`、`review-fix-round`、`native-crash-triage`
-與 `release-prep` 同樣是**純文字流程指引**，沒有掃描核心、沒有執行時相依，
+`web-ui-e2e-smoke`、`independent-rerun-verify`、`review-fix-round`、`native-crash-triage`、
+`release-prep` 與 `handoff-refresh` 同樣是**純文字流程指引**，沒有掃描核心、沒有執行時相依，
 也不依賴 Gitleaks 或 Bash／Python。
 
 | 項目 | 狀態 | 依據 |
