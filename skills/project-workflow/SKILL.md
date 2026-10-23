@@ -194,8 +194,9 @@ progress 最新段加上**兩個 repo 的 `git log`** 為準。要重生現況�
 這個 skill 不綁定任何模型、provider 或特定 agent 工具名稱；沒有步驟要求某個專有工具。
 
 - 「文件**已確認支援**的載入位置」與「**實際 runtime 已測試**」必須分開寫。
-- **OpenCode** 的 project `.opencode/skills/` 已於 **2026-10-21 實測**會載入
+- **OpenCode** 的 project 層 skill 目錄已於 **2026-10-21 實測**會載入
   （`handoff-refresh`、`release-prep` 皆成功載入並讀到新內容）。
+  各 client 的確切載入路徑見 `references/client-compatibility.md`。
 - 其餘 client 仍為文件記載、**未實測**：pi 用 .pi/skills 與通用 .agents/skills、
   DeepSeek Harness 用 .dsh/skills 與通用 .agents/skills。詳細來源、手動觸發與限制
   見 `references/client-compatibility.md`。
