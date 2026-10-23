@@ -143,8 +143,8 @@ CLI 退出碼 0，且 `SKILL.md` 與其相對資源都存在於安裝目標）�
 ## 其他流程指引 skill 的狀態
 
 `web-ui-e2e-smoke`、`independent-rerun-verify`、`review-fix-round`、`native-crash-triage`、
-`release-prep` 與 `handoff-refresh` 同樣是**純文字流程指引**，沒有掃描核心、沒有執行時相依，
-也不依賴 Gitleaks 或 Bash／Python。
+`release-prep`、`handoff-refresh` 與 `diagram-guide` 同樣是**純文字流程指引**，沒有掃描核心、
+沒有執行時相依，也不依賴 Gitleaks 或 Bash／Python。
 
 | 項目 | 狀態 | 依據 |
 | --- | --- | --- |
@@ -155,6 +155,8 @@ CLI 退出碼 0，且 `SKILL.md` 與其相對資源都存在於安裝目標）�
 要點：
 
 - 格式驗證只證明 frontmatter、命名與相對資源可解析，**不證明流程步驟正確或可執行**。
+- `diagram-guide` 的**格式驗證**於 2026-10-23 隨本 repo 通過（`validate_skills --check-docs --strict`）；
+  但它的 **agent runtime 載入與觸發仍未實測**，與上表其他 skill 同樣未驗證。
 - 這些 skill 的驗證結果**不繼承** `repo-privacy-audit` 的四種安裝實測或 runtime 行為；
   反向亦然。
 

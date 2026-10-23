@@ -1,7 +1,7 @@
 # my-agent-skills
 
 `j7708git/my-agent-skills` 是一個 [Agent Skills](https://agentskills.io/specification) 集合 repo。
-目前提供九個 skill：
+目前提供十個 skill：
 
 - **`repo-privacy-audit`** —— 對 Git repo 做唯讀的隱私與秘密掃描，
   並附上明確安裝的 hooks、CI 範本與修復手冊。
@@ -22,6 +22,8 @@
   標籤、CI、Release 驗證與發版紀錄。
 - **`handoff-refresh`** —— 交接與現況文件的重生對帳：以進度紀錄與兩個 repo 的 Git 事實
   逐條比對交接檔、總覽與計畫的宣稱，只改「現況／下一步」段並回報差異。
+- **`diagram-guide`** —— 圖解指引：圖型選擇、一張圖一件事、節點白話化、圖例門檻、
+  改圖門檻、圖的權威位置與驗收分級；預設 Mermaid，升級才用 archify 或對話內 render。
 
 這個 repo 不做自動修復，也不替你決定任何不可逆的動作。它只負責**看清楚**、**講明白**。
 
@@ -42,7 +44,7 @@ agent，與 `/wish`／`/proto`／`/research`／`/optimize` 指令。發行版本
 > `academic-paper-search` 的路由已在 OpenChamber 環境實測（2026-10-15）：researcher
 > subagent 的 skill 清單含本 skill、`skill` 工具載入成功、`scripts/arxiv_search.py`
 > 兩次 API 呼叫均成功；web-search agent 為 subagent 模式無法直接派發，依同一 skill
-> 發現機制推定可見，**未單獨實測**。**其餘七個 skill 的 agent runtime 尚未實測。**
+> 發現機制推定可見，**未單獨實測**。**其餘八個 skill 的 agent runtime 尚未實測。**
 > 逐項的可宣稱／不可宣稱範圍見 [docs/compatibility.md](docs/compatibility.md)；
 > 產品行為契約：掃描器見 [docs/specification.md](docs/specification.md)，
 > 流程指引見 [docs/project-workflow.md](docs/project-workflow.md)。
@@ -61,6 +63,7 @@ GitHub 設定檢查仍可能因方案／權限不足回報 incomplete；這與�
 - [native-crash-triage（原生崩潰歸因）](#native-crash-triage原生崩潰歸因)
 - [release-prep（發版整備）](#release-prep發版整備)
 - [handoff-refresh（交接與現況對帳）](#handoff-refresh交接與現況對帳)
+- [diagram-guide（圖解指引）](#diagram-guide圖解指引)
 - [OpenCode agent adapters](#opencode-agent-adapters)
 - [安裝 skill](#安裝-skill)
 - [使用掃描器](#使用掃描器)
@@ -198,6 +201,20 @@ Release 驗證 → 紀錄」固定成一份可重複套用的發版清單，讓�
 - 現況只寫一處：狀態留在進度紀錄，三份文件只保留指標與最小快照，避免同一天漂移。
 - 完整內容：[skills/handoff-refresh/SKILL.md](skills/handoff-refresh/SKILL.md)
 
+## diagram-guide（圖解指引）
+
+`diagram-guide` 把「用圖說明流程與架構」從主觀選用變成可重複的判準：先選圖型
+（流程／架構／時序／狀態）、一張圖只講一件事、節點寫白話而不是代號、節點多於五個
+要附圖例、標題要能自己解釋。
+
+- **載入時機**：要畫流程圖或架構圖、判斷這次改動該不該改圖，或決定圖要放在哪裡、
+  怎麼驗收時。
+- **預設 Mermaid**：純文字、寫在 Markdown 裡，OpenChamber 的 Markdown 檢視與 GitHub
+  都能顯示，也能進版控、看得出改了什麼。archify 互動頁與對話內 render 是升級選項。
+- 它只管「怎麼畫、畫什麼、放在哪、怎麼驗」；什麼時候**一定**要有圖由流程規則決定。
+  它是流程指引，不下載或安裝工具，也不自行 commit／push。
+- 完整內容：[skills/diagram-guide/SKILL.md](skills/diagram-guide/SKILL.md)
+
 ## OpenCode agent adapters
 
 `adapters/opencode/` 收錄這套流程的**選配** OpenCode 設定：`project-workflow`
@@ -216,23 +233,57 @@ Release 驗證 → 紀錄」固定成一份可重複套用的發版清單，讓�
 「任何環境安裝即正常運作」。安裝步驟、檔案說明與模型選擇建議見
 [adapters/opencode/README.md](adapters/opencode/README.md)。
 
-<p align="center"><img src="docs/pm-workflow.svg" alt="PM 標準工作流程：研究、規劃、選配的跨模型計畫審查、實作、單一 tester 與可選的獨立複驗" width="720"></p>
+現行權威的 PM 標準流程圖（Mermaid，原始碼就在本檔）：
+
+```mermaid
+flowchart TD
+  W["使用者提出願望<br/>口語需求、交接單或 /wish"] --> P1["PM 釐清目標與邊界<br/>已知／未知分開，只問關鍵問題"]
+  P1 --> P2["PM 讀既有紀錄與兩個 repo 現況<br/>overview、progress、plan"]
+  P2 --> Q1{"需要研究？"}
+  Q1 -- "要" --> R["researcher（可平行）<br/>只寫研究筆記"]
+  R --> P3["PM 驗證來源、蒸餾結論"]
+  Q1 -- "不用" --> P3
+  P3 --> P4["PM 產出計畫與任務卡<br/>plan.md＋自包含任務卡"]
+  P4 --> Q2{"要不要審查計畫？<br/>選配，先問使用者"}
+  Q2 -- "要" --> PR["plan-reviewer（一位，唯讀）<br/>不同模型；只審計畫"]
+  PR --> P5["PM 修正計畫／任務卡"]
+  Q2 -- "不用" --> P5
+  P5 --> I["implementer 依簡報實作<br/>每任務一個，可平行"]
+  I --> T["tester 逐條驗收<br/>跑指令、開瀏覽器"]
+  T --> Q3{"驗收通過？"}
+  Q3 -- "失敗" --> F["先分辨需求錯或實作錯<br/>修簡報或帶指示重派"]
+  F --> I
+  Q3 -- "通過" --> Q4{"任務卡標獨立複驗<br/>或高風險、判斷型？"}
+  Q4 -- "要" --> B["tester-verify 獨立重跑<br/>不看第一位 tester 的報告"]
+  Q4 -- "不用" --> P6["PM 更新紀錄與提交<br/>progress、acceptance、知識面板"]
+  B --> P6
+  P6 --> Q5{"還有任務？"}
+  Q5 -- "有" --> I
+  Q5 -- "沒有" --> OUT["三段式回報使用者<br/>做到哪／接下來／需要你決定什麼"]
+```
 
 上圖是制度上的標準流程：預設單一 tester，`tester-verify` 獨立複驗是選配，
 只在任務卡標「獨立複驗」或高風險／判斷型驗收時加派；實際執行會依專案調整。
 計畫卡完成後、派工之前，PM 會先問要不要做跨模型計畫審查；要的話由
 `plan-reviewer` 讀計畫與任務卡，PM 修正後才派工，不審查則記在 `progress.md`。
+每個里程碑回報都會附上這張圖，只更新「現在走到哪」的標記節點，不重畫整張。
+
+舊版手製圖（保留並存，不重畫）：
+
+<p align="center"><img src="docs/pm-workflow.svg" alt="PM 標準工作流程：研究、規劃、選配的跨模型計畫審查、實作、單一 tester 與可選的獨立複驗" width="720"></p>
+
+上圖是舊版手製圖，內容以相鄰 Mermaid 為準。
 
 ## 安裝 skill
 
-這九個 skill **不會無縫相容於任何 agent client**。下表是 `repo-privacy-audit` 實際驗證過的
+這十個 skill **不會無縫相容於任何 agent client**。下表是 `repo-privacy-audit` 實際驗證過的
 安裝位置；「檔案放對位置」只證明格式與路徑可安裝，**不證明某個 agent 會自動載入它**。
-**這些安裝實測不繼承給 `project-workflow`、六個流程指引 skill**
+**這些安裝實測不繼承給 `project-workflow`、七個流程指引 skill**
 （`web-ui-e2e-smoke`、`independent-rerun-verify`、`review-fix-round`、
-`native-crash-triage`、`release-prep`、`handoff-refresh`）與
+`native-crash-triage`、`release-prep`、`handoff-refresh`、`diagram-guide`）與
 `academic-paper-search`：它們都只有文件已記載的位置。其中 `academic-paper-search`
 已在 OpenChamber 的 researcher subagent 實測過路由（見上方狀態）；`project-workflow`
-與六個流程指引 skill 的 runtime 仍未實測。
+與七個流程指引 skill 的 runtime 仍未實測。
 
 ### 方式 A：skills CLI
 
@@ -483,6 +534,7 @@ skill 自己的文件（安裝後也可用，不依賴本 repo）：
 | `skills/native-crash-triage/SKILL.md` | 原生崩潰歸因的證據處理流程、紀錄欄位與停止條件 |
 | `skills/release-prep/SKILL.md` | 發版整備清單、失敗處理與紀錄欄位 |
 | `skills/handoff-refresh/SKILL.md` | 交接文件的現況重生、逐條對帳與差異回報 |
+| `skills/diagram-guide/SKILL.md` | 圖型選擇、節點白話化、改圖門檻、圖的權威位置與驗收分級 |
 
 本 repo 的 `docs/` 只放公開文件。完整計畫、todo、session 日誌、驗收紀錄與研究筆記
 是本機工作紀錄，不進版控，也不從公開文件連過去；分流規則見
