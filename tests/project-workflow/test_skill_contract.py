@@ -1,6 +1,8 @@
 """skills/project-workflow 的契約測試。
 
-只用 Python 3 標準函式庫；所有 fixture 都是合成資料與暫存目錄，不碰真實 repo，
+只用 Python 3 標準函式庫；本檔部分測試會唯讀 repo 內的真實檔案
+（`task-brief.md`、`pm.md`、`SKILL.md`、`workflow-details.md`）；
+「不碰真實 repo」指**不做破壞性 fixture、不修改 repo 內檔案**，
 也不使用真實帳號、真實 email 或個人本機絕對路徑。
 
 測試守住幾件事：
@@ -11,6 +13,8 @@
 4. 沒有平台工具硬依賴、沒有模型／provider 綁定。
 5. 沒有真實個資或個人絕對路徑，placeholder 符合慣例。
 6. 安全敘述存在：載入不等於授權，commit／push／hooks 等需要明確授權。
+7. 派工簡報的節名、順序與類型列舉在 `task-brief.md`、`pm.md`、`SKILL.md`、
+   `workflow-details.md` 四處同源；權威一律即時從 `task-brief.md` 抽取。
 """
 
 from __future__ import annotations
@@ -170,6 +174,23 @@ ALLOWED_EMAIL_DOMAINS = ("example.com", "example.invalid")
 # 安全敘述：載入不等於授權；不可逆動作需要明確授權。
 REQUIRED_SKILL_MARKERS = ("不等於授權", "明確授權", "不會", "絕不")
 
+# 派工簡報契約：四個檔案都以 repo 根為基準解析（保持相對路徑結構，反例才好複製）。
+ADAPTERS_AGENTS_DIR = REPO_ROOT / "adapters" / "opencode" / "agents"
+BRIEF_RELATIVE_PATHS = {
+    "template": Path("skills/project-workflow/assets/templates/task-brief.md"),
+    "pm": Path("adapters/opencode/agents/pm.md"),
+    "skill": Path("skills/project-workflow/SKILL.md"),
+    "details": Path("skills/project-workflow/references/workflow-details.md"),
+}
+OLD_TYPE_ENUM = "原型／正式實作／研究"
+OLD_FOUR_TYPE_ENUM = re.compile(r"實作／研究／文件／驗收(?!／原型)")
+TYPE_LINE = re.compile(r"類型：<(?P<enum>[^>]+)>")
+SKILL_LIST_ITEM = re.compile(r"^(?P<number>\d+)\. \*\*(?P<name>[^*]+)\*\*")
+SKILL_BRIEF_HEADING = "## 任務簡報（固定模板）"
+DETAILS_CHECKLIST_HEADING = "## 5. 任務簡報檢查清單"
+CHECKLIST_PREFIX = "- [ ] "
+KEYWORD_SEPARATORS = re.compile(r"[\s／、與]+")
+
 
 def read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8")
@@ -214,6 +235,234 @@ def looks_like_path(token: str, strict: bool) -> bool:
     if strict:
         return True
     return token.lower().endswith(KNOWN_EXTENSIONS)
+
+
+# ---------------------------------------------------------------------------
+# 派工簡報契約的抽取與比較。
+#
+# 所有 helper 都接受 `root`（repo 根），比對對象是 root 底下的真實檔案；
+# 反例測試把檔案以相同相對結構複製到暫存目錄後，用同一組 helper 比對。
+# 權威基準（10 節名稱與類型列舉）一律即時從 `task-brief.md` 抽取，不寫死常數。
+# ---------------------------------------------------------------------------
+
+
+def contract_path(root: Path, key: str) -> Path:
+    return root / BRIEF_RELATIVE_PATHS[key]
+
+
+def contract_text(root: Path, key: str) -> str:
+    return read_text(contract_path(root, key))
+
+
+def fenced_blocks(text: str) -> list[tuple[str, list[str]]]:
+    """回傳 (info string, 區塊內原始行)；原始行不 strip，保留縮排。"""
+    blocks: list[tuple[str, list[str]]] = []
+    info: str | None = None
+    lines: list[str] = []
+    for raw in text.splitlines():
+        stripped = raw.strip()
+        if stripped.startswith("```"):
+            if info is None:
+                info = stripped[3:].strip()
+                lines = []
+            else:
+                blocks.append((info, lines))
+                info = None
+            continue
+        if info is not None:
+            lines.append(raw)
+    if info is not None:
+        raise AssertionError("fenced code block 沒有關閉，無法抽取派工簡報模板")
+    return blocks
+
+
+def brief_blocks(root: Path, key: str) -> list[list[str]]:
+    """回傳含 `## 1. ` 標題的 fenced block（原始行）；正常情況恰好 1 個。"""
+    return [
+        lines
+        for _, lines in fenced_blocks(contract_text(root, key))
+        if any(line.strip().startswith("## 1. ") for line in lines)
+    ]
+
+
+def single_brief_block(root: Path, key: str) -> list[str]:
+    blocks = brief_blocks(root, key)
+    if len(blocks) != 1:
+        raise AssertionError(
+            f"{key}: 含 `## 1. ` 的 fenced block 應恰好 1 個，實際找到 {len(blocks)} 個"
+        )
+    return blocks[0]
+
+
+def headings_from_lines(lines: list[str]) -> list[str]:
+    return [line.strip() for line in lines if line.strip().startswith("## ")]
+
+
+def heading_names(root: Path) -> list[str]:
+    """權威 10 節的名稱（去掉 `## N. ` 前綴），即時從 `task-brief.md` 抽取。"""
+    headings = headings_from_lines(single_brief_block(root, "template"))
+    return [re.sub(r"^##\s+\d+\.\s*", "", heading) for heading in headings]
+
+
+def section_lines(text: str, heading: str) -> list[str]:
+    """取 Markdown 某個 `## ` 段（到下一個 `## ` 為止）的原始行。"""
+    lines = text.splitlines()
+    for index, line in enumerate(lines):
+        if line.strip() == heading:
+            section: list[str] = []
+            for candidate in lines[index + 1 :]:
+                if candidate.strip().startswith("## "):
+                    break
+                section.append(candidate)
+            return section
+    raise AssertionError(f"找不到段落：{heading}")
+
+
+def skill_brief_names(root: Path) -> list[str]:
+    names: list[str] = []
+    section = section_lines(contract_text(root, "skill"), SKILL_BRIEF_HEADING)
+    for line in section:
+        match = SKILL_LIST_ITEM.match(line.strip())
+        if match:
+            names.append(match.group("name"))
+    return names
+
+
+def details_checklist_items(root: Path) -> list[str]:
+    section = section_lines(contract_text(root, "details"), DETAILS_CHECKLIST_HEADING)
+    return [
+        line.strip()[len(CHECKLIST_PREFIX) :]
+        for line in section
+        if line.strip().startswith(CHECKLIST_PREFIX)
+    ]
+
+
+def heading_keywords(name: str) -> list[str]:
+    """節名拆成關鍵詞：以空白、`／`、`、`、`與` 切開，長度 < 2 的片段忽略。"""
+    return [part for part in KEYWORD_SEPARATORS.split(name) if len(part) >= 2]
+
+
+def type_enumeration(root: Path) -> str:
+    """權威類型列舉，即時從 `task-brief.md` §1 的「類型：<...>」抽取。"""
+    matches = TYPE_LINE.findall(contract_text(root, "template"))
+    if len(matches) != 1:
+        raise AssertionError(
+            f"task-brief.md 應恰好有 1 個「類型：<...>」，實際找到 {len(matches)} 個：{matches!r}"
+        )
+    return matches[0]
+
+
+def compare_pm_headings(root: Path) -> str:
+    """T1：`task-brief.md` 骨架與 `pm.md` 內嵌模板的節名序列差異。"""
+    template = headings_from_lines(single_brief_block(root, "template"))
+    pm = headings_from_lines(single_brief_block(root, "pm"))
+    if template == pm:
+        return ""
+    return f"task-brief 骨架節名序列：{template!r}\npm.md 內嵌模板節名序列：{pm!r}"
+
+
+def compare_skill_names(root: Path) -> str:
+    """T2：`SKILL.md`〈任務簡報（固定模板）〉的項名序列差異。"""
+    expected = heading_names(root)
+    actual = skill_brief_names(root)
+    if expected == actual:
+        return ""
+    return f"task-brief 節名序列：{expected!r}\nSKILL.md 清單名稱序列：{actual!r}"
+
+
+def compare_details_checklist(root: Path) -> str:
+    """T3：`workflow-details.md` 檢查清單的項目數與關鍵詞差異。"""
+    headings = heading_names(root)
+    items = details_checklist_items(root)
+    problems: list[str] = []
+    if len(items) != len(headings):
+        problems.append(
+            f"項目數 {len(items)} != 節數 {len(headings)}；項目序列：{items!r}"
+        )
+    for index, (heading, item) in enumerate(zip(headings, items), start=1):
+        missing = [keyword for keyword in heading_keywords(heading) if keyword not in item]
+        if missing:
+            problems.append(
+                f"第 {index} 項缺少關鍵詞 {missing!r}（節名 {heading!r}；項目 {item!r}）"
+            )
+    return "\n".join(problems)
+
+
+def compare_type_enumeration(root: Path) -> str:
+    """T4：類型列舉在三處逐字相同，且舊列舉在四個檔案都不得出現。"""
+    enum = type_enumeration(root)
+    problems: list[str] = []
+    for key in ("template", "pm", "skill"):
+        if enum not in contract_text(root, key):
+            problems.append(f"{key} 缺少類型列舉 {enum!r}")
+    for key in ("template", "pm", "skill", "details"):
+        text = contract_text(root, key)
+        if OLD_TYPE_ENUM in text:
+            problems.append(f"{key} 仍出現舊列舉 {OLD_TYPE_ENUM!r}")
+        match = OLD_FOUR_TYPE_ENUM.search(text)
+        if match:
+            problems.append(
+                f"{key} 出現舊四項列舉（新五項的前綴子字串）{match.group(0)!r}"
+            )
+    return "\n".join(problems)
+
+
+def compare_pm_indentation(root: Path) -> str:
+    """T9：`pm.md` 模板 block（含圍欄行）每個非空行都要以兩個空格開頭。"""
+    lines = contract_text(root, "pm").splitlines()
+    start: int | None = None
+    end: int | None = None
+    inside = False
+    block: list[str] = []
+    for index, raw in enumerate(lines):
+        if raw.strip().startswith("```"):
+            if not inside:
+                inside = True
+                block_start = index
+                block = []
+            else:
+                inside = False
+                if any(line.strip().startswith("## 1. ") for line in block):
+                    start, end = block_start, index
+                block = []
+            continue
+        if inside:
+            block.append(raw)
+    if start is None or end is None:
+        raise AssertionError("pm.md 找不到含 `## 1. ` 的 fenced block")
+    bad = [
+        f"第 {index} 行：{line!r}"
+        for index, line in enumerate(lines[start : end + 1], start=start + 1)
+        if line.strip() and not line.startswith("  ")
+    ]
+    if not bad:
+        return ""
+    return "pm.md 模板 block 縮排不符（每個非空行須以兩個空格開頭）：\n" + "\n".join(bad)
+
+
+def copy_contract_tree(root: Path) -> None:
+    """把契約檔案以相同相對結構複製到 root，供反例測試突變。"""
+    shutil.copytree(SKILL_DIR, root / "skills" / "project-workflow")
+    shutil.copytree(ADAPTERS_AGENTS_DIR, root / "adapters" / "opencode" / "agents")
+
+
+def replace_once(path: Path, old: str, new: str) -> None:
+    text = read_text(path)
+    count = text.count(old)
+    if count != 1:
+        raise AssertionError(f"{path} 內 {old!r} 出現 {count} 次，反例突變需要唯一位置")
+    path.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+
+def swap_lines(path: Path, first: str, second: str) -> None:
+    lines = read_text(path).splitlines()
+    try:
+        i = lines.index(first)
+        j = lines.index(second)
+    except ValueError as exc:
+        raise AssertionError(f"{path} 找不到要交換的行：{exc}") from exc
+    lines[i], lines[j] = lines[j], lines[i]
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 class TemplateContractTests(unittest.TestCase):
@@ -457,6 +706,115 @@ class ConsistencyAndAuthorizationTests(unittest.TestCase):
         text = read_text(SKILL_DIR / "references" / "client-compatibility.md")
         self.assertIn("從當前工作目錄往父層搜尋直到 Git 根", text)
         self.assertNotIn("由根往 repo 上溯", text)
+
+
+class BriefTemplateConsistencyTests(unittest.TestCase):
+    """派工簡報四份清單同源；權威一律即時從 `task-brief.md` 抽取。"""
+
+    def test_t1_brief_section_names_match_pm_template(self) -> None:
+        for key in ("template", "pm"):
+            blocks = brief_blocks(REPO_ROOT, key)
+            self.assertEqual(
+                1,
+                len(blocks),
+                f"{key} 內含 `## 1. ` 的 fenced block 應恰好 1 個，實際找到 {len(blocks)} 個",
+            )
+        diff = compare_pm_headings(REPO_ROOT)
+        self.assertEqual("", diff, f"節名序列不一致：\n{diff}")
+
+    def test_t2_skill_list_names_match_brief(self) -> None:
+        diff = compare_skill_names(REPO_ROOT)
+        self.assertEqual("", diff, f"SKILL.md 項名序列與權威骨架不一致：\n{diff}")
+
+    def test_t3_workflow_details_checklist_matches_brief(self) -> None:
+        diff = compare_details_checklist(REPO_ROOT)
+        self.assertEqual("", diff, f"檢查清單與權威骨架不一致：\n{diff}")
+
+    def test_t4_type_enumeration_matches_in_three_files(self) -> None:
+        diff = compare_type_enumeration(REPO_ROOT)
+        self.assertEqual("", diff, f"類型列舉不一致：\n{diff}")
+
+    def test_t9_pm_template_block_keeps_two_space_indentation(self) -> None:
+        diff = compare_pm_indentation(REPO_ROOT)
+        self.assertEqual("", diff, f"pm.md 模板縮排結構被破壞：\n{diff}")
+
+
+class BriefTemplateAntiRegressionTests(unittest.TestCase):
+    """反例：把暫存副本改壞，證明 T1–T4 的比較函式真的抓得到漂移。"""
+
+    def _copy(self) -> tuple[tempfile.TemporaryDirectory, Path]:
+        tmp = tempfile.TemporaryDirectory()
+        root = Path(tmp.name)
+        copy_contract_tree(root)
+        return tmp, root
+
+    def test_t5_mutated_pm_section_name_is_detected(self) -> None:
+        tmp, root = self._copy()
+        with tmp:
+            clean = compare_pm_headings(root)
+            self.assertEqual("", clean, f"乾淨副本應無差異，實際：\n{clean}")
+            replace_once(
+                contract_path(root, "pm"),
+                "  ## 2. repo 根與路徑基準",
+                "  ## 2. 專案目錄與路徑基準",
+            )
+            diff = compare_pm_headings(root)
+            self.assertNotEqual("", diff, "改掉 pm.md 一個節名後，T1 應報差異")
+            print(f"[T5] 改掉 pm.md 一個節名後，T1 差異：\n{diff}")
+
+    def test_t5b_swapped_pm_section_order_is_detected(self) -> None:
+        tmp, root = self._copy()
+        with tmp:
+            self.assertEqual("", compare_pm_headings(root), "乾淨副本應無差異")
+            swap_lines(
+                contract_path(root, "pm"),
+                "  ## 3. 必讀背景",
+                "  ## 4. 已知／假設／未知",
+            )
+            diff = compare_pm_headings(root)
+            self.assertNotEqual("", diff, "交換 pm.md 兩個相鄰節名後，T1 應報差異")
+            print(f"[T5b] 交換 pm.md 相鄰節名後，T1 差異：\n{diff}")
+
+    def test_t6_mutated_skill_item_name_is_detected(self) -> None:
+        tmp, root = self._copy()
+        with tmp:
+            self.assertEqual("", compare_skill_names(root), "乾淨副本應無差異")
+            replace_once(
+                contract_path(root, "skill"),
+                "1. **任務類型與目標**",
+                "1. **任務種類與目標**",
+            )
+            diff = compare_skill_names(root)
+            self.assertNotEqual("", diff, "改掉 SKILL.md 一個項名後，T2 應報差異")
+            print(f"[T6] 改掉 SKILL.md 一個項名後，T2 差異：\n{diff}")
+
+    def test_t7_dropped_checklist_item_is_detected(self) -> None:
+        tmp, root = self._copy()
+        with tmp:
+            self.assertEqual("", compare_details_checklist(root), "乾淨副本應無差異")
+            replace_once(
+                contract_path(root, "details"),
+                "- [ ] 範圍與 non-goals 都寫了。\n",
+                "",
+            )
+            diff = compare_details_checklist(root)
+            self.assertNotEqual("", diff, "刪掉檢查清單一項後，T3 應報差異")
+            print(f"[T7] 刪掉檢查清單一項後，T3 差異：\n{diff}")
+
+    def test_t8_mutated_type_enumeration_is_detected(self) -> None:
+        for key in ("template", "pm", "skill"):
+            with self.subTest(file=key):
+                tmp, root = self._copy()
+                with tmp:
+                    clean = compare_type_enumeration(root)
+                    self.assertEqual("", clean, f"乾淨副本應無差異，實際：\n{clean}")
+                    enum = type_enumeration(root)
+                    old = f"<{enum}>" if key == "template" else enum
+                    new = old.replace("／原型", "／示範")
+                    replace_once(contract_path(root, key), old, new)
+                    diff = compare_type_enumeration(root)
+                    self.assertNotEqual("", diff, f"突變 {key} 的列舉後，T4 應報差異")
+                    print(f"[T8] 突變 {key} 的類型列舉後，T4 差異：\n{diff}")
 
 
 if __name__ == "__main__":
