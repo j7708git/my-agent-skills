@@ -5,6 +5,8 @@ license: MIT
 compatibility: Python 3.8 以上（僅標準庫 urllib 與 xml.etree），需可連外存取 https://export.arxiv.org/api/query。
 ---
 
+> 本檔若與程式碼、測試或實際指令不符，以程式碼為準；安全邊界、授權與不可逆操作則以本檔為準。發現不符時：照程式碼做，並在回報中指出「本檔第 {line} 行已過期」。
+
 # academic-paper-search
 
 用 arXiv 官方 API 做**結構化**的論文檢索：給一段查詢，拿回每篇論文的標題、作者、摘要、

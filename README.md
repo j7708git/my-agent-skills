@@ -1,13 +1,16 @@
 # my-agent-skills
 
 `j7708git/my-agent-skills` 是一個 [Agent Skills](https://agentskills.io/specification) 集合 repo。
-目前提供十個 skill：
+目前提供十一個 skill：
 
 - **`repo-privacy-audit`** —— 對 Git repo 做唯讀的隱私與秘密掃描，
   並附上明確安裝的 hooks、CI 範本與修復手冊。
 - **`project-workflow`** —— 引導「公開程式碼 repo」與「獨立 private 工作紀錄 repo」
   的規劃、拆工、驗收與同步流程。它只是**流程指引**，不是掃描器，
   也不會自行建立 repo、push、安裝 hooks 或搬移檔案。
+- **`writing-contract`** —— 人看的文件與給 agent 看的指令檔的寫作契約：
+  8 條機械檢查、人工自檢清單、四張自檢清單、重複句白名單與上游許可。它是規則與詞表，
+  不自動改寫檔案，也不執行檢查器。
 - **`web-ui-e2e-smoke`** —— 把「真實建置的 Web UI ＋ 可達後端 ＋ 真實瀏覽器驅動
   ＋ 截圖留證」的端到端冒煙驗收固定成可重複的步驟。
 - **`independent-rerun-verify`** —— 驗收時自行建置、自行重跑，不採信實作方產物，
@@ -44,7 +47,7 @@ agent，與 `/wish`／`/proto`／`/research`／`/optimize` 指令。發行版本
 > `academic-paper-search` 的路由已在 OpenChamber 環境實測（2026-10-15）：researcher
 > subagent 的 skill 清單含本 skill、`skill` 工具載入成功、`scripts/arxiv_search.py`
 > 兩次 API 呼叫均成功；web-search agent 為 subagent 模式無法直接派發，依同一 skill
-> 發現機制推定可見，**未單獨實測**。**其餘八個 skill 的 agent runtime 尚未實測。**
+> 發現機制推定可見，**未單獨實測**。**其餘九個 skill 的 agent runtime 尚未實測。**
 > 逐項的可宣稱／不可宣稱範圍見 [docs/compatibility.md](docs/compatibility.md)；
 > 產品行為契約：掃描器見 [docs/specification.md](docs/specification.md)，
 > 流程指引見 [docs/project-workflow.md](docs/project-workflow.md)。
@@ -56,6 +59,7 @@ GitHub 設定檢查仍可能因方案／權限不足回報 incomplete；這與�
 
 - [快速開始](#快速開始)
 - [project-workflow（流程指引）](#project-workflow流程指引)
+- [writing-contract（寫作契約）](#writing-contract寫作契約)
 - [web-ui-e2e-smoke（Web UI 端到端冒煙）](#web-ui-e2e-smokeweb-ui-端到端冒煙)
 - [independent-rerun-verify（獨立重跑驗證）](#independent-rerun-verify獨立重跑驗證)
 - [review-fix-round（審查修復輪）](#review-fix-round審查修復輪)
@@ -215,6 +219,21 @@ Release 驗證 → 紀錄」固定成一份可重複套用的發版清單，讓�
   它是流程指引，不下載或安裝工具，也不自行 commit／push。
 - 完整內容：[skills/diagram-guide/SKILL.md](skills/diagram-guide/SKILL.md)
 
+## writing-contract（寫作契約）
+
+`writing-contract` 把「人看的敘述文件」與「給 agent 看的指令檔」的寫作要求，
+拆成 8 條可機械檢查的形式規則、可複製的模板與人工自檢清單。A 類機械檢查涵蓋
+四欄、填充詞、依據路徑、代號句、單檔長度與 commit SHA；其餘 A 類規則（結構、
+模糊詞、重複、術語）與 B2／B3 是人工自檢。B 類的 B1 優先序句要求指令檔在衝突時
+以程式碼為準，安全與授權則以本檔為準。
+
+- **適用時機**：新寫或大改 README、公開文件、任務卡、進度、計畫、驗收紀錄、
+  `SKILL.md`、`AGENTS.md` 或 agent 定義時。
+- **邊界**：它是規則與詞表，不自動改寫檔案、不執行檢查器、不自行 commit 或 push。
+- 公開契約：[docs/writing-contract.md](docs/writing-contract.md)；
+  規則本體：[a-human-docs.md](skills/writing-contract/references/a-human-docs.md) 與
+  [b-agent-docs.md](skills/writing-contract/references/b-agent-docs.md)。
+
 ## OpenCode agent adapters
 
 `adapters/opencode/` 收錄這套流程的**選配** OpenCode 設定：`project-workflow`
@@ -276,7 +295,7 @@ flowchart TD
 
 ## 安裝 skill
 
-這十個 skill **不會無縫相容於任何 agent client**。下表是 `repo-privacy-audit` 實際驗證過的
+這十一個 skill **不會無縫相容於任何 agent client**。下表是 `repo-privacy-audit` 實際驗證過的
 安裝位置；「檔案放對位置」只證明格式與路徑可安裝，**不證明某個 agent 會自動載入它**。
 **這些安裝實測不繼承給 `project-workflow`、七個流程指引 skill**
 （`web-ui-e2e-smoke`、`independent-rerun-verify`、`review-fix-round`、
@@ -471,7 +490,7 @@ skill 內附 CI 範本。它是**範本**，不會自動安裝到你的專案，
 - Gitleaks 固定 **8.30.1**，下載後比對 SHA-256，不符即中止。
 - 秘密掃描分兩個獨立步驟：**歷史**（`--log-opts='--all'`，所有本機 refs 可達的 commit）
   與 **staged**（index）。checkout 使用 `fetch-depth: 0`。
-- 執行 `bash scripts/run-checks.sh`：格式驗證 → 單元測試 → Bash 語法 → Python 語法 → 秘密掃描。
+- 執行 `bash scripts/run-checks.sh`：格式驗證 → 寫作契約 → 單元測試 → Bash 語法 → Python 語法 → 秘密掃描。
 
 CI **不會**替你改 branch protection、required checks 或任何 repo 設定；那些由維護者手動設定。
 
@@ -501,6 +520,7 @@ python3 scripts/validate_skills.py --check-docs --strict    # 只跑格式驗證
 | --- | --- |
 | [docs/specification.md](docs/specification.md) | 產品技術契約：CLI、退出碼、輸出格式、安全邊界（掃描器） |
 | [docs/project-workflow.md](docs/project-workflow.md) | project-workflow 產品契約：流程指引的邊界、檔案配置與不能宣稱的事 |
+| [docs/writing-contract.md](docs/writing-contract.md) | 寫作契約：規則摘要、CLI 與退出碼、衝突矩陣、中文門檻與不能宣稱的事 |
 | [docs/translator-agent.md](docs/translator-agent.md) | translator 翻譯官的行為契約：意圖層流程、交接單、核可閘門與 OpenChamber 依賴 |
 | [docs/architecture.html](docs/architecture.html) | 架構圖（單一 HTML，可互動瀏覽） |
 | [docs/pm-workflow.svg](docs/pm-workflow.svg) | PM 標準工作流程圖：研究、規劃、選配的計畫審查、實作、預設單一 tester 與選配的獨立複驗 |
@@ -525,6 +545,10 @@ skill 自己的文件（安裝後也可用，不依賴本 repo）：
 | `skills/project-workflow/references/privacy-and-sync.md` | 公開／私有隔離、索引紀律與同步步驟 |
 | `skills/project-workflow/references/client-compatibility.md` | client 的已確認與未確認狀態、手動 fallback |
 | `skills/project-workflow/assets/templates/` | 六份空白模板（overview、progress、plan、task-brief、research、acceptance） |
+| `skills/writing-contract/SKILL.md` | 寫作契約的入口、兩類文件與規則邊界 |
+| `skills/writing-contract/references/a-human-docs.md` | A 類規則、衝突對、中文門檻、五種異味與自檢清單 |
+| `skills/writing-contract/references/b-agent-docs.md` | B1 優先序句、插入位置、B2／B3 建議與同步對象 |
+| `skills/writing-contract/assets/` | `fillers.md` 是機械輸入；其餘是人工自檢清單與上游許可 |
 | `skills/web-ui-e2e-smoke/SKILL.md` | Web UI 端到端冒煙驗收的固定步驟與證據欄位 |
 | `skills/independent-rerun-verify/SKILL.md` | 獨立重跑驗證與對照組的四類必備證據 |
 | `skills/review-fix-round/SKILL.md` | 審查修復輪協定、紀錄欄位與收斂條件 |

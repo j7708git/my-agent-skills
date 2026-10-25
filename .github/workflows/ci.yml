@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   checks:
-    name: 格式、測試與秘密掃描
+    name: 格式、寫作契約、測試與秘密掃描
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -56,7 +56,7 @@ jobs:
           "$HOME/.local/bin/gitleaks" version
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
-      - name: 執行統一檢查（格式 → 測試 → Bash 語法 → Python 語法 → Gitleaks 歷史與 staged）
+      - name: 執行統一檢查（格式 → 寫作契約 → 測試 → Bash 語法 → Python 語法 → Gitleaks 歷史與 staged）
         # 測試的預設 gitleaks 路徑是本機暫存位置，在 runner 上不存在會被 skip，讓 CI 綠燈
         # 但等於沒跑真實掃描。必須在 shell 內展開 $HOME（Actions 的 env: 不做 shell 展開），
         # 這樣測試與掃描用的是前一步安裝並校驗過的同一支執行檔；只影響這個 step 的子行程。

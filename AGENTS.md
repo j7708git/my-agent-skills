@@ -1,3 +1,5 @@
+> 本檔若與程式碼、測試或實際指令不符，以程式碼為準；安全邊界、授權與不可逆操作則以本檔為準。發現不符時：照程式碼做，並在回報中指出「本檔第 {line} 行已過期」。
+
 # 在 my-agent-skills 內工作的 agent 須知
 
 本檔是這個 repo 對 coding agent 的工作規範。人類維護者請看 [CONTRIBUTING.md](CONTRIBUTING.md)；
@@ -6,12 +8,15 @@
 ## 這個 repo 是什麼
 
 - 標準 [Agent Skills](https://agentskills.io/specification) 的集合 repo，名稱 `j7708git/my-agent-skills`。
-- 目前有十個 skill：
+- 目前有十一個 skill：
   - `skills/repo-privacy-audit/`：唯讀的 repo 隱私與秘密掃描。它的**唯讀安全邊界不變**，
     不自動修復、不改寫歷史、不推送、不動任何 GitHub 設定。
   - `skills/project-workflow/`：公開程式碼 repo 與獨立 private 工作紀錄 repo 的流程指引。
     它**只提供指引**，不會自動授權或執行任何寫入、commit、push、安裝 hooks、調整可見度
     或搬移檔案；載入它不等於授權。
+  - `skills/writing-contract/`：人看的文件與給 agent 看的指令檔的寫作契約
+    （8 條機械檢查、B1 優先序句、四張自檢清單、重複句白名單與上游許可）；它是規則與詞表，
+    不自動改寫檔案，也不執行檢查器。
   - `skills/web-ui-e2e-smoke/`：Web UI 端到端冒煙驗收的流程指引（真實建置的產物、
     可達後端、真實瀏覽器驅動、截圖留證）。
   - `skills/independent-rerun-verify/`：獨立重跑驗證的流程指引（以現行原始碼自行建置、
@@ -37,7 +42,8 @@
   - `project-workflow` 與 `web-ui-e2e-smoke`／`independent-rerun-verify`／
     `review-fix-round`／`native-crash-triage`／`release-prep`／`handoff-refresh`／
     `diagram-guide` 都是**純文字流程指引**：不下載或安裝工具、不自行 commit／push，
-    也不提供任何安全保證；載入它們不等於授權。
+    也不提供任何安全保證；載入它們不等於授權。`writing-contract` 同為純文字規則
+    與詞表，邊界相同。
 - 平台專屬 agent（OpenCode 的 agent／command 定義）屬於**選配**，收錄在
   `adapters/opencode/`：目前包含 `project-workflow` 配套的 `pm`／`researcher`／
   `implementer`／`tester`／`tester-verify`、派工前的選配計畫審查 `plan-reviewer`、
@@ -135,7 +141,7 @@
 bash scripts/run-checks.sh
 ```
 
-這一條會依序跑格式驗證、單元測試、Bash 語法檢查、Python 語法檢查，
+這一條會依序跑格式驗證、寫作契約、單元測試、Bash 語法檢查、Python 語法檢查，
 以及 Gitleaks 的**歷史**（所有本機 refs 可達的 commit）與 **staged**（index）掃描。
 任一步失敗就回報失敗，不要略過或改寫檢查腳本來讓它變綠。
 缺 Gitleaks 時腳本會以退出碼 2 結束並說明掃描不完整——那是誠實的結果，不是可忽略的雜訊。

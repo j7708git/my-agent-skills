@@ -98,7 +98,10 @@ REQUIRED_REPO_FILES = (
 # docs/specification.md 是產品契約，屬於必要公開文件：沒有它，讀者無從得知
 # CLI、退出碼與安全邊界，公開文件就不自足。--repo 指向其他 repo 時若沒有這份契約，
 # 該 repo 應確實先建立它，而不是讓驗證器放行。
-DOC_FILES = REQUIRED_REPO_FILES + ("docs/research/portability.md",)
+DOC_FILES = REQUIRED_REPO_FILES + (
+    "docs/research/portability.md",
+    "docs/writing-contract.md",
+)
 
 # 本機專屬目錄：不進版控，因此公開文件不可引用（否則對外部讀者是死連結）。
 LOCAL_ONLY_DIRS = (".local", ".openchamber")

@@ -115,6 +115,10 @@ CLI 退出碼 0，且 `SKILL.md` 與其相對資源都存在於安裝目標）�
     查不到的端點一律記為未檢查，不會從缺漏推論成未啟用。
 12. **本文件不記錄發布過程。** 遠端可見度、安裝授權與歷史改寫這類維運事實
     會隨時間改變，也不屬於產品契約；以當下的 GitHub 設定與本機 Git 狀態為準。
+13. **通過寫作契約檢查不等於好文件。** 檢查器只證明列出的形式規則沒有命中；
+    可讀性、內容正確與讀者適配都沒有被驗證。可讀性公式與 LLM judge 都不能當放行依據。
+14. **寫作契約 skill 的 agent runtime 未實測。** 規則與詞表只有格式驗證；
+    沒有在任何 client 實測載入、觸發或遵循率。
 
 ## project-workflow 的狀態
 
@@ -159,6 +163,25 @@ CLI 退出碼 0，且 `SKILL.md` 與其相對資源都存在於安裝目標）�
   但它的 **agent runtime 載入與觸發仍未實測**，與上表其他 skill 同樣未驗證。
 - 這些 skill 的驗證結果**不繼承** `repo-privacy-audit` 的四種安裝實測或 runtime 行為；
   反向亦然。
+
+## writing-contract 的狀態
+
+`skills/writing-contract/` 是規則與詞表，不是掃描器；它沒有執行時相依，也不會
+自動改寫檔案。放在集合 repo 的檢查器是維護工具，安裝 skill 後不會跟著走。
+
+| 項目 | 狀態 | 依據 |
+| --- | --- | --- |
+| Agent Skills 格式與相對資源 | 已驗證 | `python3 scripts/validate_skills.py --check-docs --strict` |
+| 檢查器契約測試 | 已驗證 | `tests/scaffold/test_validate_writing.py` |
+| 安裝實測（本 skill） | **未實測** | 先前的四種隔離安裝只針對 `repo-privacy-audit`，不繼承給本 skill |
+| agent runtime 實際載入與觸發 | **未驗證** | 沒有在任何真實 client 實測 |
+| 規則對真實文件品質的效果 | **未驗證** | 沒有 A/B 實驗、讀者測試或跨版本量測 |
+
+要點：
+
+- 格式驗證只證明 frontmatter、命名與相對資源可解析，不證明規則有效或模型會遵守。
+- 檢查器通過只代表形式規則沒有命中；文件是否好讀、正確與適合讀者，仍要人工判斷。
+- 本 skill 的驗證結果不繼承 `repo-privacy-audit` 的安裝實測或 runtime 行為。
 
 ## OpenCode adapters（`adapters/opencode/`）
 

@@ -9,8 +9,10 @@
 | 路徑 | 用途 |
 | --- | --- |
 | `docs/specification.md` | 產品技術契約：CLI、退出碼、輸出格式、安全邊界 |
+| `docs/writing-contract.md` | 寫作契約摘要：規則、CLI、衝突矩陣、中文門檻與不能宣稱的事 |
 | `scripts/validate_skills.py` | 格式驗證器（Python 3 標準函式庫，無外部相依） |
-| `scripts/run-checks.sh` | 統一檢查入口：格式 → 測試 → Bash 語法 → Python 語法 → Gitleaks（歷史＋staged） |
+| `scripts/validate_writing.py` | 寫作契約檢查器（A／B 類形式規則，全部是 warning） |
+| `scripts/run-checks.sh` | 統一檢查入口：格式 → 寫作契約 → 測試 → Bash 語法 → Python 語法 → Gitleaks（歷史＋staged） |
 | `.github/workflows/ci.yml` | 本 repo 的 CI，權限 `contents: read` |
 | `.gitleaks.toml` | 使用 Gitleaks 預設規則，沒有路徑或值豁免 |
 | `tests/scaffold/` | 驗證器與檢查腳本自身的測試 |
@@ -47,6 +49,7 @@ skill 安裝到使用者的專案後，這個腳本不會跟著走。
 | `tests/repo-privacy-audit/test_cli_modes.py` | 12 | CLI 模式與輸入處理 |
 | `tests/scaffold/test_validate_skills.py` | 33 | 驗證器自身與文件分流：公開文件自足、禁止引用本機路徑、禁止追蹤本機目錄 |
 | `tests/scaffold/test_run_checks_cli.py` | 14 | 檢查腳本的 CLI 與失敗聚合 |
+| `tests/scaffold/test_validate_writing.py` | 契約測試 | 8 條機械檢查的正例、假綠對照、diff 範圍、四態與降級規則不誤報 |
 | `tests/project-workflow/test_skill_contract.py` | 契約測試 | `project-workflow`：模板欄位、自足引用、隔離複製、平台中立、隱私 placeholder、授權敘述 |
 | `tests/academic-paper-search/test_arxiv_search.py` | 54 | arXiv 檢索腳本契約：查詢建構與 URL 編碼、Atom 解析、json/text/bibtex 輸出、退出碼 |
 
@@ -95,7 +98,7 @@ fixtures 全部是合成資料；完整假憑證只在暫存測試 repo 的執�
      以及三份契約與維護文件——**`docs/specification.md`**（產品契約：CLI、退出碼、
      輸出、安全邊界）、本文件、`docs/compatibility.md`。
      契約缺席或空白都算錯誤：沒有它，公開文件就沒有說明產品怎麼用、怎麼讀退出碼。
-   - 公開文件（含 `docs/research/portability.md`）的 Markdown 相對連結指向存在的檔案，
+   - 公開文件（含 `docs/research/portability.md` 與 `docs/writing-contract.md`）的 Markdown 相對連結指向存在的檔案，
      依序以「文件所在目錄、repo 根目錄」為基準解析，邊界是 repo 根。
    - 公開文件**不得引用** `.local/` 或 `.openchamber/`：這些路徑不在版控內，
      對外部讀者是死連結。這項檢查先於存在性檢查，因為這些路徑在本機確實存在。
@@ -133,11 +136,13 @@ bash scripts/run-checks.sh --gitleaks /path/to/gitleaks
 依序執行：
 
 1. `python3 scripts/validate_skills.py --repo <目標> --check-docs --strict`
-2. `python3 -m unittest`（測試檔以 `find tests -name 'test_*.py'` 收集，避免 discover 漏掉非套件目錄；
+2. `python3 scripts/validate_writing.py --repo <目標> --format text`
+   （寫作契約檢查；**不加 `--strict`**，因為所有文件問題都是 warning，不阻擋提交）
+3. `python3 -m unittest`（測試檔以 `find tests -name 'test_*.py'` 收集，避免 discover 漏掉非套件目錄；
    逐檔執行並把該檔目錄加入 `PYTHONPATH`，讓同目錄的 `helpers.py` 可匯入）
-3. `bash -n` 檢查所有 `.sh`
-4. `python3 -m py_compile` 檢查 Python 語法
-5. Gitleaks 兩個獨立步驟：
+4. `bash -n` 檢查所有 `.sh`
+5. `python3 -m py_compile` 檢查 Python 語法
+6. Gitleaks 兩個獨立步驟：
    - **歷史**：`gitleaks git . --log-opts='--all'`（所有本機 refs 可達的 commit）
    - **staged**：`gitleaks git . --staged`（index 中即將進入 commit 的內容）
 
@@ -146,7 +151,23 @@ bash scripts/run-checks.sh --gitleaks /path/to/gitleaks
 沒有 Gitleaks 時兩個秘密掃描步驟都以未完成（退出碼 2）收尾，並明說掃描不完整。
 `--repo`／`--gitleaks` 缺參數值時立即以退出碼 2 結束（不會陷入參數解析迴圈）。
 
-### 秘密掃描的邊界與失敗處理
+## 寫作契約檢查
+
+`scripts/validate_writing.py` 只做 8 條機械檢查：A1 四欄存在、四欄非空／非
+`<…>`、現在要做填充詞、依據反引號路徑、A3 代號句、單檔 > 400 行、A9c commit SHA、
+B1 優先序句。其餘規則（A5 條列／散文、A6、A7、A2r、A4r、A9r、B2、B3）是人工自檢，
+不在檢查器內。
+
+- 只有 `skills/writing-contract/assets/fillers.md` 是機械輸入；缺檔或空表 →
+  退出碼 2。`terms.md`／`vague.md`／`familiar-terms.md`／`duplicate-allowlist.md`
+  是人工清單，缺失只提示。
+- `--notes-root` 只用於解析 `project-notes/...` 路徑，不讀取檔案內容。
+- `--base` 必須是 commit 物件；空字串 → 退出碼 2；40 位全 0 視為 CI 首次 push 的
+  空樹。HEAD 已在 merge-base 時用 HEAD。
+- 新增檔檢查全文；修改檔只檢查新增行；單檔 > 400 行（只套 A 類）是檔案層級，修改檔也會報。
+- `--baseline` 四態與 `out-of-scope` 規則同公開契約；所有文件問題都是 warning。
+
+## 秘密掃描的邊界與失敗處理
 
 - **歷史掃描不涵蓋未 commit 的內容。** index 由 `--staged` 涵蓋；
   未 staged 的工作樹變更不在本腳本範圍內，發布前請另外確認。

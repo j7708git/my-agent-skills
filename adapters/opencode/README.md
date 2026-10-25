@@ -98,6 +98,19 @@ cp commands/*.md ~/.config/opencode/commands/
   執行 `scripts/arxiv_search.py` 做 arXiv 結構化檢索；環境未安裝該 skill 時退回
   一般網路搜尋）。這是配合本 repo 發行 skill 的刻意增補，同步作者新版本時請保留。
 
+## 寫作契約的 B1 注入
+
+本 repo 的 `writing-contract` 要求 B 類指令檔第一段有優先序句。這次沒有新增或移除
+agent；注入範圍與排除理由如下：
+
+- `agents/pm.md` 與 `skills/project-workflow/assets/templates/task-brief.md` 的
+  檔案開頭與內嵌骨架前導句都加了同一句；`pm.md` 骨架保留兩個空格的縮排。
+- 其餘 B 類檔（10 份 `SKILL.md`、7 份 `references/*.md`、根 `AGENTS.md`）只在
+  檔案開頭加 B1；`skills/writing-contract/` 的規則檔本身豁免，因為它們定義規則，
+  不描述程式行為。
+- 其他 adapters agent／command 檔不在本次 B 類清單內，沒有注入；若日後納入，
+  要同步更新檢查器的類別清單與契約測試，不要只改文件。
+
 ## 相依關係
 
 - `pm.md`／`researcher.md`／`implementer.md`／`tester.md`／`tester-verify.md`／

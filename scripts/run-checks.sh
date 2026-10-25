@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # my-agent-skills 統一檢查腳本。
 #
-# 依序執行：格式驗證 → 單元測試 → Bash 語法 → Python 語法 → Gitleaks（歷史＋staged）。
+# 依序執行：格式驗證 → 寫作契約 → 單元測試 → Bash 語法 → Python 語法 → Gitleaks（歷史＋staged）。
 # 不下載、不安裝任何東西，不修改任何全域設定。
 #
 # 退出碼（聚合）：
@@ -62,6 +62,11 @@ STEP_NAMES=()
 STEP_CODES=()
 STEP_NOTES=()
 
+# banner 的步驟總數由腳本內的 banner 呼叫數算出，不寫死數字。
+STEP_TOTAL=$(grep -cE '^banner "' "${BASH_SOURCE[0]}" 2>/dev/null || true)
+STEP_TOTAL=${STEP_TOTAL:-0}
+STEP_INDEX=0
+
 record() {
   STEP_NAMES+=("$1")
   STEP_CODES+=("$2")
@@ -69,6 +74,12 @@ record() {
 }
 
 banner() {
+  STEP_INDEX=$((STEP_INDEX + 1))
+  echo ""
+  echo "=== ${STEP_INDEX}/${STEP_TOTAL} $1 ==="
+}
+
+summary_banner() {
   echo ""
   echo "=== $1 ==="
 }
@@ -81,7 +92,7 @@ cd "$REPO_ROOT" || {
 echo "repo：$REPO_ROOT"
 
 # 1. 格式驗證 ------------------------------------------------------------------
-banner "1/6 格式驗證（scripts/validate_skills.py）"
+banner "格式驗證（scripts/validate_skills.py）"
 if command -v python3 >/dev/null 2>&1; then
   # 驗證器永遠來自本 checkout，--repo 只決定被檢查的目標。
   python3 "$SCRIPT_DIR/validate_skills.py" --repo "$REPO_ROOT" --check-docs --strict
@@ -91,8 +102,19 @@ else
   record "格式驗證" 2 "缺少 python3"
 fi
 
-# 2. 單元測試 ------------------------------------------------------------------
-banner "2/6 單元測試（unittest）"
+# 2. 寫作契約 ------------------------------------------------------------------
+# 只回報形式問題，全部是 warning；不加 --strict，避免既有存量警告擋住 CI。
+banner "寫作契約（scripts/validate_writing.py）"
+if command -v python3 >/dev/null 2>&1; then
+  python3 "$SCRIPT_DIR/validate_writing.py" --repo "$REPO_ROOT" --format text
+  record "寫作契約" "$?" ""
+else
+  echo "找不到 python3，無法執行寫作契約檢查。"
+  record "寫作契約" 2 "缺少 python3"
+fi
+
+# 3. 單元測試 ------------------------------------------------------------------
+banner "單元測試（unittest）"
 if [ "$SKIP_TESTS" -eq 1 ]; then
   echo "已依 --skip-tests 略過；此結果不代表測試通過。"
   record "單元測試" 2 "依參數略過"
@@ -126,8 +148,8 @@ else
   fi
 fi
 
-# 3. Bash 語法 -----------------------------------------------------------------
-banner "3/6 Bash 語法檢查（bash -n）"
+# 4. Bash 語法 -----------------------------------------------------------------
+banner "Bash 語法檢查（bash -n）"
 SH_FILES=()
 while IFS= read -r file; do
   SH_FILES+=("$file")
@@ -146,8 +168,8 @@ else
   record "Bash 語法" "$bash_syntax_code" ""
 fi
 
-# 4. Python 語法 ---------------------------------------------------------------
-banner "4/6 Python 語法檢查（compileall）"
+# 5. Python 語法 ---------------------------------------------------------------
+banner "Python 語法檢查（compileall）"
 if command -v python3 >/dev/null 2>&1; then
   PY_FILES=()
   while IFS= read -r file; do
@@ -166,14 +188,14 @@ else
   record "Python 語法" 2 "缺少 python3"
 fi
 
-# 5. Gitleaks -----------------------------------------------------------------
+# 6. Gitleaks -----------------------------------------------------------------
 # 兩個掃描各自独立記錄：
-#   5a 歷史：git log --all 的所有本機 refs 可達 commit（不含未 commit 的工作樹／index）
-#   5b staged：index 中即將進入 commit 的內容
+#   6a 歷史：git log --all 的所有本機 refs 可達 commit（不含未 commit 的工作樹／index）
+#   6b staged：index 中即將進入 commit 的內容
 # 未 staged 的工作樹變更不在本腳本範圍內；發布前請另外確認。
 # 退出碼映射：0=通過、99=有發現→1、其它非 0→2（未完成）。
 # 報告檔不存在或不是合法 JSON 一律視為未完成（fail closed），不當成通過。
-banner "5/6 Gitleaks 敏感資訊掃描（本 repo）"
+banner "Gitleaks 敏感資訊掃描（本 repo）"
 
 summarize_report() {
   # 只輸出規則、檔案與行號；不輸出 Secret 欄位，也不直接轉發 gitleaks 的原始輸出。
@@ -270,7 +292,7 @@ MSG
     echo "使用 Gitleaks：$GITLEAKS_BIN（$("$GITLEAKS_BIN" version 2>/dev/null | tr -d '\n')）"
     REPORT_DIR="$(mktemp -d)"
 
-    echo "--- 5a 歷史（所有本機 refs 可達的 commit）---"
+    echo "--- 6a 歷史（所有本機 refs 可達的 commit）---"
     if ! git rev-parse --verify --quiet HEAD >/dev/null 2>&1; then
       echo "這個 repo 還沒有任何 commit，沒有歷史可掃描（退出碼 2：掃描不完整）。" >&2
       record "Gitleaks 歷史" 2 "尚無 commit"
@@ -278,7 +300,7 @@ MSG
       run_gitleaks "Gitleaks 歷史" "$REPORT_DIR/gitleaks-history.json" --log-opts="--all"
     fi
 
-    echo "--- 5b staged（index 中即將進入 commit 的內容）---"
+    echo "--- 6b staged（index 中即將進入 commit 的內容）---"
     if git diff --cached --quiet; then
       echo "目前沒有 staged 變更可掃描；歷史掃描不涵蓋未 commit 的內容。" >&2
       record "Gitleaks staged" 0 "無 staged 變更"
@@ -289,7 +311,7 @@ MSG
 fi
 
 # 彙總 ------------------------------------------------------------------------
-banner "檢查結果彙總"
+summary_banner "檢查結果彙總"
 overall=0
 index=0
 while [ "$index" -lt "${#STEP_NAMES[@]}" ]; do

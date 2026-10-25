@@ -5,6 +5,8 @@ license: MIT
 compatibility: Bash、Python 3.8 以上、Git 2.31 以上（hooks 需要）。完整的高風險密鑰比對另需使用者自行提供的 Gitleaks 8.x；GitHub 唯讀設定檢查另需 GitHub CLI。缺少 Gitleaks 時內容掃描為不完整，退出碼 2。Windows 原生 shell 未測試。
 ---
 
+> 本檔若與程式碼、測試或實際指令不符，以程式碼為準；安全邊界、授權與不可逆操作則以本檔為準。發現不符時：照程式碼做，並在回報中指出「本檔第 {line} 行已過期」。
+
 # repo-privacy-audit
 
 對 Git repo 與 GitHub 專案做**唯讀**的隱私與機密稽核：找出 token、憑證、個人資料與
