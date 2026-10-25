@@ -75,9 +75,14 @@ python3 scripts/validate_writing.py --repo . [--notes-root PATH] [--base REF]
                                      [--format text|json]
 ```
 
-- `--base` 必須是 commit 物件；空字串是格式錯誤（退出碼 2）；40 位全 0 視為
-  CI 首次 push 的空樹。缺席時依 CI 事件、merge-base、HEAD 決定；HEAD 已在
-  merge-base 時用 HEAD。
+- **明確 `--base`** 必須是 commit 物件；空字串是格式錯誤（退出碼 2）；指向 blob／
+  不存在的 ref → 退出碼 2，**不 fallback**。40 位全 0 視為 CI 首次 push 的空樹。
+- **CI 事件 base**：存在且是 commit → 採用；存在但不是 commit（blob）→ 退出碼 2；
+  不存在於本 repo → fallback 到 merge-base／HEAD／空樹，並在輸出寫「已改用 `<base>`」。
+  **payload 不是 dict／shape 不符／不是合法 JSON** → 退出碼 2，訊息可讀、不 traceback。
+  **有 `GITHUB_EVENT_NAME` 但事件檔路徑缺失／不存在** → fallback 並自曝
+  「CI 事件無法提供 base，已改用」。**完全沒有 CI 事件**（`GITHUB_EVENT_NAME` 為空）
+  → 安靜走 merge-base／HEAD／空樹。HEAD 已在 merge-base 時用 HEAD。
 - 新增檔檢查全文；修改檔只檢查 `git diff -U0 <base>` 的新增行。被刪的檔不再檢查，
   rename 的新路徑視為新增。**單檔 > 400 行是檔案層級，修改檔也會報。**
 - 既有公開 A 類檔在全檔掃描時可能出現存量命中（例如沒有四欄、README 超過 400 行）；

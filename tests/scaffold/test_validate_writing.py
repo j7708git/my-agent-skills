@@ -112,26 +112,36 @@ def make_script_copy(root: Path) -> Path:
     return copy_root / "scripts" / "validate_writing.py"
 
 
-def run_script(script: Path, repo: Path, *args: str) -> subprocess.CompletedProcess:
+def clean_env(**extra: str) -> dict:
+    env = dict(os.environ)
+    env.pop("GITHUB_EVENT_NAME", None)
+    env.pop("GITHUB_EVENT_PATH", None)
+    env.update(extra)
+    return env
+
+
+def run_script(script: Path, repo: Path, *args: str, env: dict | None = None) -> subprocess.CompletedProcess:
     return subprocess.run(
         [sys.executable, str(script), "--repo", str(repo), *args],
         capture_output=True,
         text=True,
         timeout=TIMEOUT,
+        env=env or clean_env(),
     )
 
 
-def run(repo: Path, *args: str) -> subprocess.CompletedProcess:
+def run(repo: Path, *args: str, env: dict | None = None) -> subprocess.CompletedProcess:
     return subprocess.run(
         [sys.executable, str(SCRIPT), "--repo", str(repo), *args],
         capture_output=True,
         text=True,
         timeout=TIMEOUT,
+        env=env or clean_env(),
     )
 
 
-def run_json(repo: Path, *args: str) -> tuple[int, dict]:
-    result = run(repo, "--format", "json", *args)
+def run_json(repo: Path, *args: str, env: dict | None = None) -> tuple[int, dict]:
+    result = run(repo, "--format", "json", *args, env=env)
     try:
         payload = json.loads(result.stdout)
     except json.JSONDecodeError as exc:
@@ -402,6 +412,59 @@ class B1Tests(BaseCase):
         self.assertEqual(1, len(reference_lines), reference_lines)
         for line in template_lines + pm_lines + reference_lines:
             self.assertEqual(B1, line)
+
+
+class CiEventBaseTests(BaseCase):
+    def _payload(self, before: str) -> tuple[dict, Path]:
+        path = self.root / "event.json"
+        path.write_text(json.dumps({"before": before}), encoding="utf-8")
+        return clean_env(GITHUB_EVENT_NAME="push", GITHUB_EVENT_PATH=str(path)), path
+
+    def test_ci_event_base_exists_is_used(self) -> None:
+        repo = make_repo(self.root / "ci-exists", commit=True)
+        base = git_out(repo, "rev-parse", "HEAD")
+        write(repo, "docs/bad.md", "# 壞文件\n\n沒有四欄。\n")
+        git(repo, "add", "-A")
+        git(repo, "-c", "commit.gpgsign=false", "commit", "-qm", "synthetic: 第二個 commit")
+        env, _ = self._payload(base)
+        code, payload = run_json(repo, "--class", "a", env=env)
+        self.assertEqual(0, code, payload)
+        self.assertEqual(base, payload["base"])
+        self.assertIsNone(payload["baseNote"])
+        self.assertIn("docs/bad.md", {item["file"] for item in payload["findings"]})
+
+    def test_ci_event_payload_not_dict_exits_2_without_traceback(self) -> None:
+        repo = make_repo(self.root / "ci-bad-shape", commit=True)
+        for content in ("[1,2]", '"hello"'):
+            with self.subTest(payload=content):
+                path = self.root / "bad-event.json"
+                path.write_text(content, encoding="utf-8")
+                env = clean_env(GITHUB_EVENT_NAME="push", GITHUB_EVENT_PATH=str(path))
+                result = run(repo, "--class", "a", env=env)
+                self.assertEqual(2, result.returncode, result.stdout + result.stderr)
+                self.assertIn("不是 JSON 物件", result.stdout)
+                self.assertNotIn("Traceback", result.stdout + result.stderr)
+
+    def test_ci_event_missing_path_falls_back_and_reports(self) -> None:
+        repo = make_repo(self.root / "ci-no-path", commit=True)
+        env = clean_env(GITHUB_EVENT_NAME="push", GITHUB_EVENT_PATH=str(self.root / "does-not-exist.json"))
+        result = run(repo, "--class", "a", env=env)
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertIn("CI 事件無法提供 base，已改用", result.stdout)
+        self.assertNotIn("Traceback", result.stdout + result.stderr)
+
+    def test_ci_event_base_missing_falls_back_and_reports(self) -> None:
+        repo = make_repo(self.root / "ci-missing", commit=True)
+        fake = "f" * 40
+        env, _ = self._payload(fake)
+        code, payload = run_json(repo, "--class", "a", env=env)
+        self.assertEqual(0, code, payload)
+        self.assertNotEqual(fake, payload["base"])
+        self.assertIn("已改用", payload["baseNote"])
+        result = run(repo, "--class", "a", env=env)
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertIn("注意：", result.stdout)
+        self.assertIn("已改用", result.stdout)
 
 
 class BaseAndBaselineTests(BaseCase):

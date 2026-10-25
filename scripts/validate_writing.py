@@ -425,26 +425,45 @@ def is_git_repo(repo: Path) -> bool:
     return git_ok(repo, ["rev-parse", "--git-dir"])
 
 
-def event_base() -> str | None:
+def event_base() -> tuple[str | None, str | None, bool]:
+    """回傳 (base, error, event_claimed)。
+
+    event_claimed=True 代表「有 CI 事件變數，但取不到可用 base」；呼叫端要
+    fallback 並自曝。完全沒有事件變數時 event_claimed=False，維持安靜。
+    """
     name = os.environ.get("GITHUB_EVENT_NAME", "")
     path = os.environ.get("GITHUB_EVENT_PATH", "")
-    if not name or not path or not Path(path).is_file():
-        return None
+    if not name:
+        return None, None, False
+    if not path or not Path(path).is_file():
+        return None, None, True
     try:
-        payload = json.loads(Path(path).read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return None
+        text = Path(path).read_text(encoding="utf-8")
+    except OSError as exc:
+        return None, f"CI 事件 payload 無法讀取：{exc}", True
+    try:
+        payload = json.loads(text)
+    except ValueError as exc:
+        return None, f"CI 事件 payload 不是合法 JSON：{exc}", True
+    if not isinstance(payload, dict):
+        return None, "CI 事件 payload 不是 JSON 物件，無法取得 base", True
     if name == "pull_request":
-        sha = (payload.get("pull_request") or {}).get("base", {}).get("sha")
+        pull = payload.get("pull_request")
+        base_obj = pull.get("base") if isinstance(pull, dict) else None
+        sha = base_obj.get("sha") if isinstance(base_obj, dict) else None
+        if not isinstance(sha, str) or not sha:
+            return None, "CI 事件 payload 缺少 pull_request.base.sha", True
     elif name == "push":
         sha = payload.get("before")
+        if sha is None or sha == "":
+            return EMPTY_TREE, None, False
+        if not isinstance(sha, str):
+            return None, "CI 事件 payload 的 before 必須是字串", True
     else:
-        sha = None
-    if not isinstance(sha, str) or not sha:
-        return EMPTY_TREE
+        return None, None, False
     if re.fullmatch(r"0{40}", sha):
-        return EMPTY_TREE
-    return sha
+        return EMPTY_TREE, None, False
+    return sha, None, False
 
 
 def merge_base(repo: Path) -> str | None:
@@ -474,31 +493,60 @@ def commit_base(repo: Path, ref: str, origin: str) -> tuple[str | None, str | No
     return (resolved or ref), None
 
 
-def resolve_base(repo: Path, explicit: str | None) -> tuple[str | None, str | None]:
-    if explicit is not None:
-        if explicit == "":
-            return None, "--base 不可為空字串"
-        if re.fullmatch(r"0{40}", explicit):
-            return EMPTY_TREE, None
-        if explicit == EMPTY_TREE:
-            return EMPTY_TREE, None
-        if not git_ok(repo, ["cat-file", "-e", explicit]):
-            return None, f"--base 指向不存在的 ref／物件：{explicit}"
-        return commit_base(repo, explicit, "--base")
-    env = event_base()
-    if env:
-        if env == EMPTY_TREE:
-            return EMPTY_TREE, None
-        return commit_base(repo, env, "CI 事件提供的 base")
+def fallback_base(repo: Path) -> tuple[str | None, str | None]:
     found = merge_base(repo)
     if found:
-        return commit_base(repo, found, "merge-base")
+        base, error = commit_base(repo, found, "merge-base")
+        if not error:
+            return base, None
     head_result = git(repo, ["rev-parse", "HEAD"])
     if head_result.returncode == 0:
         head = head_result.stdout.decode("utf-8", "replace").strip()
         if head and object_type(repo, head) == "commit":
             return head, None
     return EMPTY_TREE, None
+
+
+def resolve_base(repo: Path, explicit: str | None) -> tuple[str | None, str | None, str | None]:
+    if explicit is not None:
+        if explicit == "":
+            return None, "--base 不可為空字串", None
+        if re.fullmatch(r"0{40}", explicit):
+            return EMPTY_TREE, None, None
+        if explicit == EMPTY_TREE:
+            return EMPTY_TREE, None, None
+        if not git_ok(repo, ["cat-file", "-e", explicit]):
+            return None, f"--base 指向不存在的 ref／物件：{explicit}", None
+        base, error = commit_base(repo, explicit, "--base")
+        return base, error, None
+    env, event_error, event_claimed = event_base()
+    if event_error:
+        return None, event_error, None
+    if env:
+        if env == EMPTY_TREE:
+            return EMPTY_TREE, None, None
+        kind = object_type(repo, env)
+        if kind == "commit":
+            base, error = commit_base(repo, env, "CI 事件提供的 base")
+            return base, error, None
+        if kind is not None:
+            # 存在但不是 commit：環境異常，維持 fail-closed。
+            return None, f"CI 事件提供的 base 必須是 commit 物件：{env}（實際為 {kind}）", None
+        # CI 事件 base 不存在於這個 repo：這通常是測試用 fixture，不是環境異常。
+        # fallback 到 merge-base 時範圍通常比事件 base 大；fallback 到 HEAD 時，
+        # 乾淨工作樹的 diff 為空（只掃工作樹變更）；只有空 repo 才用空樹，
+        # 全部檔案視為新增。不會把尚未檢查的內容誤報成已檢查。
+        base, error = fallback_base(repo)
+        if error:
+            return None, error, None
+        return base, None, f"CI 事件提供的 base 不存在於本 repo，已改用 {base}"
+    if event_claimed:
+        base, error = fallback_base(repo)
+        if error:
+            return None, error, None
+        return base, None, f"CI 事件無法提供 base，已改用 {base}"
+    base, error = fallback_base(repo)
+    return base, error, None
 
 
 def tracked_markdown(repo: Path, include_untracked: bool) -> list[str]:
@@ -759,9 +807,10 @@ def main(argv: list[str] | None = None) -> int:
         return emit_spec_error(str(exc), args.format, repo)
 
     base: str | None = None
+    base_note: str | None = None
     scope = ""
     if is_git_repo(repo):
-        base, error = resolve_base(repo, args.base)
+        base, error, base_note = resolve_base(repo, args.base)
         if error:
             return emit_incomplete(error, args.format, repo, base=args.base)
     elif args.base is not None:
@@ -795,6 +844,7 @@ def main(argv: list[str] | None = None) -> int:
         "status": "passed",
         "repo": repo.name,
         "base": base,
+        "baseNote": base_note,
         "baselineBase": baseline_base,
         "baseChanged": base_changed,
         "scope": scope,
@@ -809,6 +859,8 @@ def main(argv: list[str] | None = None) -> int:
     else:
         suffix = "；".join(not_checked)
         print(f"本輪 {len(findings)} 個形式問題（不阻擋）／未檢查：{scope}" + (f"；{suffix}" if suffix else ""))
+        if base_note:
+            print(f"注意：{base_note}")
         for item in findings:
             print(f"- {item.file}:{item.line} [{item.rule}／檢查 {item.check}] {item.message}（{item.state}）")
         if baseline is not None:

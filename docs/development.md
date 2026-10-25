@@ -162,8 +162,12 @@ B1 優先序句。其餘規則（A5 條列／散文、A6、A7、A2r、A4r、A9r�
   退出碼 2。`terms.md`／`vague.md`／`familiar-terms.md`／`duplicate-allowlist.md`
   是人工清單，缺失只提示。
 - `--notes-root` 只用於解析 `project-notes/...` 路徑，不讀取檔案內容。
-- `--base` 必須是 commit 物件；空字串 → 退出碼 2；40 位全 0 視為 CI 首次 push 的
-  空樹。HEAD 已在 merge-base 時用 HEAD。
+- 明確 `--base` 必須是 commit 物件；空字串／壞 ref／blob → 退出碼 2，不 fallback。
+  40 位全 0 視為 CI 首次 push 的空樹。CI 事件 base 不存在於本 repo 時 fallback 到
+  merge-base／HEAD／空樹，並在輸出標示「已改用」；存在但不是 commit 仍退出碼 2。
+  payload 不是 dict／shape 不符／不是合法 JSON → 退出碼 2、訊息可讀、不 traceback。
+  有 `GITHUB_EVENT_NAME` 但事件檔路徑缺失／不存在 → fallback 並自曝；完全沒有
+  CI 事件（`GITHUB_EVENT_NAME` 為空）→ 安靜走 merge-base／HEAD／空樹。
 - 新增檔檢查全文；修改檔只檢查新增行；單檔 > 400 行（只套 A 類）是檔案層級，修改檔也會報。
 - `--baseline` 四態與 `out-of-scope` 規則同公開契約；所有文件問題都是 warning。
 

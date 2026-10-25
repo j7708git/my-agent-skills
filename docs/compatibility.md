@@ -10,6 +10,7 @@
 | --- | --- | --- |
 | Linux（x86_64）+ Bash 5.1 + Python 3.10 + Git 2.34 | 已驗證 | 本 repo 的 `scripts/run-checks.sh` 與 `tests/`（掃描核心合成測試 191 項；另有 project-workflow 契約測試，見下方「project-workflow 的狀態」） |
 | Gitleaks 8.30.1（linux x64） | 已驗證 | 版本與校驗和見 [development.md](development.md)；歷史與 staged 掃描皆實跑過 |
+| 真實 GitHub Actions（push） | 已實跑（2026-10-25，run `40199845818`） | 首次執行因環境相依 bug 失敗；已於下一個 commit 修正 |
 | skills@1.7.0 安裝（global／project × copy／symlink） | 已驗證（僅安裝） | 四個 case 全部退出碼 0 且資源齊全，詳見下方「安裝路徑」 |
 | hooks 安裝／移除／實際觸發 | 已驗證 | `tests/repo-privacy-audit/test_hooks.py`：68 項，含真 `git commit`／`git push` 的擋下行為 |
 | macOS + Bash 3.2 | **未驗證** | 掃描腳本設計為相容，但沒有實際跑過本 repo 檢查 |
