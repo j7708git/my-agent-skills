@@ -1,10 +1,10 @@
 # 黑話與術語表（A4r 人工自檢清單）
 
 > Copyright (c) 2026 jacklondon（zh-tech-writing, MIT）——本表為其衍生作品；
-> 上游許可全文見同目錄 `LICENSE.zh-tech-writing`；來源：<https://github.com/leter/zh-tech-writing>
+> 上游許可全文見 `assets/LICENSE.zh-tech-writing`；來源：<https://github.com/leter/zh-tech-writing>
 > 用途：A4r 人工自檢清單；不是機械檢查的輸入。正文散文第一次出現下列詞時，緊接在後要有 6–120 字實質白話註解（「一句話」欄豁免）。
 > 詞條來源：`leter/zh-tech-writing` 的「AI 腔清單」黑話列（MIT）。
-> 開發者日常縮寫（CI、API、CLI、JSON、SHA 等）另列於 `familiar-terms.md`，
+> 開發者日常縮寫（CI、API、CLI、JSON、SHA 等）另列於 `assets/familiar-terms.md`，
 > 不列入 A4r；A4r 只處理需要解釋的黑話與承重術語。
 > 維護責任：新增或刪除詞條只改這張表；檢查器不寫死詞表。
 

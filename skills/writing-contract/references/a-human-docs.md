@@ -92,7 +92,7 @@
   <https://github.com/leter/zh-tech-writing>）：「20 字以內／超過 30 字拆開／
   整句 100 字」、「一段最好不超過 4 行，最多 7 行」、黑話詞列。
   衍生清單與上游許可全文見 `assets/LICENSE.zh-tech-writing`。
-- `terms.md` 的 11 條黑話詞取自上游；`fillers.md` 與 `vague.md` 是專案自擬，
+- `assets/terms.md` 的 11 條黑話詞取自上游；`assets/fillers.md` 與 `assets/vague.md` 是專案自擬，
   參考同類公開清單的分類，不是逐條翻譯。
 - 阮一峰《中文技术文档的写作规范》：20–29 可接受、30–39 須語意明確、
   多於 40 字不接受；縮寫先展開。只引用短句。

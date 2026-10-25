@@ -80,14 +80,17 @@ B 類文件只放三類內容，其餘刪掉：
 
 ## 本專案 B 類清單（20 檔）
 
+下表是**本集合 repo 的實例清單**；裝成獨立 skill 時指不到這些檔案，規則不依賴它們。
+
 | 類型 | 檔案 |
 | --- | --- |
 | SKILL.md（10） | `skills/{academic-paper-search,diagram-guide,handoff-refresh,independent-rerun-verify,native-crash-triage,project-workflow,release-prep,repo-privacy-audit,review-fix-round,web-ui-e2e-smoke}/SKILL.md` |
 | references（7） | `skills/academic-paper-search/references/*.md`（2）、`skills/project-workflow/references/*.md`（3）、`skills/repo-privacy-audit/references/*.md`（2） |
-| 其他（3） | 根 `AGENTS.md`、`skills/project-workflow/assets/templates/task-brief.md`、`adapters/opencode/agents/pm.md`（檔頭與骨架） |
+| 其他（3，本集合 repo 實例） | 根 `AGENTS.md`、`skills/project-workflow/assets/templates/task-brief.md`、`adapters/opencode/agents/pm.md`（檔頭與骨架） |
 
-`adapters/opencode/agents/` 的其他 agent 定義不在本輪 B 類範圍；
-`skills/writing-contract/` 自身的規則檔豁免 B1。
+以上路徑是**本集合 repo 的實例路徑**；裝成獨立 skill 時這裡指不到那些檔案，
+本節的規則本身不依賴這些路徑。本集合 repo 的 adapters/opencode/agents/ 其他
+agent 定義不在本輪 B 類範圍；本 skill 自身的規則檔豁免 B1。
 
 ## 交付前自檢
 

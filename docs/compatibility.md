@@ -52,25 +52,40 @@ CLI 退出碼 0，且 `SKILL.md` 與其相對資源都存在於安裝目標）�
   **Claude Code 使用 `.claude/skills`**（全域為 `~/.`、專案內為 `./`）。
 - copy 與 symlink 兩種方式在四個 case 都成功安裝，資源檔皆可讀。
 - 這些是 skills CLI 的安裝結果，**不等於 agent runtime 驗證**。
-  下表列出的 client 行為仍屬未實測。
+  下表分開列「安裝位置」與「client 端載入」。
 
-| Client | 手動安裝路徑（未實測） | 狀態 |
+| Client | 手動安裝路徑 | 狀態 |
 | --- | --- | --- |
-| OpenCode | `~/.agents/skills/`、`.agents/skills/` | 安裝位置已由 skills CLI 實測；**client 端載入未實測** |
+| OpenCode | `~/.agents/skills/`、`.agents/skills/` | 安裝位置已由 skills CLI 實測；**`writing-contract` 的 `.agents/skills` client 端載入已實測（2026-10-25，見下）；`repo-privacy-audit` 的載入未實測** |
 | Codex | `~/.agents/skills/`、`.agents/skills/` | 安裝位置已由 skills CLI 實測；**client 端載入未實測** |
 | Claude Code | `~/.claude/skills/`、`.claude/skills/` | 安裝位置已由 skills CLI 實測；**client 端載入未實測** |
 
-**這個 skill 不會無縫相容於任何 agent client。** 上表只證明「檔案可以被放到這些位置，
-且相對資源可解析」；沒有一個 client 通過實際載入測試。
+### writing-contract 的 client 端載入（2026-10-25）
+
+把 `writing-contract` 安裝到 `~/.agents/skills/writing-contract/` 後，**OpenCode 在
+session 中偵測到這張 skill，並列出可用名單與正確的 description**。這是
+`.agents/skills` 路徑的**第一次 client 端載入實測**。
+
+邊界：
+
+- 只在**這台機器、這個 OpenCode 版本**實測；其他 client（Claude Code／Codex／pi）
+  與其他 OpenCode 版本**仍未實測**。
+- 只證明「skill 被偵測到並列出」；**agent 是否真的照規則寫、是否會觸發**，
+  屬於行為改善，**仍未測**。
+- 這次實測的是 `writing-contract`，不繼承給 `repo-privacy-audit`。
+
+**`repo-privacy-audit` 不會無縫相容於任何 agent client。** 上表只證明「檔案可以被放到
+這些位置，且相對資源可解析」；它沒有通過實際載入測試。
 
 **安裝驗證不等於 agent runtime 驗證。** 把檔案放對位置，只能證明「格式與路徑可安裝」，
 不能證明某個 agent 會自動載入、會正確觸發、或在真實對話中表現正確。
-後者需要該 agent 的實際 runtime 與真實模型，這部分目前標為**待驗證**。
-本次安裝測試也**不等於**掃描核心（`skills/repo-privacy-audit/`）最終快照的驗收。
+`writing-contract` 已有一次 `.agents/skills` 載入實測，但**行為與觸發仍待驗證**；
+`repo-privacy-audit` 的 runtime 與本次掃描核心最終快照驗收仍在未驗證範圍。
 
 ## Skill 自身的自足性
 
-- `SKILL.md` 與 `references/` 只引用 skill 目錄內的檔案。
+- `SKILL.md` 與 `references/` 的**實際依賴**只引用 skill 目錄內的檔案；
+  文中出現的集合 repo 實例路徑是說明用，不是依賴，安裝後指不到也不影響規則。
   安裝時只複製 skill 目錄，不需要這個集合 repo 的 `docs/` 或 `scripts/`。
 - 掃描腳本只用 Bash 與 Python 3 標準函式庫；安裝 `skills` CLI（Node.js）
   與執行掃描是兩件事，Node.js 不是執行時相依。
@@ -174,14 +189,15 @@ CLI 退出碼 0，且 `SKILL.md` 與其相對資源都存在於安裝目標）�
 | --- | --- | --- |
 | Agent Skills 格式與相對資源 | 已驗證 | `python3 scripts/validate_skills.py --check-docs --strict` |
 | 檢查器契約測試 | 已驗證 | `tests/scaffold/test_validate_writing.py` |
-| 安裝實測（本 skill） | **未實測** | 先前的四種隔離安裝只針對 `repo-privacy-audit`，不繼承給本 skill |
-| agent runtime 實際載入與觸發 | **未驗證** | 沒有在任何真實 client 實測 |
+| 安裝實測（本 skill） | **已實測（僅 OpenCode `.agents/skills` 載入）** | 2026-10-25 安裝到 `~/.agents/skills/writing-contract/` 後，OpenCode 偵測並列出 skill 名與 description |
+| agent 觸發與遵循率 | **未驗證** | 只證明被列出；沒有實測是否觸發或照規則寫 |
 | 規則對真實文件品質的效果 | **未驗證** | 沒有 A/B 實驗、讀者測試或跨版本量測 |
 
 要點：
 
 - 格式驗證只證明 frontmatter、命名與相對資源可解析，不證明規則有效或模型會遵守。
 - 檢查器通過只代表形式規則沒有命中；文件是否好讀、正確與適合讀者，仍要人工判斷。
+- 本 skill 的載入實測只在這台機器、這個 OpenCode 版本；其他 client 與版本未測。
 - 本 skill 的驗證結果不繼承 `repo-privacy-audit` 的安裝實測或 runtime 行為。
 
 ## OpenCode adapters（`adapters/opencode/`）
