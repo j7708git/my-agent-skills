@@ -173,7 +173,7 @@
   <rect x="466" y="994" width="228" height="3" rx="1.5" fill="#d97706"/>
   <text x="472" y="1014" font-size="13" font-weight="600" fill="#9a4c00">tester（葉節點）</text>
   <text x="472" y="1032" font-size="11" fill="#59636e">跑指令／開瀏覽器／比對證據</text>
-  <text x="472" y="1048" font-size="11" fill="#59636e">回報：通過／失敗／未測／需人工</text>
+  <text x="472" y="1048" font-size="11" fill="#59636e">回報：通過／失敗／未做／未測／需人工</text>
   <text x="472" y="1064" font-size="11" fill="#59636e">不改程式碼、不再派子 agent</text>
 
   <!-- 09 選配：tester-verify（A 通過後的側分支；B 的證據回到同一個裁決鑽石） -->

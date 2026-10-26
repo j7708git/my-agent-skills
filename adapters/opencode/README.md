@@ -97,6 +97,11 @@ cp commands/*.md ~/.config/opencode/commands/
   `academic-paper-search` skill 的條件式入口（先載入該 skill、再依其 `SKILL.md`
   執行 `scripts/arxiv_search.py` 做 arXiv 結構化檢索；環境未安裝該 skill 時退回
   一般網路搜尋）。這是配合本 repo 發行 skill 的刻意增補，同步作者新版本時請保留。
+- `agents/implementer.md`／`agents/researcher.md`／`agents/tester.md` 增列成本前提
+  （「成本信號」「證據下限」「驗收看外部世界」），`agents/pm.md` 增列「工具使用義務」
+  與兩句成本界定。起因是觀察到部分 flash 級模型在離開原生 agent 框架後，對「行動
+  成本」過度保守（原生框架的文件明說推理便宜、且「跳過不是成本信號」）。這些是通用
+  規則、不綁型號也不綁版本；行為若改變，整段可刪，不影響其他規則。
 
 ## 寫作契約的 B1 注入
 
