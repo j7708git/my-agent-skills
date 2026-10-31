@@ -1,7 +1,8 @@
 # OpenCode adapters：PM 工作流的 agent 與指令定義
 
 這裡收錄 `skills/project-workflow/` 作者實際在用的 OpenCode 設定：
-十個 agent（工作流配套、計畫審查、獨立審查與翻譯官）、一個獨立的網路研究 agent，以及四個斜線指令。
+十四個 agent（工作流配套、計畫審查、獨立審查、翻譯官，以及研究組長與四個
+來源 worker）、一個獨立的網路研究 agent，以及四個斜線指令。
 agent 定義與 skill 分開發行（原因見
 [docs/research/portability.md](../../docs/research/portability.md)）：
 agent 是平台專屬的角色、權限與模型設定，skill 是純文字流程指引。
@@ -11,7 +12,11 @@ agent 是平台專屬的角色、權限與模型設定，skill 是純文字流�
 | 檔案 | 說明 |
 | --- | --- |
 | `agents/pm.md` | 專案 PM（技術長）：接收願望、安排研究、規劃、派工與驗收 |
-| `agents/researcher.md` | 研究員：調查主題並把結論寫成 `project-notes/` 內部知識筆記 |
+| `agents/researcher.md` | 研究組長：拆題、平行派工給四個來源 worker、彙整並寫成 `project-notes/` 知識筆記 |
+| `agents/research-github.md` | 研究 worker（GitHub）：以 `gh` 唯讀查 repo、程式碼、issue、release，只回摘要不寫檔 |
+| `agents/research-papers.md` | 研究 worker（論文與模型）：查 arXiv 與 Hugging Face 的論文、模型、dataset，只回摘要不寫檔 |
+| `agents/research-social.md` | 研究 worker（社群）：以 `last30days` 抓 Reddit、X、Hacker News 近 30 天風向，只回摘要不寫檔 |
+| `agents/research-web.md` | 研究 worker（網路）：查非 GitHub、非 Hugging Face 的官方文件與網站，只回摘要不寫檔 |
 | `agents/implementer.md` | 實作者：依自包含任務簡報實作、自我驗收並回報 |
 | `agents/tester.md` | 測試員：依任務卡的驗證方式執行驗收並回報，不改程式碼 |
 | `agents/tester-verify.md` | 獨立複驗測試員（選配）：不讀第一份 tester 報告，重跑關鍵驗收並加負向／對照組，不改程式碼 |
@@ -40,14 +45,20 @@ cp agents/web-search-modules/*.md ~/.config/opencode/agents/web-search-modules/
 cp commands/*.md ~/.config/opencode/commands/
 ```
 
+> **平行研究需要 `experimental.subagent_depth: 2`**：`researcher` 會用 `subagent`
+> 呼叫四個來源 worker；OpenCode 預設深度為 1，子代理不能再開子代理。請在
+> `~/.config/opencode/opencode.json` 加入 `"experimental": { "subagent_depth": 2 }`
+> 後重新載入設定。沒有這個設定時，`researcher` 派不出 worker，只能退回自己的
+> 網路搜尋，並在筆記標明「未採用平行（原因）」。
+
 之後在 OpenCode 裡即可用 `/wish`、`/proto`、`/research`、`/optimize` 指令，
 或直接指定 `agent: pm`／`researcher`／`implementer`／`workflow-optimizer`／`translator`。
 
-> **選配：一併安裝 `academic-paper-search` skill**：`agents/researcher.md` 與
+> **選配：一併安裝 `academic-paper-search` skill**：`agents/research-papers.md` 與
 > `agents/web-search-modules/academic-papers.md` 在環境**已安裝**本 repo 發行的
 > `academic-paper-search` skill（`skills/academic-paper-search/`）時，會優先載入
-> 它、用它內附的 arXiv API 腳本做結構化論文檢索；未安裝時自動退回原本的網路
-> 搜尋流程，不會失效。要走這條路徑就一併安裝該 skill（安裝方式同其他 skill，
+> 它、用它內附的 arXiv API 腳本做結構化論文檢索；未安裝時回報「此來源未取得」，
+> 不會失效。要走這條路徑就一併安裝該 skill（安裝方式同其他 skill，
 > 見根目錄 [README](../../README.md) 的〈安裝 skill〉一節）。
 
 > **模組檔為什麼帶 frontmatter**：OpenCode 會把 `agents/` 底下巢狀目錄的
@@ -66,6 +77,9 @@ cp commands/*.md ~/.config/opencode/commands/
 - **researcher／implementer／tester**：世界知識有限但便宜快速的 flash 級模型
   即可，它們的工作方式是「以 docs 內的知識為準、不憑記憶猜 API」，正好抵消
   小模型知識不足的弱點。
+- **research-github／research-papers／research-social／research-web**：只做來源
+  蒐集與摘要，不寫筆記，適合便宜模型；未綁定 `model:` 時會繼承呼叫端的模型。
+  建議給它們較低的 reasoning 等級或 flash 級模型，避免四個 worker 同時吃高階額度。
 - **tester-verify**：只在獨立複驗時使用，**必須與 `tester` 用不同模型**，
   否則同一模型的盲點會一起漏掉；發行版同樣不綁型號，由你依環境選擇。
 - **plan-reviewer**：只在派工前的選配計畫審查使用，**必須與 PM 用不同模型**，
@@ -89,8 +103,8 @@ cp commands/*.md ~/.config/opencode/commands/
 - `agents/web-search-modules/*.md` 加上 `hidden: true` frontmatter，並移除
   指向未收錄來源檔（`web-search-agent.md`）的標題註記——否則 OpenCode 會把
   這五個模組檔當成可選 agent 列出。
-- `commands/research.md` 的無效鍵 `subagent: true` 改為文件記載的 `subtask: true`
-  （本 repo 未做 runtime 對照實測）。
+- `commands/research.md` 使用 `subtask: true`；OpenCode V2 文件標示現行欄位為
+  `subagent`、`subtask` 是相容但已棄用的別名（本 repo 未做 runtime 對照實測）。
 - `agents/web-search.md` 保留 legacy 欄位 `temperature:`／`tools:`（作者現行
   設定原樣；OpenCode V2 文件標示不建議新設定使用，實測 v2.0.27 仍正確轉譯）。
 - `agents/researcher.md` 與 `agents/web-search-modules/academic-papers.md` 增列
@@ -102,11 +116,15 @@ cp commands/*.md ~/.config/opencode/commands/
   與兩句成本界定。起因是觀察到部分 flash 級模型在離開原生 agent 框架後，對「行動
   成本」過度保守（原生框架的文件明說推理便宜、且「跳過不是成本信號」）。這些是通用
   規則、不綁型號也不綁版本；行為若改變，整段可刪，不影響其他規則。
+- `agents/researcher.md` 改為組長角色，並新增四個 `agents/research-*.md` worker：
+  每個 worker 都 `edit: "*"` deny、`subagent: "*"` deny、`question: "*"` deny，
+  shell 只開唯讀 allowlist（web worker 完全不給 shell）；`researcher` 的
+  `subagent` 權限只開這四個 ID，其餘一律 deny。worker 不寫任何檔案，只回文字摘要。
 
 ## 寫作契約的 B1 注入
 
-本 repo 的 `writing-contract` 要求 B 類指令檔第一段有優先序句。這次沒有新增或移除
-agent；注入範圍與排除理由如下：
+本 repo 的 `writing-contract` 要求 B 類指令檔第一段有優先序句。新增的四個
+研究 worker 不在 B 類清單內（本輪沒有改動既有 B 類檔的範圍）；注入範圍與排除理由如下：
 
 - `agents/pm.md` 與 `skills/project-workflow/assets/templates/task-brief.md` 的
   檔案開頭與內嵌骨架前導句都加了同一句；`pm.md` 骨架保留兩個空格的縮排。
@@ -127,7 +145,17 @@ agent；注入範圍與排除理由如下：
 - `reviewer.md`／`reviewer-deep.md` 審查時以任務卡的驗收條件逐條對照，
   同樣引用該 workflow 的慣例；獨立使用時可不安裝 skill，但對照會失準。
 - `researcher.md` 的 edit 權限只允許寫 `project-notes/` 下的研究筆記；
-  若你的工作區不用這個慣例，需自行調整它的 permissions。
+  若你的工作區不用這個慣例，需自行調整它的 permissions。它的 shell 也只留唯讀
+  查詢（`grep`／`Select-String`／`git status`／`git log`／`ls`），其餘調查工作
+  必須經由四個 worker。
+- **研究 worker 的分工**：`research-github`（`gh`）、`research-papers`（arXiv 腳本
+  與 `hf`）、`research-social`（`last30days`）、`research-web`（`websearch`／
+  `webfetch`）。一個 URL 只有一個 owner；`last30days` 回傳的 GitHub／網路段落只當
+  趨勢訊號，不當事實。worker 皆為唯讀、非互動，不寫任何檔案。
+- **選配工具（Hugging Face CLI 與 last30days）**：`research-papers` 需要 `hf`
+  （Hugging Face Hub CLI）與 `academic-paper-search` skill；`research-social` 需要
+  `last30days` skill。未安裝時該 worker 回報「此來源未取得」；`last30days` 是外部
+  skill，本 repo 不發行，請另行安裝，本文件不提供本機路徑。
 - `workflow-optimizer.md` 的 edit 權限只允許寫健檢報告
   （`project-notes/shared/workflow/`）與 skill 提案（程式碼 repo 的
   `.local/proposals/`），shell 只開放唯讀 git；它同樣採用 project-workflow 的
@@ -146,9 +174,10 @@ agent；注入範圍與排除理由如下：
 - `pm.md` 的 permissions 允許呼叫名為 `researcher`／`implementer`／`tester`／
   `tester-verify`／`plan-reviewer`／`explore` 的 subagent；`explore` 是 OpenCode
   內建 subagent，不需另裝。
-- **選配工具（GitHub CLI）**：建議安裝並登入 `gh`（`gh auth login`）。`researcher.md`
-  在尋找現成的 Agent Skills、開源工具、範例 repo 或查閱 GitHub Issues 時，會優先使用
-  `gh` CLI 直接查詢結構化資料；若環境未安裝或未認證 `gh`，則自動退回一般網路搜尋。
+- **選配工具（GitHub CLI）**：建議安裝並登入 `gh`（`gh auth login`）。`research-github`
+  worker 在尋找現成的 Agent Skills、開源工具、範例 repo 或查閱 GitHub Issues 時，
+  會優先使用 `gh` CLI 直接查詢結構化資料；若環境未安裝或未認證 `gh`，則回報
+  「此來源未取得」並由組長決定是否改派 `research-web`。
 - **選配 skill（學術論文檢索）**：本 repo 另發行 `academic-paper-search` skill
   （`skills/academic-paper-search/`）：以 arXiv API 做結構化論文檢索
   （關鍵字、作者、分類、日期範圍），輸出含標題、作者、摘要、arXiv ID、分類、
@@ -171,6 +200,8 @@ agent；注入範圍與排除理由如下：
 瀏覽器面板驗證成果——這些是 **OpenChamber**（以 OpenCode 為底的工作台）提供的
 工具，純 OpenCode（TUI）沒有。`translator.md` 用 `subagent` 呼叫 `pm`；需要
 `pm` 設為 `mode: all` 與 workspace 的 `experimental.subagent_depth: 2`。
+`researcher.md` 平行派工給四個研究 worker 也依賴同一個
+`experimental.subagent_depth: 2`；未設定時只能退回自己的網路搜尋並標明未平行。
 沒有這兩個條件時，它會退回「輸出交接單，請使用者切到 `pm` agent 貼上」。agent 在純 OpenCode 可以載入並運作，但走到這些指引時模型需要
 自行變通（例如改用 CLI 指令或口頭回報）；`/wish` 的完整 PM 流程以 OpenChamber
 環境為預設。

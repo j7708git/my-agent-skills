@@ -26,6 +26,11 @@
   > Claude Code／Codex 版仍未收錄。格式依據同頁上方 OpenCode V2 文件；
   > `web-search.md` 保留 legacy 欄位 `temperature:`／`tools:`（V2 文件標示
   > 不建議新設定使用，實測 v2.0.27 仍正確轉譯），為忠實呈現作者現行設定。
+  > 2026-10-31 更新：`researcher` 改為組長角色，新增四個唯讀來源 worker
+  > （`research-github`／`research-papers`／`research-social`／`research-web`），
+  > 以 `subagent` 平行取資料；需要 workspace 的
+  > `experimental.subagent_depth: 2`。worker 不寫檔，`gh`／`hf`／`last30days`
+  > 都是選配，未安裝時回報缺源而不是自動安裝。
 - OpenChamber 使用底層 OpenCode；不需獨立 SKILL.md 格式。
 
 ## 現成安裝工具
