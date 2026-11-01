@@ -32,7 +32,12 @@ HOOKS_SH = SKILL_DIR / "scripts" / "rpa-hooks.sh"
 CORE_PY = SKILL_DIR / "scripts" / "audit_core.py"
 
 # 測試暫存根目錄。依 brief 要求固定在 /tmp/opencode，不寫進專案目錄。
-SCRATCH_ROOT = Path(os.environ.get("RPA_TEST_SCRATCH", "/tmp/opencode/repo-privacy-audit-tests"))
+# 先 realpath 正規化：macOS 的 /tmp 是連向 /private/tmp 的 symlink，
+# 而 Git（rev-parse）回報的是正規路徑；不解析會讓 fixture 路徑與工具輸出的
+# repo／hooksDir 永遠差一層，斷言在 macOS 上必然失敗。
+SCRATCH_ROOT = Path(
+    os.path.realpath(os.environ.get("RPA_TEST_SCRATCH", "/tmp/opencode/repo-privacy-audit-tests"))
+)
 
 # 合成秘密：全部取自公開文件的假範例，不是真實憑證。
 # 一律以分段常量在執行時組合，原始碼不留完整字面值——
