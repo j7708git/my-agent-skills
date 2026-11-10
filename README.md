@@ -31,13 +31,15 @@
 這個 repo 不做自動修復，也不替你決定任何不可逆的動作。它只負責**看清楚**、**講明白**。
 
 `skills/` 之外另有選配的 **`adapters/opencode/`**：`project-workflow` 配套的
-OpenCode agent 定義（`pm`／`researcher`／`implementer`／`tester`／可選的
+OpenCode agent 定義（`pm`／研究組長 `researcher` 與四個來源 worker
+（GitHub、論文與 Hugging Face、社群、網路）／`implementer`／`tester`／可選的
 獨立複驗 `tester-verify`、派工前的選配計畫審查 `plan-reviewer`、獨立審查者
 `reviewer`／`reviewer-deep`、`workflow-optimizer` 健檢、把抽象願望整理成
 brief 的 `translator` 翻譯官）、獨立的 `web-search`
 agent，與 `/wish`／`/proto`／`/research`／`/optimize` 指令。發行版本已移除所有模型綁定，
 安裝者依自己環境自選。格式層面僅保證 OpenCode（`pm`／`implementer`／`translator`
-的部分指引另假設 OpenChamber 提供的工具），說明見
+的部分指引另假設 OpenChamber 提供的工具；`researcher` 平行派工另需
+`experimental.subagent_depth: 2`），說明見
 [adapters/opencode/README.md](adapters/opencode/README.md)。
 
 > **狀態**：授權採 MIT。`repo-privacy-audit` 已驗證項目包括格式與相對資源、
@@ -237,17 +239,18 @@ Release 驗證 → 紀錄」固定成一份可重複套用的發版清單，讓�
 ## OpenCode agent adapters
 
 `adapters/opencode/` 收錄這套流程的**選配** OpenCode 設定：`project-workflow`
-配套的 `pm`／`researcher`／`implementer`／`tester`／可選的獨立複驗
-`tester-verify`、派工前的選配計畫審查 `plan-reviewer`、獨立審查者 `reviewer`／
-`reviewer-deep`、`workflow-optimizer` 健檢 agent、把抽象願望整理成 brief、
-核可後交給 `pm` 的 `translator` 翻譯官、獨立的 `web-search` agent，
+配套的 `pm`／研究組長 `researcher` 與四個來源 worker（`research-github`／
+`research-papers`／`research-social`／`research-web`）／`implementer`／`tester`／
+可選的獨立複驗 `tester-verify`、派工前的選配計畫審查 `plan-reviewer`、獨立審查者
+`reviewer`／`reviewer-deep`、`workflow-optimizer` 健檢 agent、把抽象願望整理成
+brief、核可後交給 `pm` 的 `translator` 翻譯官、獨立的 `web-search` agent，
 與 `/wish`／`/proto`／`/research`／`/optimize` 指令。把檔案複製到
 `~/.config/opencode/` 對應目錄即可使用；
 發行版本刻意移除所有 `model:` 綁定，安裝後請依自己環境選模型。
 **格式僅保證 OpenCode 相容**（Claude Code／Codex 格式不同，未收錄）；
 `pm`／`implementer`／`translator` 的部分指引假設 OpenChamber 工具
 （`tools.openchamber`、瀏覽器面板；`translator` 另需 `pm` `mode: all` 與
-`experimental.subagent_depth: 2`），
+`experimental.subagent_depth: 2`；`researcher` 平行派工也需要同一個設定），
 純 OpenCode 環境需自行變通。且「作者的日常使用」不等於
 「任何環境安裝即正常運作」。安裝步驟、檔案說明與模型選擇建議見
 [adapters/opencode/README.md](adapters/opencode/README.md)。

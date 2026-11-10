@@ -45,13 +45,15 @@
     也不提供任何安全保證；載入它們不等於授權。`writing-contract` 同為純文字規則
     與詞表，邊界相同。
 - 平台專屬 agent（OpenCode 的 agent／command 定義）屬於**選配**，收錄在
-  `adapters/opencode/`：目前包含 `project-workflow` 配套的 `pm`／`researcher`／
-  `implementer`／`tester`／`tester-verify`、派工前的選配計畫審查 `plan-reviewer`、
-  獨立審查者 `reviewer`／`reviewer-deep`、
+  `adapters/opencode/`：目前包含 `project-workflow` 配套的 `pm`／研究組長
+  `researcher` 與四個唯讀來源 worker（`research-github`／`research-papers`／
+  `research-social`／`research-web`）／`implementer`／`tester`／`tester-verify`、
+  派工前的選配計畫審查 `plan-reviewer`、獨立審查者 `reviewer`／`reviewer-deep`、
   `workflow-optimizer` 健檢 agent、`translator` 翻譯官（把抽象願望問成 brief、
   核可後交給 PM，並把 PM 的回覆翻成白話）、獨立的 `web-search` agent，與
   `/wish`／`/proto`／`/research`／`/optimize` 指令；發行版本刻意移除所有
-  `model:` 綁定，安裝者依自己環境自選模型。安裝說明見
+  `model:` 綁定，安裝者依自己環境自選模型。平行研究需要
+  `experimental.subagent_depth: 2`。安裝說明見
   `adapters/opencode/README.md`。其他平台
   （Claude Code／Codex）的 adapters 尚未收錄，等有真實需求再新增，不要先放空殼。
 
