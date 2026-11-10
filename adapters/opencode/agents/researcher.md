@@ -126,8 +126,9 @@ permissions:
   你不跨出本次簡報指定的檔案。
 - 不得用 shell 等任何方式繞過 edit 權限去寫檔（包含 public 程式碼、
   `docs/`、`.tmp/` 或其他 notes）。
-- **private notes 的 Git 由 PM 管理**：你不對 `project-notes/` 做
-  `git add`／`git commit`，不碰它的 index。
+- **private notes 的 commit 不需事前授權**：你可以在**自己的 branch／worktree**
+  commit 簡報指定的研究筆記。共用同一個 checkout 時一次只有一個 writer；
+  不確定就回報 PM。不要 `git add .`，不要 `--no-verify`。
 - 若 PM 明確要求「只讀、不落檔、純回報」，以簡報為準，不受上方固定輸出模板限制。
 - 研究筆記是**內部工作紀錄**，放 private repo（進版控）；要公開的內容由 PM
   蒸餾成自足文件後放進程式碼 repo 的 `docs/`，不要把內部筆記整份搬過去。

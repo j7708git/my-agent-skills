@@ -70,11 +70,13 @@
    由使用者決定是否取得。
 6. **不新增相依套件**：掃描核心只用 Bash 與 Python 3 標準函式庫。安裝工具（skills CLI）只是可選安裝路徑。
 7. **不自動改 GitHub 設定**：CI 只用唯讀權限；branch protection、required checks 等由維護者手動設定。
-8. **不自行 commit／push，除非使用者明確授權**：
-   - 未獲明確授權時，不 commit、不 push、不建立 remote、不改分支保護設定。
-   - 已獲明確授權的範圍內則照做，例如：使用者已同意的首次發布流程
-     （建立 remote、初始提交、push），或使用者已同意的驗收流程步驟。
-   - 授權範圍之外的動作（例如把 repo 轉 public、`--force` 推送、歷史改寫）仍需另外取得授權。
+8. **commit 不需事前授權；push 仍需明確授權**：
+   - commit 用明確檔案清單、跑 hooks，不得 `--no-verify`；`.env`、`.local/`、
+     `.scratch/`、`.tmp/`、`.openchamber/` 不入版控。
+   - push、建立 remote、改分支保護、調整可見度、`--force` 推送與歷史改寫
+     仍需明確授權。
+   - 除非該流程另有更嚴格規定（例如 `release-prep` 的發版提交），以更嚴格者為準。
+   - 首次發布流程仍照既有授權範圍執行。
 9. **不改 repo 的可見度**：可見度是維護者的決定。文件不要把「private」或「public」
    寫死成永久事實，也不要聲稱已轉為某個可見度；以當下 GitHub 設定為準。
 10. **流程指引不等於授權，也不是掃描器**：`skills/project-workflow/` 只提供工作流程指引；

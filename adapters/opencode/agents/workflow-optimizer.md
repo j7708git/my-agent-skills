@@ -88,8 +88,8 @@ permissions:
 
 ## 讀取範圍
 
-- `project-notes/projects/<id>/` 下的 `overview.md`、`progress.md`、`plan.md`、
-  `tasks/`、`acceptance/`、`research/`
+- `project-notes/projects/<id>/` 下的 `overview.md`、`status.md`、`plan.md`、
+  `log/`、`tasks/`、`acceptance/`、`research/`
 - 工作區根 `AGENTS.md`
 - 各 agent 定義（本機 `~/.config/opencode/agents/` 或 repo 的
   `adapters/opencode/agents/`）

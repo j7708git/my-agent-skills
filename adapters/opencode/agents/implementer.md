@@ -49,7 +49,8 @@ permissions:
 
 ## 提交紀律
 
-- 驗收條件通過後才提交：明確 `git add <相關檔案>`，commit message 用繁體中文。
+- **commit 不需要事前取得使用者授權**；驗收條件通過後就可以提交：明確
+  `git add <相關檔案>`，commit message 用繁體中文。**push 仍須人工確認。**
 - **只 stage 本任務相關的公開檔案**，不 stage `.env`、`.local/`、`.scratch/`、
   `.tmp/`、`.openchamber/`。
   若簡報要求提交的檔案與 `.gitignore` 不一致，回報 PM，**不自行清理索引**。
@@ -68,10 +69,11 @@ permissions:
 - 內部工作紀錄（計畫、進度、研究、驗收、任務卡）的**權威**在
   `project-notes/projects/<project-id>/`。
 - **你只能寫簡報明確列出的私有檔案**，不要改其他 notes、不要跨專案。
-- **預設只寫驗收紀錄**（`acceptance/`）；`progress.md` 由 PM 整合更新，
-  你不要直接改。研究任務若簡報指定，才寫指定的 `research/*.md`。
-- **私有 notes 由 PM 整合提交**：你**不**對 `project-notes/` 做
-  `git add`／`git commit`，不碰它的 index。
+- **預設只寫驗收紀錄**（`acceptance/`）；`status.md` 由 PM 整合更新，
+  你不要直接改；歷史由 PM 寫 `log/`。研究任務若簡報指定，才寫指定的 `research/*.md`。
+- **私有 notes 的 commit 不需事前授權**：你可以在**自己的 branch／worktree**
+  commit 簡報指定的 notes 檔案。共用同一個 notes checkout 時一次只有一個
+  writer；不確定就回報 PM。不要 `git add .`，不要 `--no-verify`。
 - public 程式碼的 commit 依簡報指定的任務範圍為準；沒有指定就不要自行提交。
 
 ## 回報格式（做完後逐項填）
@@ -81,4 +83,4 @@ permissions:
    附上輸出摘要
 3. **沒做與原因**：範圍外發現的問題、卡住的地方
 4. **修改檔案清單**：**分開列**「public 程式碼檔案」與「private notes 檔案」，
-   並註明哪些已 commit、哪些未 commit（private 一律未 commit，交由 PM）
+   並註明哪些已 commit、哪些未 commit（private 若已 commit，附 commit 雜湊）

@@ -148,7 +148,7 @@
   <rect x="466" y="856" width="228" height="3" rx="1.5" fill="#1a9e6f"/>
   <text x="472" y="876" font-size="13" font-weight="600" fill="#0f6b4a">implementer</text>
   <text x="472" y="894" font-size="11" fill="#59636e">依簡報實作＋自我檢查</text>
-  <text x="472" y="910" font-size="11" fill="#59636e">只寫指定檔案，不自行 commit</text>
+  <text x="472" y="910" font-size="11" fill="#59636e">只寫指定檔案；commit 依簡報與 hooks</text>
   <text x="472" y="926" font-size="11" fill="#59636e">葉節點：不能再派子 agent</text>
   <path d="M580 944 V956 H416" fill="none" stroke="#59636e" stroke-width="1.2" stroke-dasharray="4 4" marker-end="url(#arrow)"/>
   <text x="466" y="952" font-size="10.5" fill="#59636e">回報</text>
@@ -212,7 +212,7 @@
   <rect x="68" y="1259" width="34" height="16" rx="8" fill="#6d5efc" fill-opacity="0.13"/>
   <text x="85" y="1271" text-anchor="middle" font-size="9.5" font-weight="700" fill="#4f46e5">PM</text>
   <text x="110" y="1271" font-size="13.5" font-weight="600" fill="#1f2328">更新紀錄與提交</text>
-  <text x="72" y="1289" font-size="11.3" fill="#59636e">progress.md＋acceptance/；勾計畫、更新知識面板</text>
+  <text x="72" y="1289" font-size="11.3" fill="#59636e">status＋log＋acceptance；勾計畫、更新知識面板</text>
   <text x="72" y="1305" font-size="11.3" fill="#59636e">PM 分開提交 private notes 與可公開 docs</text>
   <text x="72" y="1321" font-size="11.3" fill="#59636e">push 前掃描＋人工確認（不 force、不改歷史）</text>
   <path d="M236 1333 V1346" fill="none" stroke="#59636e" stroke-width="1.4" marker-end="url(#arrow)"/>
@@ -243,7 +243,7 @@
   <text x="472" y="1346" font-size="11" fill="#59636e">• tester 不改程式碼、不再派工</text>
   <text x="472" y="1362" font-size="11" fill="#59636e">• 一次驗收預設只有一個 tester</text>
   <text x="472" y="1378" font-size="11" fill="#59636e">• 同時最多 5 個子 agent</text>
-  <text x="472" y="1394" font-size="11" fill="#59636e">• 子 agent 不自行 commit；PM 管索引</text>
+  <text x="472" y="1394" font-size="11" fill="#59636e">• 共用 checkout 單一 writer；PM 整合索引</text>
   <text x="472" y="1410" font-size="11" fill="#59636e">• 模型綁在 agent 設定，不寫死流程</text>
   <text x="472" y="1426" font-size="11" fill="#59636e">• 計畫審查只讀；PM 修正後才派工</text>
 

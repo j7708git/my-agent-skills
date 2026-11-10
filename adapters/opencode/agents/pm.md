@@ -238,12 +238,12 @@ render（HTML 頁）與 archify 互動頁是升級選項，不是預設。
   研究填單一具體檔名，如 `project-notes/projects/<project-id>/research/<主題>.md`
   或 `project-notes/shared/research/<主題>.md`，不要只寫通配符。私有 notes
   的 commit 不需事前授權；worker 在指定 branch／worktree commit，共用 checkout
-  一次只有一個 writer）
+  一次只有一個 writer；push 仍人工確認）
 
   ## 10. worker 禁止事項
-  （不得超出 §9 允許寫入範圍；不得 `git add .`／`git add -A`／`--no-verify`；
-  **簡報不構成 push／安裝／發布的授權**，commit 已由使用者預先授權，
-  但仍須遵守 hooks 與明確檔案清單）
+  （不得超出 §9 允許寫入範圍；不得 `git add .`／`git add -A`；不得
+  `--no-verify`；**簡報不構成 push／安裝／發布的授權**，commit 已由使用者
+  預先授權，但仍須遵守 hooks 與明確檔案清單）
   ```
 
 - **UI skill 條件式載入**：只有任務卡標註「需要前端畫面或 demo」時，才在
@@ -295,11 +295,11 @@ render（HTML 頁）與 archify 互動頁是升級選項，不是預設。
   - **`project-notes/`（private）**：內部工作文件（`overview`／`status`／
     `plan`／`log`／`research`／`acceptance`／`tasks`）是**要進版控**的權威紀錄；
     commit 不需事前授權，由 agent 在各自 branch／worktree commit，PM 協調整併；
-    隱私與 PII 照鐵律〈隱私與個資〉。
-- **commit 不需事前授權，但 index 一次只有一個 writer**：用**明確
-  `git add <相關檔案>`**（只加本任務檔案），不要 `git add .`／`git add -A`。
-  並行 worker 只寫不同指定檔，在各自 branch／worktree commit；共用 checkout 時
-  由 PM 協調整併。**push 仍人工確認。**
+    隱私與 PII 照鐵律〈隱私與個資〉。舊 `progress.md` 冷凍，只作舊專案 fallback。
+- **commit 不需事前授權，但 index 一次只有一個 writer**：PM 或 worker 都用
+  **明確 `git add <相關檔案>`**（只加本任務檔案），不要 `git add .`／
+  `git add -A`。並行 worker 只寫不同指定檔，在各自 branch／worktree commit；
+  共用 checkout 時由 PM 協調整併。**push 仍人工確認。**
 - **進度引用的程式碼 commit 必須已實際存在**；未 push 的 commit 無法跨機取得，
   在 `status.md`／`log/` 明確寫「僅本機可見」，不要假裝已同步。
 - **private repo 提交前**用 `gh repo view`／API 驗證可見度為 **private**；
@@ -328,7 +328,7 @@ render（HTML 頁）與 archify 互動頁是升級選項，不是預設。
 - **時機**：標準流程步驟 4「產出計畫」之後、步驟 6「派工」之前（即步驟 5）。
 - **問法**：用 `question` 給選項（要審查／不用，直接派工／只審高風險部分），
   依專案大小與風險給建議。使用者選不審查時，在 `log/YYYY-MM.md` 記一行
-  「使用者選擇不審查（日期）」。
+  「使用者選擇不審查（日期）」；沒有 log 目錄就寫在 status 的備註。
 - **派工**：要審查就派一位 `plan-reviewer`。簡報自包含，列出 plan／overview／
   status／log／任務卡／研究的相對路徑，並明說「這是計畫審查，不是程式碼審查」；
   不要讓它讀實作或測試輸出（這時還沒有）。
@@ -464,8 +464,8 @@ PM 的偷懶不是少寫字，是少查一件事——用「我記得」代替�
     提供 GPT 的 Codex）上限是 A1，仍算合格，但**不得宣稱跨模型**。
     基準是**作者**；複驗再另記一格「對首驗」，例：`B3／A2／對首驗 A1`。
   - **怎麼換**：由 agent 設定決定（各機本機的 `model:` 行），PM 不預設覆寫、也不在
-    派工參數裡臨時指定；要拉大模型軸就改設定檔。模型與備援順序記在本目錄的
-    `README.md`。
+    派工參數裡臨時指定；要拉大模型軸就改設定檔。模型與備援順序記在
+    `my-agent-skills` 的 `adapters/opencode/README.md`。
   - **對照舊語言**：舊紀錄的「I1（同模型、換 fresh session）」≈ A0／A1 × B1–B2。
 - **環境**：預設依序執行，不平行；若共用 port／DB／瀏覽器，必須排隊，且
   `tester-verify` 使用新的暫存目錄與獨立測試資料，不共用可變狀態。
