@@ -7,12 +7,13 @@
 
 測試守住幾件事：
 
-1. 六份模板都存在，且各自具備關鍵欄位與填寫規則。
+1. 八份模板都存在，且各自具備關鍵欄位與填寫規則。
 2. `SKILL.md` 的相對引用自足（都在 skill 目錄內且存在）。
 3. 把整個 skill 目錄隔離複製後，格式驗證仍然通過；少一個被引用的檔案就會失敗。
 4. 沒有平台工具硬依賴、沒有模型／provider 綁定。
 5. 沒有真實個資或個人絕對路徑，placeholder 符合慣例。
-6. 安全敘述存在：載入不等於授權，commit／push／hooks 等需要明確授權。
+6. 安全敘述存在：載入不等於授權；push／hooks／可見度等需要明確授權，
+   commit 則依索引紀律不需事前授權。
 7. 派工簡報的節名、順序與類型列舉在 `task-brief.md`、`pm.md`、`SKILL.md`、
    `workflow-details.md` 四處同源；權威一律即時從 `task-brief.md` 抽取。
 """
@@ -48,6 +49,28 @@ EXPECTED_TEMPLATE_FIELDS = {
         "關鍵里程碑",
         "主要風險",
         "更新紀錄",
+    ),
+    "status.md": (
+        "schema",
+        "state",
+        "needs",
+        "now",
+        "next",
+        "blocker",
+        "updated",
+        "code_dir",
+        "machine",
+        "需要你決定",
+        "本機提示",
+        "24 小時",
+    ),
+    "log.md": (
+        "YYYY-MM",
+        "做了什麼",
+        "版本／commit",
+        "驗收證據",
+        "同步",
+        "下一步",
     ),
     "progress.md": (
         "最新摘要",
@@ -545,6 +568,8 @@ class IsolatedCopyTests(unittest.TestCase):
                 "references/privacy-and-sync.md",
                 "references/client-compatibility.md",
                 "assets/templates/overview.md",
+                "assets/templates/status.md",
+                "assets/templates/log.md",
                 "assets/templates/progress.md",
                 "assets/templates/plan.md",
                 "assets/templates/task-brief.md",
@@ -627,8 +652,10 @@ class SecurityAuthorizationTests(unittest.TestCase):
 
     def test_skill_lists_actions_requiring_explicit_authorization(self) -> None:
         text = read_text(SKILL_DIR / "SKILL.md")
-        for action in ("commit", "push", "hooks", "可見度", ".local", ".scratch"):
+        for action in ("push", "hooks", "可見度", ".local", ".scratch"):
             self.assertIn(action, text, f"SKILL.md 未涵蓋需授權的動作：{action}")
+        self.assertIn("commit 不需要事前取得使用者授權", text)
+        self.assertIn("push 仍須人工確認", text)
 
     def test_privacy_reference_repeats_authorization_boundary(self) -> None:
         text = read_text(SKILL_DIR / "references" / "privacy-and-sync.md")

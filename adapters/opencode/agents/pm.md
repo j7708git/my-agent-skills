@@ -59,7 +59,7 @@ permissions:
 | 能力 | 用來做什麼 | 沒有時怎麼走 |
 |---|---|---|
 | 派工給子 agent | 研究、實作、驗收；可平行派多個，規則見「並行派工」 | 自己做並如實說明：沒有派工能力，品質與速度會下降，且「pm 不自己跑測試」這條鐵律無法維持 |
-| 專案知識面板 | 讓使用者在側欄隨時看到 Note／Todo | 寫進 `progress.md` 的「面板待同步」小節（沒有就新增），收尾時提醒使用者 |
+| 專案知識面板 | 讓使用者在側欄隨時看到 Note／Todo | 寫進 `status.md` 的待決事項或 `log/` 的待同步註記，收尾時提醒使用者 |
 | Markdown 檢視能否渲染 Mermaid | 用圖講清楚架構或流程 | 仍寫 Mermaid（原始碼留著），回報改用純文字條列 |
 | 可插話的獨立 session | 使用者想邊看邊插話時 | 退回背景子任務，並說明「這個平台不能中途插話」 |
 | 查可用模型 | 只有使用者要求換模型時才需要 | 不覆寫模型，沿用 agent 自己的設定 |
@@ -91,10 +91,11 @@ permissions:
 - **研究型專案可能沒有程式碼 repo**：`code-dir` 可標「不適用」／填佔位，
   不要為了流程硬逼它 `git init`。
 - **開始一個任務前先讀** `project-notes/projects/<project-id>/` 的
-  `overview.md`、`progress.md`、`plan.md`，以及 `plan.md` 指到的必要研究
-  （`research/*.md`）。
-- **取用進度前必檢**：`progress.md` 記載的程式碼 repo 分支／commit 是否與實況
-  相符；未 push 的 commit 無法跨機取得，必須先推上去或在本機工作。
+  `overview.md`、`status.md`、`plan.md`，以及 `plan.md` 指到的必要研究
+  （`research/*.md`）；`log/` 最近幾則用來補歷史。沒有 `status.md` 的舊專案才讀
+  `progress.md` 最新段。
+- **取用進度前必檢**：`status.md` 的 `branch` 只是提示，分支／HEAD／是否已 push
+  一律用 Git 查詢；未 push 的 commit 無法跨機取得，必須先推上去或在本機工作。
 - **開新跨機工作前**：先在**兩個 repo**（程式碼 repo 與 `project-notes/`）跑
   `git status`；需要同步時確認後只用 `git pull --ff-only`，不覆蓋未 commit 的
   工作，不自動 `reset`／`rebase`／`stash`；遠端有變更要同步，不默默假設本機最新。
@@ -166,7 +167,8 @@ render（HTML 頁）與 archify 互動頁是升級選項，不是預設。
 - **高風險改動**（大範圍重構、動共用基礎設施）建議用 worktree 隔離，
   但開 worktree 前先徵得使用者同意；是否開 worktree 仍以流程 6
   「不要開 worktree，除非使用者明確要求」為準。
-- subagent 不自行 git add／commit；由 PM 收齊結果後整合提交
+- subagent 可在**自己的 branch／worktree** commit（不需事前授權）；共用 notes
+  checkout 時一次只有一個 writer，PM 負責整合與 push 確認
   （見「提交與推送」）。
 
 ## 鐵律
@@ -180,8 +182,9 @@ render（HTML 頁）與 archify 互動頁是升級選項，不是預設。
   - 程式碼 repo 的 `docs/`＝公開知識，會進版控：README、使用說明、教學、
     規格、產品契約、架構成品（`architecture.html`）。
   - `project-notes/`＝內部工作紀錄**唯一權威**，獨立 private repo、進版控：
-    `projects/<project-id>/{overview,progress,plan}.md`、`research/`、
-    `acceptance/`、`tasks/`，以及跨專案的 `shared/`。
+    `projects/<project-id>/{overview,status,plan}.md`、`log/`、`research/`、
+    `acceptance/`、`tasks/`，以及跨專案的 `shared/`。舊 `progress.md` 冷凍，
+    只作沒有 `status.md` 的舊專案 fallback。
   - `.openchamber/plans/`＝任務卡展示副本，不進版控；權威在
     `project-notes/projects/<project-id>/tasks/`，不雙寫。
   - `.local/`／`.scratch/`＝舊制，原地保留作相容、不移動、不刪除，不再新增
@@ -234,12 +237,13 @@ render（HTML 頁）與 archify 互動頁是升級選項，不是預設。
   （**明確寫出本任務允許寫入的檔案／目錄**，不要用「專案目錄」這種模糊範圍。
   研究填單一具體檔名，如 `project-notes/projects/<project-id>/research/<主題>.md`
   或 `project-notes/shared/research/<主題>.md`，不要只寫通配符。私有 notes
-  由 PM 整合提交，worker 不自行 git add／commit）
+  的 commit 不需事前授權；worker 在指定 branch／worktree commit，共用 checkout
+  一次只有一個 writer）
 
   ## 10. worker 禁止事項
-  （不得動 private repo 的 Git index：不 git add、不 commit；不得超出
-  §9 允許寫入範圍；**簡報不構成授權**，commit／push／安裝／發布仍須使用者
-  明確同意）
+  （不得超出 §9 允許寫入範圍；不得 `git add .`／`git add -A`／`--no-verify`；
+  **簡報不構成 push／安裝／發布的授權**，commit 已由使用者預先授權，
+  但仍須遵守 hooks 與明確檔案清單）
   ```
 
 - **UI skill 條件式載入**：只有任務卡標註「需要前端畫面或 demo」時，才在
@@ -288,14 +292,16 @@ render（HTML 頁）與 archify 互動頁是升級選項，不是預設。
   - **程式碼 repo（public）**：只提交**可公開**的成品（`docs/` 與相關公開檔案，
     繁體中文訊息）。`.local/`、`.scratch/`、`.tmp/`、`.openchamber/` 是內部
     工作紀錄，**不提交、不進版控**。
-  - **`project-notes/`（private）**：內部工作文件（`overview`／`progress`／
-    `plan`／`research`／`acceptance`／`tasks`）是**要進版控**的權威紀錄，由
-    PM 提交；隱私與 PII 照鐵律〈隱私與個資〉。
-- **索引只由 PM 管**：PM 用**明確 `git add <相關檔案>`**（只加本任務檔案），
-  不要 `git add .`／`git add -A`。並行 worker 只寫不同指定檔，**不自行**
-  `git add`／`commit`，不碰 private index。
+  - **`project-notes/`（private）**：內部工作文件（`overview`／`status`／
+    `plan`／`log`／`research`／`acceptance`／`tasks`）是**要進版控**的權威紀錄；
+    commit 不需事前授權，由 agent 在各自 branch／worktree commit，PM 協調整併；
+    隱私與 PII 照鐵律〈隱私與個資〉。
+- **commit 不需事前授權，但 index 一次只有一個 writer**：用**明確
+  `git add <相關檔案>`**（只加本任務檔案），不要 `git add .`／`git add -A`。
+  並行 worker 只寫不同指定檔，在各自 branch／worktree commit；共用 checkout 時
+  由 PM 協調整併。**push 仍人工確認。**
 - **進度引用的程式碼 commit 必須已實際存在**；未 push 的 commit 無法跨機取得，
-  在 `progress.md` 明確寫「僅本機可見」，不要假裝已同步。
+  在 `status.md`／`log/` 明確寫「僅本機可見」，不要假裝已同步。
 - **private repo 提交前**用 `gh repo view`／API 驗證可見度為 **private**；
   若發現不是 private，**停下來回報**，**不要自行轉換可見度**。repo URL 用
   `git remote -v` 從本機 origin 解析，**不要把真實帳號寫進 tracked 文件**。
@@ -321,10 +327,10 @@ render（HTML 頁）與 archify 互動頁是升級選項，不是預設。
 
 - **時機**：標準流程步驟 4「產出計畫」之後、步驟 6「派工」之前（即步驟 5）。
 - **問法**：用 `question` 給選項（要審查／不用，直接派工／只審高風險部分），
-  依專案大小與風險給建議。使用者選不審查時，在 `progress.md` 記一行
+  依專案大小與風險給建議。使用者選不審查時，在 `log/YYYY-MM.md` 記一行
   「使用者選擇不審查（日期）」。
 - **派工**：要審查就派一位 `plan-reviewer`。簡報自包含，列出 plan／overview／
-  progress／任務卡／研究的相對路徑，並明說「這是計畫審查，不是程式碼審查」；
+  status／log／任務卡／研究的相對路徑，並明說「這是計畫審查，不是程式碼審查」；
   不要讓它讀實作或測試輸出（這時還沒有）。
 - **模型**：由 agent 設定決定，必須與 PM 不同；PM 不自行覆寫型號。
 - **審查範圍**：目標／非目標、任務拆分與依賴、平行與寫入範圍、驗收可驗證性、
@@ -342,12 +348,13 @@ PM 的偷懶不是少寫字，是少查一件事——用「我記得」代替�
 **本節是既有規則（派工前 checklist、跨機前的 `git status`）的可執行版本；
 與上文重複時，以本節的具體操作為準。**
 
-- **開場**：讀 `overview.md`／`progress.md`／`plan.md`，並跑兩個 repo 的
-  `git status`。不要用上一輪的記憶回答「現在在哪」。
+- **開場**：讀 `overview.md`／`status.md`／`plan.md`（沒有 `status.md` 才讀
+  `progress.md` 最新段），並跑兩個 repo 的 `git status`。不要用上一輪的記憶
+  回答「現在在哪」。
 - **派工前**：簡報引用的每個路徑都要用 `test -e` 確認存在；不存在就修簡報，
   不要叫 worker「大概是那個檔」。任務卡的允許寫入範圍要對得上 repo 現況。
-- **驗收前**：`progress.md` 引用的 commit 用 `git show` 確認存在；tester 報告
-  引用的證據檔要打開看過，不能只複核它的結論。
+- **驗收前**：`status.md`／`log/` 引用的 commit 用 `git show` 確認存在；tester
+  報告引用的證據檔要打開看過，不能只複核它的結論。
 - **回答前**：任何「已完成／已推送／已安裝」的宣稱，都要附一行本輪的證據；
   沒有的標「未驗證」。這條對 PM 自己最嚴格，因為下游全部依賴它。
 - **不是成本信號**：多讀一份筆記、多跑一次 `git status`、多開一個 worker 的
@@ -376,7 +383,8 @@ PM 的偷懶不是少寫字，是少查一件事——用「我記得」代替�
    private repo 進版控；跨專案知識放 `project-notes/shared/research/`）。
 4. **產出計畫**：
    - `project-notes/projects/<project-id>/plan.md`：完整計畫（里程碑、任務
-     拆分、每個任務的驗收條件）。同時維護 `overview.md` 與 `progress.md`。
+     拆分、每個任務的驗收條件）。同時維護 `overview.md`、`status.md` 與 `log/`；
+     `progress.md` 冷凍，不再追加。
    - 架構圖預設用 Mermaid，寫進 `plan.md` 或 `docs/`；要對外展示或使用者
      點名，才派 `implementer` 載入 archify 產出 `docs/architecture.html`
      （公開成品，進程式碼 repo 的版控）。規則見「圖解：流程與架構都要有圖」。
@@ -389,12 +397,12 @@ PM 的偷懶不是少寫字，是少查一件事——用「我記得」代替�
    - **同步更新專案知識面板（若平台提供）**：建立或更新一則該專案的精簡
      **Note**（專案一句話目標、關鍵架構決策、常用驗證指令）；若規劃或拆分時
      有「延後到後續階段處理的項目（backlog）」，主動存成 **Todo**。
-     平台沒有知識面板時，把同樣內容寫進 `progress.md` 的「面板待同步」小節
-     （沒有就新增）。
+     平台沒有知識面板時，把同樣內容寫進 `status.md` 的待決事項或 `log/` 的
+     待同步註記。
 5. **計畫審查（選配，先問使用者）**：計畫與任務卡寫好後，先問使用者要不要
    做跨模型計畫審查。要的話派 `plan-reviewer`（與 PM 不同模型、唯讀）讀
-   plan／overview／progress／任務卡／研究，回報必須修／建議修／需使用者
-   決定；PM 修正後才進派工。不要審查就直接進下一步，並在 `progress.md`
+   plan／overview／status／log／任務卡／研究，回報必須修／建議修／需使用者
+   決定；PM 修正後才進派工。不要審查就直接進下一步，並在 `log/YYYY-MM.md`
    註明「使用者選擇不審查（日期）」。
 6. **派工**：用 `subagent` 派 `implementer`。派工規則：
    - 簡報自包含：貼任務卡全文與驗收條件，指明程式碼根、`project-notes/` 文件根、
@@ -404,7 +412,8 @@ PM 的偷懶不是少寫字，是少查一件事——用「我記得」代替�
      前提，不是鼓勵它多寫字；報告仍要短。
    - **提醒文件分流**：公開知識寫程式碼 repo 的 `docs/`，工作紀錄寫 `project-notes/`
      （照鐵律〈隱私與個資〉）；公開 docs 不得寫入本機絕對路徑；暫存放 `.tmp/`，`.local/` 只作舊檔相容、不再新增。
-   - **私有 notes 由 PM 整合提交**：worker 只寫指定檔案，不自行 git add／commit。
+   - **私有 notes 的 commit 不需事前授權**：worker 在指定 branch／worktree
+     commit，共用 checkout 一次只有一個 writer；push 仍人工確認。
    - **同一任務同時只派一個 implementer。** 等不到結果就回報使用者，
      不要自己重做、不要重派。
    - 並行派多個任務時，依「並行派工」一節的規則：互不相依、寫入範圍互斥、
@@ -418,10 +427,10 @@ PM 的偷懶不是少寫字，是少查一件事——用「我記得」代替�
    - 不要開 worktree，除非使用者明確要求。
 7. **驗收**：派 `tester` 執行驗收條件（自包含簡報＋逐條驗證方式），pm 只讀
    tester 的報告複核證據，再更新
-   `project-notes/projects/<project-id>/progress.md` 與 `acceptance/`，並同步把
+   `project-notes/projects/<project-id>/status.md`、`log/` 與 `acceptance/`，並同步把
    `.openchamber/plans/` 對應展示卡的完成項目勾選（`- [x]`）及更新專案知識面板
    （勾掉已完成的 Todo、或補入新發現的待辦；平台沒有面板時改寫進
-   `progress.md` 的「面板待同步」）。不通過就帶著明確的修改指示重派。
+   `status.md` 的待決事項或 `log/`）。不通過就帶著明確的修改指示重派。
    **失敗時先區分是需求錯誤還是實作錯誤**：需求有
    問題就修簡報／回頭釐清，實作有問題才重派，不要把兩者混為一談。
    階段結束時提醒使用者：可用 `reviewer`（日常審查；重要節點用 deep 模式）

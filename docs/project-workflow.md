@@ -15,8 +15,9 @@
 - **公開程式碼 repo**：程式碼、測試、公開文件與架構成品。
 - **獨立 private 工作紀錄 repo**：計畫、進度、研究、驗收與任務卡。
 
-它涵蓋：確認工作區與兩個 repo 根、規劃（含先做最小原型）、用已知／假設／未知收斂需求、
-撰寫自足任務簡報、派工與並行紀律、實際驗收，以及跨機同步與交接。
+它涵蓋：確認工作區與兩個 repo 根、以 `status.md` 管現況並把歷史放 `log/`、依
+S／M／L 車道分級、規劃（含先做最小原型）、用已知／假設／未知收斂需求、撰寫自足
+任務簡報、派工與並行紀律、實際驗收，以及跨機同步與交接。
 
 ## 這個 skill 不是什麼
 
@@ -27,7 +28,8 @@
 - **不會自動動手。** 不建立 repo、不建立 remote、不 commit、不 push、不安裝 git hooks、
   不變更可見度、不盤點或搬移既有檔案。
 - **載入不等於授權。** 讀取或被載入這個 skill，不構成對任何寫入或不可逆動作的授權。
-  commit、push、安裝 hooks、改可見度與搬移舊檔案，都需要使用者針對該動作的明確授權。
+  push、安裝 hooks、改可見度與搬移舊檔案，都需要使用者針對該動作的明確授權。
+  commit 是例外：依索引紀律，commit 不需事前授權，但仍受明確檔案清單與 hooks 限制。
 - **不能強制權限。** skill 內對權限的敘述只是說明，不是權限設定；這個 skill 無法
   強制任何 client 的 allow／deny 行為。
 
@@ -43,7 +45,9 @@ skill 自足：`SKILL.md` 與其相對資源只引用 skill 目錄內的檔案�
 | [references/privacy-and-sync.md](../skills/project-workflow/references/privacy-and-sync.md) | 公開／私有隔離、索引紀律與同步步驟 |
 | [references/client-compatibility.md](../skills/project-workflow/references/client-compatibility.md) | client 的已確認與未確認狀態、手動 fallback |
 | [assets/templates/overview.md](../skills/project-workflow/assets/templates/overview.md) | 專案總覽空白模板 |
-| [assets/templates/progress.md](../skills/project-workflow/assets/templates/progress.md) | 進度空白模板（最新摘要、兩 repo 同步欄位與驗收狀態） |
+| [assets/templates/status.md](../skills/project-workflow/assets/templates/status.md) | 專案現況空白模板（schema、now／next／blocker、待決事項） |
+| [assets/templates/log.md](../skills/project-workflow/assets/templates/log.md) | 每月日誌空白模板（日期、做了什麼、證據、同步） |
+| [assets/templates/progress.md](../skills/project-workflow/assets/templates/progress.md) | **legacy** 進度模板；只給沒有 `status.md` 的舊專案 |
 | [assets/templates/plan.md](../skills/project-workflow/assets/templates/plan.md) | 計畫空白模板 |
 | [assets/templates/task-brief.md](../skills/project-workflow/assets/templates/task-brief.md) | 任務簡報空白模板 |
 | [assets/templates/research.md](../skills/project-workflow/assets/templates/research.md) | 研究空白模板 |
@@ -89,21 +93,28 @@ skill 自足：`SKILL.md` 與其相對資源只引用 skill 目錄內的檔案�
 
 ```text
 projects/<id>/overview.md
-projects/<id>/progress.md
+projects/<id>/status.md
 projects/<id>/plan.md
+projects/<id>/log/YYYY-MM.md
 projects/<id>/research/
 projects/<id>/acceptance/
 projects/<id>/tasks/
 shared/research/
 ```
 
+`status.md` 是現況唯一權威；`plan.md` 只講長期路線；`log/` 只講歷史。舊
+`progress.md` 冷凍，不重寫、不刪除、不再追加，只在沒有 `status.md` 的專案作 fallback。
+
 公開的 code repo 放程式碼、測試、README 與對外 `docs/`，**不得**含 private 工作筆記；
 code repo 的
 `.gitignore` 應排除暫存。workspace 的 `.tmp` 或 code repo 內的 `.tmp` 都應被 ignore，
-且 `.tmp` **絕不自動清理**。跨機接手時，先讀 plan、overview、progress，需要時再讀 research。
+且 `.tmp` **絕不自動清理**。跨機接手時，先讀 `status.md` 與兩個 repo 的 Git 事實，
+再看 acceptance、任務卡與 `log/` 最近幾則；需要時才讀 plan／research。
 
 ## 交接與同步的契約
 
+- 收工時更新 `status.md` 的 `now`／`next`／`blocker`／`needs`／`updated`，
+  並在 `log/YYYY-MM.md` 追加一則（≤10 行）；不再追加 `progress.md`。
 - 交接內容至少包含：對應的分支與**真實已存在的 commit**、哪些僅本機尚未 push、
   兩個 repo 各自的同步狀態、待決定事項，以及下一步可行動任務。
 - **寫入與同步分開**：已授權的任務內可以照流程寫入；只有同步或上傳前才要求乾淨。
@@ -115,7 +126,7 @@ code repo 的
 - 不確定可見度時不要上傳，也不要自動變更可見度。
 - 兩個 repo 的 commit 與 push **無法原子化**，各自獨立；成功與失敗要分別回報。
   不 `--force`、不改寫歷史。
-- 建立檔案或寫入筆記，不等於已同步。
+- commit 不需事前授權；**push 仍須人工確認**。建立檔案或寫入筆記，不等於已同步。
 
 ## 平台中立
 

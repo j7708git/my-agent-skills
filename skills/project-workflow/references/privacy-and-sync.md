@@ -11,7 +11,7 @@
 | --- | --- | --- | --- |
 | 使用說明、產品契約、教學、架構成品 | code repo 的 README 與 docs | 公開 | 所有人 |
 | 程式碼與測試 | code repo | 公開 | 所有人 |
-| 完整計畫、進度、研究、驗收、任務卡 | notes repo 的專案目錄與 `shared` | private | 僅協作者 |
+| 完整計畫、現況、歷史、研究、驗收、任務卡 | notes repo 的專案目錄與 `shared` | private | 僅協作者 |
 | 暫存與一次生產物 | workspace 的 `.tmp` | 忽略 | 無 |
 
 判準很簡單：這是「專案對外的知識」還是「我怎麼做出來的過程」？
@@ -47,10 +47,13 @@ notes repo 內的計畫或任務卡），這是交接所需；但仍不得寫入
 
 ## 4. 索引紀律
 
-- 多個 worker 並行時，private repo 的 Git index 只由 PM 整合。
-- 其他 worker 只寫簡報指定的檔案，不 `git add`、不 commit、不碰 index。
+- commit **不需要事前取得使用者授權**；agent 判斷到達 checkpoint 就可以 commit。
+  但仍須用**明確檔案清單**、跑 hooks、不得 `--no-verify`。
+- 並行的 worker 在**各自的 branch／worktree** commit；共用同一個 notes checkout 時，
+  **一次只有一個 writer**，避免搶 index。
 - 公開 repo 絕不 stage notes、本機設定或 `.env` 之類的檔案。
 - 一個 worker 一個明確檔案清單；不要用「全部加入」的方式整理索引。
+- push 仍須人工確認；不 `--force`、不改寫歷史、不改可見度。
 
 ## 5. 同步步驟
 
@@ -79,17 +82,19 @@ push 的注意事項：
 - push 時要**分別回報** public 與 private 的結果；程式碼未 push 要寫清楚。
 - 未 push 的 commit 只在本機可見，不能假設協作者已能取得。
 - 不 `--force`、不改寫歷史。
-- commit 與 push 都需要明確授權；建立檔案或寫筆記不等於已同步。
+- commit 依本流程可在 checkpoint 直接進行；**push 仍須明確授權**。
+  建立檔案或寫筆記不等於已同步。
 
 ## 6. 交接要寫什麼
 
 每一輪或每個里程碑，在 notes 更新：
 
+- `status.md` 的 `now`／`next`／`blocker`／`needs`／`updated`。
+- `log/YYYY-MM.md` 追加一則（≤10 行），寫日期、做了什麼、證據與下一步。
+- 不再追加 `progress.md`；它只作舊專案的 fallback。
 - code repo 的分支與 commit（真實已存在，不是預期值）。
 - 哪些只在本機、尚未 push。
-- 兩個 repo 各自的同步狀態。
-- 仍待決定的問題。
-- 下一步可行動任務。
+- 兩個 repo 各自的同步狀態、仍待決定的問題與下一步。
 
 ## 7. 常見錯誤
 

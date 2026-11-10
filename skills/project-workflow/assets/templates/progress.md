@@ -1,5 +1,8 @@
-# 進度（progress）
+# 進度（progress，legacy）
 
+> **legacy（冷凍）**：新專案不要用這份模板。現況請用 `status.md`，歷史請用
+> `log/YYYY-MM.md`；只有「還沒有 `status.md`」的舊專案才用這份作 fallback 與歷史。
+>
 > 使用方式：把整份檔案複製到 private notes repo 的專案目錄，命名為 `progress.md`。
 > 所有 `<...>` 都要換成實際值；commit 欄位只能填**真實已存在**的 commit，不要填預期值。
 > **不必每一輪把整份歷史無限追加**：保留頂部「最新摘要」代表現況，歷史交給 Git 與

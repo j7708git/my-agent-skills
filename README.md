@@ -111,8 +111,8 @@ bash <skill>/scripts/repo-privacy-audit.sh --staged --repo .
 
 - 快速了解用途與邊界：[docs/project-workflow.md](docs/project-workflow.md)
 - 完整流程與固定任務簡報區塊：[skills/project-workflow/SKILL.md](skills/project-workflow/SKILL.md)
-- 可複製的空白模板：`skills/project-workflow/assets/templates/` 內的六份檔案
-  （overview、progress、plan、task-brief、research、acceptance）
+- 可複製的空白模板：`skills/project-workflow/assets/templates/` 內的八份檔案
+  （overview、status、log、plan、task-brief、research、acceptance、legacy progress）
 - 各 client 的已確認與未確認狀態：
   [references/client-compatibility.md](skills/project-workflow/references/client-compatibility.md)
 - 預設以 project scope 安裝（OpenCode `.opencode/skills`、pi `.pi/skills`、
@@ -257,7 +257,7 @@ Release 驗證 → 紀錄」固定成一份可重複套用的發版清單，讓�
 ```mermaid
 flowchart TD
   W["使用者提出願望<br/>口語需求、交接單或 /wish"] --> P1["PM 釐清目標與邊界<br/>已知／未知分開，只問關鍵問題"]
-  P1 --> P2["PM 讀既有紀錄與兩個 repo 現況<br/>overview、progress、plan"]
+  P1 --> P2["PM 讀既有紀錄與兩個 repo 現況<br/>overview、status、plan"]
   P2 --> Q1{"需要研究？"}
   Q1 -- "要" --> R["researcher（可平行）<br/>只寫研究筆記"]
   R --> P3["PM 驗證來源、蒸餾結論"]
@@ -274,7 +274,7 @@ flowchart TD
   F --> I
   Q3 -- "通過" --> Q4{"任務卡標獨立複驗<br/>或高風險、判斷型？"}
   Q4 -- "要" --> B["tester-verify 獨立重跑<br/>不看第一位 tester 的報告"]
-  Q4 -- "不用" --> P6["PM 更新紀錄與提交<br/>progress、acceptance、知識面板"]
+  Q4 -- "不用" --> P6["PM 更新紀錄與提交<br/>status、log、acceptance、知識面板"]
   B --> P6
   P6 --> Q5{"還有任務？"}
   Q5 -- "有" --> I
@@ -284,7 +284,7 @@ flowchart TD
 上圖是制度上的標準流程：預設單一 tester，`tester-verify` 獨立複驗是選配，
 只在任務卡標「獨立複驗」或高風險／判斷型驗收時加派；實際執行會依專案調整。
 計畫卡完成後、派工之前，PM 會先問要不要做跨模型計畫審查；要的話由
-`plan-reviewer` 讀計畫與任務卡，PM 修正後才派工，不審查則記在 `progress.md`。
+`plan-reviewer` 讀計畫與任務卡，PM 修正後才派工，不審查則記在 `log/`。
 每個里程碑回報都會附上這張圖，只更新「現在走到哪」的標記節點，不重畫整張。
 
 舊版手製圖（保留並存，不重畫）：
@@ -544,7 +544,7 @@ skill 自己的文件（安裝後也可用，不依賴本 repo）：
 | `skills/project-workflow/references/workflow-details.md` | 規劃、簡報、研究、驗收與交接的細節 |
 | `skills/project-workflow/references/privacy-and-sync.md` | 公開／私有隔離、索引紀律與同步步驟 |
 | `skills/project-workflow/references/client-compatibility.md` | client 的已確認與未確認狀態、手動 fallback |
-| `skills/project-workflow/assets/templates/` | 六份空白模板（overview、progress、plan、task-brief、research、acceptance） |
+| `skills/project-workflow/assets/templates/` | 八份空白模板（overview、status、log、plan、task-brief、research、acceptance、legacy progress） |
 | `skills/writing-contract/SKILL.md` | 寫作契約的入口、兩類文件與規則邊界 |
 | `skills/writing-contract/references/a-human-docs.md` | A 類規則、衝突對、中文門檻、五種異味與自檢清單 |
 | `skills/writing-contract/references/b-agent-docs.md` | B1 優先序句、插入位置、B2／B3 建議與同步對象 |

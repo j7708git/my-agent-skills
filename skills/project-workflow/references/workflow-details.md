@@ -25,18 +25,24 @@
 
 ```text
 projects/<id>/overview.md
-projects/<id>/progress.md
+projects/<id>/status.md
 projects/<id>/plan.md
+projects/<id>/log/YYYY-MM.md
 projects/<id>/research/
 projects/<id>/acceptance/
 projects/<id>/tasks/
 shared/research/
 ```
 
+- `status.md` 是現況的唯一權威；`plan.md` 只講長期路線；`log/` 只講歷史。
+- 舊 `progress.md` 冷凍：不重寫、不刪除、不再追加；只在沒有 `status.md` 的專案
+  作 fallback。檔頭要加「歷史紀錄（冷凍）。最新狀態見 `status.md`；新日誌寫在 `log/`。」
 - code repo 的 `.gitignore` 要排除暫存；公開的 code repo 放程式碼、測試、README 與對外
   docs，不得含 private 工作筆記。
 - workspace 的 `.tmp` 或 code repo 內的 `.tmp` 都應被 ignore；`.tmp` 絕不自動清理。
-- **跨機接手時先讀 plan、overview、progress**，需要時再讀 research，才開始工作。
+- **跨機接手時**先讀 `status.md` ＋ 兩個 repo 的 Git 事實，再看 `acceptance/`、任務卡、
+  `log/` 最近幾則；需要時才讀 `plan.md`／`research/`。沒有 `status.md` 的舊專案才退回
+  `progress.md` 最新段。
 
 ## 2. 已知／假設／未知的用法
 
@@ -83,14 +89,17 @@ shared/research/
 - [ ] 驗收方法與成果寫了，每條都附驗證方式。
 - [ ] 限制與停止條件寫了。
 - [ ] 允許寫入的檔案或目錄明確列出。
-- [ ] worker 禁止事項寫了，尤其不得動 private repo 的 Git index；簡報不構成授權。
+- [ ] worker 禁止事項寫了：不得超出範圍、不得 `git add .`／`--no-verify`；
+      private notes 的 commit 可在自己的 branch／worktree 進行，push 仍須人工確認。
 
 ## 6. 並行與派工
 
 - 只有彼此獨立、且寫入不同檔案的任務才能並行。
 - 同一個任務不要重複派給多個 worker。
-- 多個 worker 並行時，private repo 的 Git index 只由 PM 整合；
-  其他 worker 只寫簡報指定的檔案。
+- commit 不需事前授權：worker 可在自己的 branch／worktree commit 簡報指定的檔案，
+  但仍須用明確檔案清單、跑 hooks、不得 `--no-verify`。
+- 共用同一個 notes checkout 時，**一次只有一個 writer**；並行工作請各自用
+  branch／worktree，避免搶 index。push 仍須人工確認。
 - worker 遇到範圍外的需要，回報後由 PM 決定，不要自行擴大。
 - 任務卡的**權威在 notes repo**；任何本機展示副本（例如 client 的計畫面板）
   都只是派生，不是第二權威，也不要雙寫兩份。
@@ -106,11 +115,13 @@ shared/research/
 
 交接時，每一輪或每個里程碑更新 notes，至少包含：
 
+- 更新 `status.md` 的 `now`／`next`／`blocker`／`needs`／`updated`。
+- 在 `log/YYYY-MM.md` 追加一則（≤10 行），寫日期、做了什麼、證據與下一步。
+- 不再追加 `progress.md`。
 - code repo 的分支與**真實已存在的 commit**。
 - 哪些僅本機、尚未 push。
 - 兩個 repo 各自的同步狀態。
-- 仍待決定的問題。
-- 下一步可行動任務。
+- 仍待決定的問題與下一步可行動任務。
 
 ## 8. 停止條件
 
@@ -120,7 +131,8 @@ shared/research/
   （本任務自己授權範圍內產生的變更可以繼續，只要不覆蓋來源不明的內容。）
 - 分支 diverged，或 `git pull --ff-only` 無法乾淨套用。
 - notes repo 可見度未知，而工作需要動到 notes 或上傳。
-- 需要 commit、push、安裝 hooks、改可見度或搬移舊檔案，但尚未取得明確授權。
+- 需要 push、安裝 hooks、改可見度或搬移舊檔案，但尚未取得明確授權。
+  （commit 不需事前授權；但仍受明確檔案清單與 hooks 限制。）
 - 驗收失敗且原因不明，或錯誤超出本次簡報範圍。
 - code-root 為 N/A 時不要對不存在的 repo 跑 git；notes repo 尚無 remote 時，
   取得建立授權後可先在本機建立並記錄 pending，等上傳前再做嚴格 private 檢查。

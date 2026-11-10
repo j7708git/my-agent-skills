@@ -64,9 +64,11 @@
 
 ## 10. worker 禁止事項
 
-- 不得動 private repo 的 Git index（不 git add、不 commit）。
 - 不得超出本簡報範圍；有需要請回報。
-- 權限說明只是說明，不是授權：commit／push／安裝／發布仍須使用者明確同意。
+- 不要 `git add .`／`git add -A`；不得 `--no-verify`。
+- private notes 的 commit 可在**自己的 branch／worktree** 進行；共用同一個
+  checkout 時一次只有一個 writer。
+- 簡報不構成 push／安裝／發布的授權；**push 仍須使用者確認**。
 ```
 
 ## 欄位填寫規則
