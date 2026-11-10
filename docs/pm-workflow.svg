@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="720" height="1594" viewBox="0 0 720 1594" role="img" aria-labelledby="svg-title svg-desc" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans TC', 'Microsoft JhengHei', sans-serif" style="max-width:100%;height:auto">
   <title id="svg-title">PM 的標準工作流程</title>
-  <desc id="svg-desc">從使用者願望、研究、規劃、實作到驗收：預設一次驗收只有一個 tester；tester-verify 獨立複驗與跨模型計畫審查都是選配，先問使用者才加派。</desc>
+  <desc id="svg-desc">從使用者願望、研究、規劃、實作到驗收：預設一次驗收只有一個 tester；tester-verify 盲簡報複驗與獨立計畫審查都是選配，先問使用者才加派；獨立性以流程軸 B 與模型軸 A 記錄。</desc>
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
       <path d="M0,0 L10,5 L0,10 z" fill="#59636e"/>
@@ -40,7 +40,7 @@
 
   <rect x="56" y="98" width="648" height="44" rx="6" fill="#fff4e5" stroke="#d97706" stroke-width="1"/>
   <text x="72" y="114" font-size="11.3" fill="#8a4b00">預設：一次驗收 ＝ 一個 tester；tester-verify 獨立複驗是選配，任務卡標「獨立複驗」或高風險才加派。</text>
-  <text x="72" y="131" font-size="11.3" fill="#8a4b00">計畫審查也是選配：計畫與任務卡完成後，PM 先問使用者要不要做跨模型審查；不審查就直接派工。</text>
+  <text x="72" y="131" font-size="11.3" fill="#8a4b00">計畫審查也是選配：計畫與任務卡完成後，PM 先問要不要做獨立審查（跨模型或至少跨 session）；不審查就直接派工。</text>
 
   <!-- 01 接收 -->
   <rect x="56" y="150" width="360" height="54" rx="10" fill="#ffffff" stroke="#d0d7de" stroke-width="1.2"/>
@@ -120,7 +120,7 @@
   <rect x="660" y="608" width="36" height="15" rx="7.5" fill="#0d9488" fill-opacity="0.12"/>
   <text x="678" y="619" text-anchor="middle" font-size="9" font-weight="700" fill="#0f766e">選配</text>
   <text x="472" y="622" font-size="13" font-weight="600" fill="#0f766e">plan-reviewer（只派一位）</text>
-  <text x="472" y="640" font-size="11" fill="#59636e">不同模型；只讀、不改檔、不跑測試</text>
+  <text x="472" y="640" font-size="11" fill="#59636e">優先不同模型；只讀、不改檔、不跑測試</text>
   <text x="472" y="656" font-size="11" fill="#59636e">讀 plan／overview／progress／任務卡</text>
   <text x="472" y="672" font-size="11" fill="#59636e">　與研究；只審計畫，不是程式碼審查</text>
   <text x="472" y="688" font-size="11" fill="#59636e">抓矛盾、漏項、不可驗證的驗收</text>
@@ -182,12 +182,13 @@
   <rect x="660" y="1130" width="36" height="15" rx="7.5" fill="#b45309" fill-opacity="0.12"/>
   <text x="678" y="1141" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e">選配</text>
   <text x="472" y="1146" font-size="13" font-weight="600" fill="#92400e">tester-verify（選配）</text>
-  <text x="472" y="1164" font-size="11" fill="#59636e">tester 通過後才派：任務卡標「獨立複驗」</text>
-  <text x="472" y="1180" font-size="11" fill="#59636e">或 PM 判斷屬高風險／判斷型驗收</text>
-  <text x="472" y="1196" font-size="11" fill="#59636e">不同模型；B 不看 A 的報告與截圖</text>
-  <text x="472" y="1212" font-size="11" fill="#59636e">重跑關鍵項＋負向／對照組</text>
-  <text x="472" y="1228" font-size="11" fill="#59636e">任一 tester 失敗即不通過</text>
-  <text x="472" y="1244" font-size="11" fill="#59636e">分歧看原始證據，不用多數決</text>
+  <text x="472" y="1162" font-size="11" fill="#59636e">tester 通過後才派：任務卡標「獨立複驗」</text>
+  <text x="472" y="1178" font-size="11" fill="#59636e">或 PM 判斷屬高風險／判斷型驗收</text>
+  <text x="472" y="1194" font-size="11" fill="#59636e">盲簡報：不看 A 的報告、截圖與產物</text>
+  <text x="472" y="1210" font-size="11" fill="#59636e">重跑關鍵項＋負向／對照組</text>
+  <text x="472" y="1226" font-size="11" fill="#59636e">模型取平台能給的最大差異（A0–A2）</text>
+  <text x="472" y="1242" font-size="11" fill="#59636e">任一 tester 失敗即不通過</text>
+  <text x="472" y="1258" font-size="11" fill="#59636e">分歧看原始證據，不用多數決</text>
 
   <path d="M580 1088 V1118" fill="none" stroke="#b45309" stroke-width="1.4" stroke-dasharray="4 4" marker-end="url(#arrow-opt)"/>
   <text x="568" y="1108" text-anchor="end" font-size="10" fill="#8a4b00">選配：A 通過後複驗</text>
@@ -253,5 +254,5 @@
   <text x="472" y="1518" font-size="11" fill="#59636e">修完再走一次 tester，不跳過</text>
   <text x="472" y="1534" font-size="11" fill="#59636e">需求與實作不要混為一談</text>
 
-  <text x="56" y="1580" font-size="10.5" fill="#59636e">＊這是制度上的標準流程；實際派工與驗收方式會依專案調整。預設單一 tester，獨立複驗與計畫審查都是選配。</text>
+  <text x="56" y="1580" font-size="10.5" fill="#59636e">＊這是制度上的標準流程；實際派工與驗收方式會依專案調整。預設單一 tester，複驗與計畫審查都是選配，獨立性以流程軸 B／模型軸 A 記錄。</text>
 </svg>
