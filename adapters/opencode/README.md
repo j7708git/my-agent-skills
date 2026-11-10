@@ -66,8 +66,13 @@ cp commands/*.md ~/.config/opencode/commands/
 - **researcher／implementer／tester**：世界知識有限但便宜快速的 flash 級模型
   即可，它們的工作方式是「以 docs 內的知識為準、不憑記憶猜 API」，正好抵消
   小模型知識不足的弱點。
-- **tester-verify**：只在獨立複驗時使用，**必須與 `tester` 用不同模型**，
-  否則同一模型的盲點會一起漏掉；發行版同樣不綁型號，由你依環境選擇。
+- **tester-verify**：只在獨立複驗時使用，**優先與 `tester` 用不同模型家族**；
+  只有單一模型家族的 client（例如只提供 GPT 的 Codex）取同家族不同版本或
+  effort，並在驗收紀錄註明「非跨模型」——此時獨立性由**盲簡報、否證對照組與
+  人工抽查**承擔，不要宣稱跨模型。發行版同樣不綁型號，由你依環境選擇。
+  可用性備援順序（依需求強度遞減）：本機 `nous` 的 minimax → `openrouter` 的
+  同名 minimax（同權重，只解決可用性、不增加獨立性）→ `nous`／`openrouter`
+  的 qwen 3.8 flash（不同家族，可達 A2）→ gpt 6 luna（Codex 側唯一選項）。
 - **plan-reviewer**：只在派工前的選配計畫審查使用，**必須與 PM 用不同模型**，
   否則跨模型獨立性會消失；它只讀文件，flash 級模型即可，發行版不綁型號。
 - **pm**：負責規劃、派工與驗收判斷，用你能取得的較強模型。
