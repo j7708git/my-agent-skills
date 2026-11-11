@@ -203,10 +203,11 @@ session 中偵測到這張 skill，並列出可用名單與正確的 description
 ## OpenCode adapters（`adapters/opencode/`）
 
 `adapters/opencode/` 收錄作者實際在用的 OpenCode agent／command 定義：
-`project-workflow` 配套的 `pm`／`researcher`／`implementer`／`tester`、
-可選的獨立複驗 `tester-verify`、派工前的選配計畫審查 `plan-reviewer`、獨立
-審查者 `reviewer`／`reviewer-deep`、`workflow-optimizer` 健檢 agent、
-`translator` 翻譯官、獨立的 `web-search` agent，以及
+`project-workflow` 配套的 `pm`、研究組長 `researcher` 與四個來源 worker
+（`research-github`／`research-papers`／`research-social`／`research-web`）、
+`implementer`／`tester`、可選的獨立複驗 `tester-verify`、派工前的選配計畫審查
+`plan-reviewer`、獨立審查者 `reviewer`／`reviewer-deep`、`workflow-optimizer`
+健檢 agent、`translator` 翻譯官、獨立的 `web-search` agent，以及
 `/wish`／`/proto`／`/research`／`/optimize` 指令。
 與 skill 的差別：
 
@@ -217,9 +218,16 @@ session 中偵測到這張 skill，並列出可用名單與正確的 description
   這些 agent，但相關指引在該環境沒有對應工具，需自行變通。`translator.md`
   用 `subagent` 呼叫 `pm`；需要 `pm` 設為 `mode: all` 與 workspace 的
   `experimental.subagent_depth: 2`。沒有這兩個條件時，它會退回「輸出交接單，
-  請使用者切到 `pm` agent 貼上」。
+  請使用者切到 `pm` agent 貼上」。`researcher` 平行派工給四個來源 worker
+  也依賴同一個 `experimental.subagent_depth: 2`；未設定時派不出 worker，
+  只能退回自己的網路搜尋並在筆記標明「未採用平行」。
 - 發行版本**移除所有 `model:` 綁定**（作者的 provider／模型是個人設定）；
   安裝者需依自己環境補上模型選擇，選擇建議見 `adapters/opencode/README.md`。
+- 四個研究 worker（`research-*`）是唯讀、非互動的來源蒐集角色：`edit`／
+  `subagent`／`question` 全部 deny，shell 只開唯讀 allowlist，`research-web`
+  不給 shell。它們不寫筆記；`researcher` 只允許呼叫這四個 worker。
+  `research-papers` 需要 `hf` 與 `academic-paper-search`，`research-social`
+  需要外部 `last30days` skill；未安裝時回報缺源，不會自動下載或安裝。
 - 這些定義在作者的 OpenCode 環境中日常使用；但**對其他使用者的安裝與執行
   未實測**——「作者的日常使用」不等於「任何環境裝上就會正常運作」。
 - `pm`／`researcher`／`implementer`／`tester`／`tester-verify`／`plan-reviewer` 預設採用 `project-workflow` 的
