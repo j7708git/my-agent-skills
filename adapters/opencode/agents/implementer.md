@@ -2,12 +2,165 @@
 description: 實作 agent：依自包含任務簡報在專案目錄內實作、自我驗收並回報
 mode: subagent
 permissions:
+  # 三段固定 ask → allow → deny；deny 必須最後（last-match-wins）。
+  # base policy 是 * allow，未命中不是 ask；危險命令要逐條列出。
   - action: shell
     resource: sudo *
     effect: ask
   - action: shell
+    resource: git push
+    effect: ask
+  - action: shell
     resource: git push *
     effect: ask
+  - action: shell
+    resource: git * push *
+    effect: ask
+  - action: shell
+    resource: gh pr merge *
+    effect: ask
+  - action: shell
+    resource: gh pr close *
+    effect: ask
+  - action: shell
+    resource: gh pr reopen *
+    effect: ask
+  - action: shell
+    resource: git push -u origin feat/*
+    effect: allow
+  - action: shell
+    resource: git push -u origin fix/*
+    effect: allow
+  - action: shell
+    resource: git push -u origin chore/*
+    effect: allow
+  - action: shell
+    resource: git push -u origin hotfix/*
+    effect: allow
+  - action: shell
+    resource: git push -u origin release/*
+    effect: allow
+  - action: shell
+    resource: gh pr create *
+    effect: allow
+  - action: shell
+    resource: gh pr view *
+    effect: allow
+  - action: shell
+    resource: gh pr checks *
+    effect: allow
+  - action: shell
+    resource: gh pr ready *
+    effect: allow
+  - action: shell
+    resource: gh pr list *
+    effect: allow
+  - action: shell
+    resource: gh pr edit *
+    effect: allow
+  - action: shell
+    resource: gh pr comment *
+    effect: allow
+  # notes push 例外：受保護的安裝副本；路徑依 workspace 配置調整。
+  - action: shell
+    resource: bash $HOME/workspace/agent/.openchamber/bin/push-notes*
+    effect: allow
+  - action: shell
+    resource: git push * main
+    effect: deny
+  - action: shell
+    resource: git push * master
+    effect: deny
+  - action: shell
+    resource: git push * develop
+    effect: deny
+  - action: shell
+    resource: git push * :main
+    effect: deny
+  - action: shell
+    resource: git push * :master
+    effect: deny
+  - action: shell
+    resource: git push * :develop
+    effect: deny
+  - action: shell
+    resource: git push * +main
+    effect: deny
+  - action: shell
+    resource: git push * +master
+    effect: deny
+  - action: shell
+    resource: git push * +develop
+    effect: deny
+  - action: shell
+    resource: git push * HEAD:main
+    effect: deny
+  - action: shell
+    resource: git push * HEAD:master
+    effect: deny
+  - action: shell
+    resource: git push * HEAD:develop
+    effect: deny
+  - action: shell
+    resource: git push * refs/heads/main*
+    effect: deny
+  - action: shell
+    resource: git push * refs/heads/master*
+    effect: deny
+  - action: shell
+    resource: git push * refs/heads/develop*
+    effect: deny
+  - action: shell
+    resource: git push --force*
+    effect: deny
+  - action: shell
+    resource: git push * --force*
+    effect: deny
+  - action: shell
+    resource: git push -f*
+    effect: deny
+  - action: shell
+    resource: git push * -f*
+    effect: deny
+  - action: shell
+    resource: git push --mirror*
+    effect: deny
+  - action: shell
+    resource: git push * --mirror*
+    effect: deny
+  - action: shell
+    resource: git push --all*
+    effect: deny
+  - action: shell
+    resource: git push * --all*
+    effect: deny
+  - action: shell
+    resource: git push --tags*
+    effect: deny
+  - action: shell
+    resource: git push * --tags*
+    effect: deny
+  - action: shell
+    resource: git push --prune*
+    effect: deny
+  - action: shell
+    resource: git push * --prune*
+    effect: deny
+  - action: shell
+    resource: git * --no-verify*
+    effect: deny
+  - action: shell
+    resource: git * core.hooksPath=*
+    effect: deny
+  - action: shell
+    resource: git * core.hooksPath *
+    effect: deny
+  - action: shell
+    resource: gh repo delete *
+    effect: deny
+  - action: shell
+    resource: gh repo edit *
+    effect: deny
   - action: subagent
     resource: "*"
     effect: deny
@@ -32,6 +185,12 @@ permissions:
 - **先檢查簡報與文件是否齊全。** 若簡報把空洞形容詞當驗收、缺少核心要求、
   或出現重大矛盾（例如要求寫到某路徑、權限卻不允許），**停下來回報 PM**，
   不要自行猜測或偷偷改做法。
+- **開工預檢**：確認簡報寫的 branch／base SHA／worktree。`plan` 唯讀；
+  `prepare` 才 fetch、`pull --ff-only`、開分支／worktree；`ship` 才 commit／push／
+  開 PR。分支一律從 `origin/<default>` 開，不引入 `develop`；S 用主 checkout，
+  M／L 或並行用 worktree。dirty／diverged／缺 hooks／detached HEAD 就停下回報。
+- **push 一律 `cd` 進 repo 或 worktree**，不用 `git -C … push`；後者只會停在 ask，
+  不會命中非預設分支的 allow。
 - **動工前先讀簡報指定的 docs**（計畫、研究筆記）。以 docs 內的知識為準；
   不確定的 API 或版本不要憑記憶猜——去查官方文件，查不到就在回報中提出。
 - **只做簡報範圍內的事。** 合理的可逆實作細節可自行決定，但**不補重大方向**；
@@ -50,7 +209,20 @@ permissions:
 ## 提交紀律
 
 - **commit 不需要事前取得使用者授權**；驗收條件通過後就可以提交：明確
-  `git add <相關檔案>`，commit message 用繁體中文。**push 仍須人工確認。**
+  `git add <相關檔案>`，commit message 用繁體中文。
+- **push 預設仍需明確授權。** 只有使用者已於該工作區明確授權時，才照 ship 流程：
+  1. 分支從 `origin/<default>` 開，簡報有 base SHA；base 落後不擋 push，但 PR
+     標「需 rebase」，由使用者決定何時 rebase。
+  2. 專案檢查與測試已跑，結果可引用；明確 `git add`、繁中 commit、
+     pre-commit hook exit 0。
+  3. public 文字檢查：commit message 與 PR body 不得含 private notes 路徑、
+     `.local/`、`.openchamber/`、本機絕對路徑、機器名、內部帳號或 private URL。
+  4. pre-push hook exit 0；`cd <repo 或 worktree> && git push -u origin <branch>`，
+     只推非預設分支；再 `gh pr create --draft` 開 draft PR，body 用
+     `pull-request` 模板。
+  5. PR URL、commit SHA、掃描 exit code 回報 PM／寫進 notes。
+  6. **不 merge、不 force、不改歷史、不改可見度、不推 tag**；沒有 remote 或
+     授權不明時只到 commit，回報「僅本機」。
 - **只 stage 本任務相關的公開檔案**，不 stage `.env`、`.local/`、`.scratch/`、
   `.tmp/`、`.openchamber/`。
   若簡報要求提交的檔案與 `.gitignore` 不一致，回報 PM，**不自行清理索引**。
@@ -64,6 +236,15 @@ permissions:
   `make test`）優先；有統一入口就跑它，不要只跑你改到的那一個測試。專案明確寫
   「不要預設跑全套」時照專案規範，但要在回報說明你跑了哪些、為什麼。
 
+## 權限三段（技術護欄，不是授權）
+
+權限規則固定 `ask → allow → deny`，`deny` 必須最後；base policy 是 `* allow`，
+**未命中不是 ask**。裸 `git push`、`git push *`、`git * push *` 與
+`gh pr merge`／`close`／`reopen` 是 ask；非預設分支的標準推法與 PR 子命令是
+allow；main／master／develop、force、`--mirror`／`--all`／`--tags`／`--prune`、
+`--no-verify`、`core.hooksPath`、`gh repo delete`／`edit` 是 deny。
+權限 allow **不構成授權**；沒有 workspace 的明確授權，仍須逐次問。
+
 ## 內部 notes（`project-notes/`）的寫入紀律
 
 - 內部工作紀錄（計畫、進度、研究、驗收、任務卡）的**權威**在
@@ -74,6 +255,9 @@ permissions:
 - **私有 notes 的 commit 不需事前授權**：你可以在**自己的 branch／worktree**
   commit 簡報指定的 notes 檔案。共用同一個 notes checkout 時一次只有一個
   writer；不確定就回報 PM。不要 `git add .`，不要 `--no-verify`。
+- **notes 只在它的 default 分支寫入**，不開 notes 分支／worktree；push 只能經由
+  受保護的 push 工具，且須通過 ff-only 與 private 可見度檢查。diverged 就停，
+  不自動 merge／rebase。
 - public 程式碼的 commit 依簡報指定的任務範圍為準；沒有指定就不要自行提交。
 
 ## 回報格式（做完後逐項填）

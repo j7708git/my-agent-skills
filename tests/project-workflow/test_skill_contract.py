@@ -7,7 +7,7 @@
 
 測試守住幾件事：
 
-1. 八份模板都存在，且各自具備關鍵欄位與填寫規則。
+1. 九份模板都存在，且各自具備關鍵欄位與填寫規則。
 2. `SKILL.md` 的相對引用自足（都在 skill 目錄內且存在）。
 3. 把整個 skill 目錄隔離複製後，格式驗證仍然通過；少一個被引用的檔案就會失敗。
 4. 沒有平台工具硬依賴、沒有模型／provider 綁定。
@@ -127,6 +127,12 @@ EXPECTED_TEMPLATE_FIELDS = {
         "允許寫入",
         "worker 禁止事項",
         "權限說明",
+        "分支",
+        "base SHA",
+        "worktree",
+        "開工預檢",
+        "ship",
+        "ask → allow → deny",
     ),
     "research.md": (
         "研究問題",
@@ -151,6 +157,16 @@ EXPECTED_TEMPLATE_FIELDS = {
         "結論",
         "後續修正",
         "授權與同步狀態",
+        "push 授權",
+        "ship 結果",
+    ),
+    "pull-request.md": (
+        "目標",
+        "變更摘要",
+        "驗證指令與結果",
+        "隱私掃描 exit code",
+        "風險與回滾",
+        "已知限制",
     ),
 }
 
@@ -575,6 +591,7 @@ class IsolatedCopyTests(unittest.TestCase):
                 "assets/templates/task-brief.md",
                 "assets/templates/research.md",
                 "assets/templates/acceptance.md",
+                "assets/templates/pull-request.md",
             ):
                 self.assertTrue((dest / rel).is_file(), f"複製後缺少 {rel}")
             result = self._validate(root)
@@ -655,12 +672,97 @@ class SecurityAuthorizationTests(unittest.TestCase):
         for action in ("push", "hooks", "可見度", ".local", ".scratch"):
             self.assertIn(action, text, f"SKILL.md 未涵蓋需授權的動作：{action}")
         self.assertIn("commit 不需要事前取得使用者授權", text)
-        self.assertIn("push 仍須人工確認", text)
+        # 預設安全與已授權例外必須同時存在；不能退化成 universal auto-push。
+        self.assertIn("預設 push 仍需明確授權", text)
+        self.assertIn("已於該工作區明確授權", text)
+        self.assertIn("非預設分支", text)
+        self.assertIn("draft PR", text)
+        self.assertNotIn("push 仍須人工確認", text)
 
     def test_privacy_reference_repeats_authorization_boundary(self) -> None:
         text = read_text(SKILL_DIR / "references" / "privacy-and-sync.md")
         self.assertIn("明確授權", text)
         self.assertIn("不會", text)
+        self.assertIn("ask → allow → deny", text)
+        self.assertIn("base policy", text)
+        self.assertIn("* allow", text)
+        self.assertIn("未命中不是 ask", text)
+        self.assertIn("deny 必須放在最後", text)
+        self.assertIn("權限 allow 只是技術護欄", text)
+
+
+class WorkflowFlowContractTests(unittest.TestCase):
+    """分支、開工預檢、worktree、ship 與三段權限的契約。"""
+
+    def test_skill_documents_branch_preflight_worktree_and_ship(self) -> None:
+        text = read_text(SKILL_DIR / "SKILL.md")
+        for marker in (
+            "不引入 `develop`",
+            "`origin` 的 `<default>`",
+            "開工預檢",
+            "worktree",
+            "git worktree add -b",
+            "cd <repo 或 worktree> && git push",
+            "gh pr create --draft",
+            "draft PR",
+            "Notes 的 push 例外",
+        ):
+            self.assertIn(marker, text, f"SKILL.md 缺少流程契約：{marker}")
+
+    def test_adapters_document_preflight_and_ship(self) -> None:
+        for name in ("pm.md", "implementer.md"):
+            with self.subTest(file=name):
+                text = read_text(ADAPTERS_AGENTS_DIR / name)
+                for marker in (
+                    "開工預檢",
+                    "origin/<default>",
+                    "worktree",
+                    "push 預設仍需明確授權",
+                    "已於該工作區明確授權",
+                    "draft PR",
+                ):
+                    self.assertIn(marker, text, f"{name} 缺少流程契約：{marker}")
+                self.assertNotIn("不要開 worktree", text)
+
+    def test_adapter_permissions_are_ordered_ask_allow_deny(self) -> None:
+        for name in ("pm.md", "implementer.md"):
+            with self.subTest(file=name):
+                text = read_text(ADAPTERS_AGENTS_DIR / name)
+                self.assertIn("ask → allow → deny", text)
+                self.assertIn("base policy", text)
+                frontmatter = text.split("---", 2)[1]
+                for resource in (
+                    "resource: git push",
+                    "resource: git push *",
+                    "resource: git * push *",
+                    "resource: git push -u origin feat/*",
+                    "resource: gh pr create *",
+                    "resource: git push * main",
+                    "resource: git push --force*",
+                    "resource: gh repo delete *",
+                    "push-notes",
+                ):
+                    self.assertIn(resource, frontmatter, f"{name} 缺少權限規則：{resource}")
+                ask = frontmatter.index("resource: git push *")
+                allow = frontmatter.index("resource: git push -u origin feat/*")
+                deny = frontmatter.index("resource: git push * main")
+                self.assertLess(ask, allow, f"{name} 的 ask 必須在 allow 之前")
+                self.assertLess(allow, deny, f"{name} 的 deny 必須在 allow 之後")
+
+    def test_public_docs_use_nine_templates(self) -> None:
+        for rel in ("README.md", "docs/project-workflow.md"):
+            with self.subTest(file=rel):
+                text = read_text(REPO_ROOT / rel)
+                self.assertIn("九份", text)
+                self.assertNotIn("八份檔案", text)
+                self.assertNotIn("八份空白模板", text)
+
+    def test_public_contract_documents_three_tier_permissions(self) -> None:
+        text = read_text(REPO_ROOT / "docs" / "project-workflow.md")
+        self.assertIn("ask → allow → deny", text)
+        self.assertIn("base policy", text)
+        self.assertIn("未命中不是 ask", text)
+        self.assertIn("不構成授權", text)
 
 
 class ConsistencyAndAuthorizationTests(unittest.TestCase):
