@@ -7,7 +7,7 @@
 
 這份契約處理兩類文件。A 類是**本專案列入 allowlist 的敘述文件**；B 類是
 **樣式分類的 agent 指令檔**：任何 `skills/*/SKILL.md`、`skills/*/references/*.md`、
-根 `AGENTS.md`、`task-brief.md` 與 `pm.md` 都自動納入；目前實際命中 **20 份**。
+根 `AGENTS.md`、`task-brief.md` 與 `pm.md` 都自動納入；目前實際命中 **26 份**。
 
 ## 適用範圍（allowlist）
 
@@ -15,8 +15,8 @@
 | --- | --- |
 | A 類 | `docs/**/*.md`、`README.md`、`CONTRIBUTING.md`、`SECURITY.md` |
 | A 類模板 | `skills/project-workflow/assets/templates/{overview,progress,plan,acceptance}.md` |
-| B 類 | `skills/*/SKILL.md`（目前 10 份） |
-| B 類 references | `skills/*/references/*.md`（目前 7 份） |
+| B 類 | `skills/*/SKILL.md`（目前 12 份） |
+| B 類 references | `skills/*/references/*.md`（目前 11 份） |
 | B 類其他 | 根 `AGENTS.md`、`skills/project-workflow/assets/templates/task-brief.md`、`adapters/opencode/agents/pm.md` |
 
 四個 A 類模板的四欄放在 fenced skeleton 內，因此 A1 的檔案開頭檢查對模板豁免；

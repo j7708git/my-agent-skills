@@ -1,7 +1,7 @@
 # my-agent-skills
 
 `j7708git/my-agent-skills` 是一個 [Agent Skills](https://agentskills.io/specification) 集合 repo。
-目前提供十一個 skill：
+目前提供十二個 skill：
 
 - **`repo-privacy-audit`** —— 對 Git repo 做唯讀的隱私與秘密掃描，
   並附上明確安裝的 hooks、CI 範本與修復手冊。
@@ -27,6 +27,8 @@
   逐條比對交接檔、總覽與計畫的宣稱，只改「現況／下一步」段並回報差異。
 - **`diagram-guide`** —— 圖解指引：圖型選擇、一張圖一件事、節點白話化、圖例門檻、
   改圖門檻、圖的權威位置與驗收分級；預設 Mermaid，升級才用 archify 或對話內 render。
+- **`vastai-comfyui-provision`** —— vast.ai ComfyUI instance 的上線流程：盤點、
+  依 manifest 下載並驗 SHA256、處理 Caddy 入口的 401、端到端出圖驗收與回填。
 
 這個 repo 不做自動修復，也不替你決定任何不可逆的動作。它只負責**看清楚**、**講明白**。
 
@@ -47,7 +49,7 @@ agent，與 `/wish`／`/proto`／`/research`／`/optimize` 指令。發行版本
 > `academic-paper-search` 的路由已在 OpenChamber 環境實測（2026-10-15）：researcher
 > subagent 的 skill 清單含本 skill、`skill` 工具載入成功、`scripts/arxiv_search.py`
 > 兩次 API 呼叫均成功；web-search agent 為 subagent 模式無法直接派發，依同一 skill
-> 發現機制推定可見，**未單獨實測**。**其餘九個 skill 的 agent runtime 尚未實測。**
+> 發現機制推定可見，**未單獨實測**。**其餘十個 skill 的 agent runtime 尚未實測。**
 > 逐項的可宣稱／不可宣稱範圍見 [docs/compatibility.md](docs/compatibility.md)；
 > 產品行為契約：掃描器見 [docs/specification.md](docs/specification.md)，
 > 流程指引見 [docs/project-workflow.md](docs/project-workflow.md)。
@@ -68,6 +70,7 @@ GitHub 設定檢查仍可能因方案／權限不足回報 incomplete；這與�
 - [release-prep（發版整備）](#release-prep發版整備)
 - [handoff-refresh（交接與現況對帳）](#handoff-refresh交接與現況對帳)
 - [diagram-guide（圖解指引）](#diagram-guide圖解指引)
+- [vastai-comfyui-provision（vast.ai ComfyUI 上線）](#vastai-comfyui-provisionvastai-comfyui-上線)
 - [OpenCode agent adapters](#opencode-agent-adapters)
 - [安裝 skill](#安裝-skill)
 - [使用掃描器](#使用掃描器)
@@ -234,6 +237,22 @@ Release 驗證 → 紀錄」固定成一份可重複套用的發版清單，讓�
   規則本體：[a-human-docs.md](skills/writing-contract/references/a-human-docs.md) 與
   [b-agent-docs.md](skills/writing-contract/references/b-agent-docs.md)。
 
+## vastai-comfyui-provision（vast.ai ComfyUI 上線）
+
+`vastai-comfyui-provision` 把「剛租到一台 vast.ai ComfyUI」到「能用 API 出圖」固定成
+六個階段：取得 SSH、盤點 GPU 與磁碟與 ComfyUI 版本、依 manifest 從 Hugging Face
+下載並驗 SHA256、處理 Caddy 入口的 401、用一張真圖驗收、把實測數字回填。
+
+- **載入時機**：剛租到一台 vast.ai 的 ComfyUI，上面還沒有專案要的模型；本機 API
+  打這台回 401 或連不上；或換了不同 GPU 的機器，要重跑一次「盤點 → 下載 → 驗收」時。
+- 主機規格與模型清單都由現場盤點與 manifest 決定，不寫死型號或檔名；
+  ComfyUI 的內部 port 一律從 `/etc/portal.yaml` 讀，不假設固定值。
+- 它是流程指引，不是安裝器：不下載模型、不代管 token。下載模型與重啟 Caddy
+  各自需要當輪明確授權，**載入這個 skill 不等於授權**。
+- 入口的 401、`AUTH_EXCLUDE` 與 env 位置見
+  [references/caddy-auth.md](skills/vastai-comfyui-provision/references/caddy-auth.md)；
+  完整內容：[skills/vastai-comfyui-provision/SKILL.md](skills/vastai-comfyui-provision/SKILL.md)
+
 ## OpenCode agent adapters
 
 `adapters/opencode/` 收錄這套流程的**選配** OpenCode 設定：`project-workflow`
@@ -297,7 +316,7 @@ A0–A2 分別記錄（只有單一模型家族的 client 上限是 A1，不得�
 
 ## 安裝 skill
 
-這十一個 skill **不會無縫相容於任何 agent client**。下表是 `repo-privacy-audit` 實際驗證過的
+這十二個 skill **不會無縫相容於任何 agent client**。下表是 `repo-privacy-audit` 實際驗證過的
 安裝位置；「檔案放對位置」只證明格式與路徑可安裝，**不證明某個 agent 會自動載入它**。
 **這些安裝實測不繼承給 `project-workflow`、七個流程指引 skill**
 （`web-ui-e2e-smoke`、`independent-rerun-verify`、`review-fix-round`、
