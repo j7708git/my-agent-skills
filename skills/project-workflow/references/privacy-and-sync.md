@@ -53,7 +53,8 @@ notes repo 內的計畫或任務卡），這是交接所需；但仍不得寫入
   **一次只有一個 writer**，避免搶 index。
 - 公開 repo 絕不 stage notes、本機設定或 `.env` 之類的檔案。
 - 一個 worker 一個明確檔案清單；不要用「全部加入」的方式整理索引。
-- push 仍須人工確認；不 `--force`、不改寫歷史、不改可見度。
+- **push 預設仍需明確授權**；只有該 workspace 已明確授權時，才照 ship 流程
+  push 非預設分支並開 PR。不 `--force`、不改寫歷史、不改可見度。
 
 ## 5. 同步步驟
 
@@ -82,8 +83,9 @@ push 的注意事項：
 - push 時要**分別回報** public 與 private 的結果；程式碼未 push 要寫清楚。
 - 未 push 的 commit 只在本機可見，不能假設協作者已能取得。
 - 不 `--force`、不改寫歷史。
-- commit 依本流程可在 checkpoint 直接進行；**push 仍須明確授權**。
-  建立檔案或寫筆記不等於已同步。
+- commit 依本流程可在 checkpoint 直接進行；**push 預設仍需明確授權**。
+  只有使用者已於該工作區明確授權時，才照 ship 流程 push 非預設分支與 notes 的
+  default 分支。建立檔案或寫筆記不等於已同步。
 
 ## 6. 交接要寫什麼
 
@@ -103,3 +105,48 @@ push 的注意事項：
 - 在可見度未知時就把 notes 上傳。
 - 用 `git add .` 或 `git add -A`，把 `.env`、暫存檔或私有內容一起帶進索引。
 - 未經授權就安裝 hooks、改可見度或改寫歷史。
+- 把「權限 allow」當成「已授權」；兩者是不同層次的事。
+
+## 8. 權限三段與 ship 閘門
+
+權限規則的順序固定是 **`ask → allow → deny`**，deny 必須放在最後；OpenCode
+的規則是 last-match-wins。**base policy 是 `* allow`，未命中不是 ask**：
+沒列出的命令會落到 allow，所以危險命令要逐條列 deny。`ask` 與 `deny` 只有在
+真正命中時才生效。
+
+- **ask**：裸 `git push`、`git push *`、`git * push *`（旗標前置或 `-C` 形式）、
+  `gh pr merge *`、`gh pr close *`、`gh pr reopen *`。
+- **allow**：`git push -u origin feat/*`（以及 fix／chore／hotfix／release）、
+  `gh pr create *`、`gh pr view *`、`gh pr checks *`、`gh pr ready *`、
+  `gh pr list *`、`gh pr edit *`、`gh pr comment *`。
+- **deny**（最後）：推 main／master／develop 與其變體、force、`--mirror`、
+  `--all`、`--tags`、`--prune`、`--no-verify`、`core.hooksPath`、`gh repo delete`、
+  `gh repo edit`。
+
+`gh pr` 要逐個子命令寫，不可寫 `gh pr *`，否則會連 `gh pr merge` 一起放行。
+push 一律用 `cd` 進 repo／worktree 的標準形式；`git -C … push` 只會停在 ask，
+不會命中 allow。**權限 allow 只是技術護欄，不構成授權**；沒有 workspace 的明確
+授權，agent 仍須逐次問。
+
+ship 的閘門：分支從 `origin/<default>` 開且任務卡有 base SHA；測試可引用；
+明確 `git add`、繁中 commit、pre-commit exit 0；public 文字檢查通過；
+pre-push exit 0；只推非預設分支；開 draft PR。base 落後不擋 push，但 PR 要標
+「需 rebase」，由使用者決定何時 rebase。任何掃描 exit 1／2、push 被拒、分支不符、
+需要 force、hooks 缺失、可見度不符或 PR body 去不掉 private 內容，都要停止回報。
+
+PR body 至少要有：目標、變更摘要、驗證指令與結果、隱私掃描 exit code、
+風險與回滾、已知限制。不得連結 private notes 的具體檔案。
+
+## 9. Notes 的自動 push 例外
+
+- notes repo 只在它的預設分支寫入（目前多為 `main`），不開 notes 分支／worktree；
+  需要隔離時，同一個 checkout 一次只有一個 writer。
+- 變更前先 `git status`。無關的 dirty／untracked 只警告、不擋，但不得 stage；
+  `git pull --ff-only` 若會覆蓋那些路徑就停。
+- 明確檔案 commit、pre-commit hook exit 0 後，才可用受保護的 notes push 工具
+  （由 workspace 安裝，安裝副本不可被 agent 隨意改寫）push notes 的預設分支。
+- 工具要確認 repo 是 notes、分支是 notes 的 default、remote 可見度 private、
+  已 ff-only；完整性無法驗證（副本不存在、雜湊不符、被改寫）時退回 `ask`。
+- push 被拒通常是 diverged；`pull --ff-only` 無法解決。**停止並回報**，
+  由使用者決定 merge／rebase；本流程不自動做。
+- code 與 notes 的 push 分開回報；未推的寫「僅本機」。

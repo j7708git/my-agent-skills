@@ -6,8 +6,10 @@
 - **`repo-privacy-audit`** —— 對 Git repo 做唯讀的隱私與秘密掃描，
   並附上明確安裝的 hooks、CI 範本與修復手冊。
 - **`project-workflow`** —— 引導「公開程式碼 repo」與「獨立 private 工作紀錄 repo」
-  的規劃、拆工、驗收與同步流程。它只是**流程指引**，不是掃描器，
-  也不會自行建立 repo、push、安裝 hooks 或搬移檔案。
+  的分支、開工預檢、worktree、ship／PR、規劃、拆工、驗收與同步流程。它只是
+  **流程指引**，不是掃描器，也不會自行建立 repo、安裝 hooks 或搬移檔案。
+  push 預設仍需明確授權；只有使用者已於該工作區明確授權時，執行 agent 才可照
+  ship 協議 push 非預設分支並開 draft PR，PR 合併仍由使用者決定。
 - **`writing-contract`** —— 人看的文件與給 agent 看的指令檔的寫作契約：
   8 條機械檢查、人工自檢清單、四張自檢清單、重複句白名單與上游許可。它是規則與詞表，
   不自動改寫檔案，也不執行檢查器。
@@ -108,16 +110,20 @@ bash <skill>/scripts/repo-privacy-audit.sh --staged --repo .
 
 **`project-workflow`** 不是掃描器，而是一份工作流程指引：
 把「公開程式碼 repo」與「獨立 private 工作紀錄 repo」分開管理，
-涵蓋確認兩個 repo 根、規劃或先做最小原型、撰寫自足任務簡報、派工與並行紀律、
-實際驗收，以及跨機同步與交接。
+涵蓋確認兩個 repo 根、分支模型與開工預檢、worktree、ship／PR、規劃或先做最小
+原型、撰寫自足任務簡報、派工與並行紀律、實際驗收，以及跨機同步與交接。
 
-它**不會**自動建立 repo、commit、push、安裝 hooks、調整可見度或搬移既有檔案；
-**載入這個 skill 也不等於授權**任何寫入或不可逆動作。
+它**不會自行執行**任何動作：不建立 repo、不安裝 hooks、不改可見度、不搬移既有
+檔案。commit 依索引紀律可在 checkpoint 直接進行；**push 預設仍需明確授權**，
+只有使用者已於該工作區明確授權時，執行 agent 才可照 ship 協議 push 非預設分支
+並開 draft PR；**合併仍由使用者決定**。**載入這個 skill 也不等於授權**任何寫入或
+不可逆動作。
 
 - 快速了解用途與邊界：[docs/project-workflow.md](docs/project-workflow.md)
 - 完整流程與固定任務簡報區塊：[skills/project-workflow/SKILL.md](skills/project-workflow/SKILL.md)
-- 可複製的空白模板：`skills/project-workflow/assets/templates/` 內的八份檔案
-  （overview、status、log、plan、task-brief、research、acceptance、legacy progress）
+- 可複製的空白模板：`skills/project-workflow/assets/templates/` 內的九份檔案
+  （overview、status、log、plan、task-brief、research、acceptance、pull-request、
+  legacy progress）
 - 各 client 的已確認與未確認狀態：
   [references/client-compatibility.md](skills/project-workflow/references/client-compatibility.md)
 - 預設以 project scope 安裝（OpenCode `.opencode/skills`、pi `.pi/skills`、
@@ -569,7 +575,7 @@ skill 自己的文件（安裝後也可用，不依賴本 repo）：
 | `skills/project-workflow/references/workflow-details.md` | 規劃、簡報、研究、驗收與交接的細節 |
 | `skills/project-workflow/references/privacy-and-sync.md` | 公開／私有隔離、索引紀律與同步步驟 |
 | `skills/project-workflow/references/client-compatibility.md` | client 的已確認與未確認狀態、手動 fallback |
-| `skills/project-workflow/assets/templates/` | 八份空白模板（overview、status、log、plan、task-brief、research、acceptance、legacy progress） |
+| `skills/project-workflow/assets/templates/` | 九份空白模板（overview、status、log、plan、task-brief、research、acceptance、pull-request、legacy progress） |
 | `skills/writing-contract/SKILL.md` | 寫作契約的入口、兩類文件與規則邊界 |
 | `skills/writing-contract/references/a-human-docs.md` | A 類規則、衝突對、中文門檻、五種異味與自檢清單 |
 | `skills/writing-contract/references/b-agent-docs.md` | B1 優先序句、插入位置、B2／B3 建議與同步對象 |
