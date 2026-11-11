@@ -10,7 +10,7 @@ compatibility: 純文字流程指引，本身無執行時相依；實際操作�
 # vastai-comfyui-provision
 
 這是一份流程指引，把「租到一台 vast.ai ComfyUI」到「能用 API 出圖」之間的事
-固定成六個階段。每一步都留下可核對的輸出，最後回報的是數字，不是形容詞。
+固定成七個階段（Phase 0 到 Phase 6）。每一步都留下可核對的輸出，最後回報的是數字，不是形容詞。
 
 - 下載模型會佔磁碟、重啟 Caddy 會短暫中斷入口。這兩件事各自需要當輪明確授權；
   載入本 skill 不等於授權。
@@ -94,6 +94,8 @@ mkdir -p /workspace/ComfyUI/models/<type>/<子目錄>
 mv /tmp/models-staging/<path_in_repo> /workspace/ComfyUI/models/<type>/<子目錄>/
 ```
 
+staging 會多一個 `/tmp/models-staging/.cache/huggingface/`，清 staging 時一起刪，不要只刪檔案。
+
 三種驗證都要做，缺一不算下載完成：
 
 1. **SHA256** 與 manifest 逐位元相符。
@@ -120,6 +122,7 @@ curl -sI http://<public_ip>:<VAST_TCP_PORT_8188>/system_stats | head -5
 - 預設建議用 token，不動機器；使用者明確要求免驗證才走 `AUTH_EXCLUDE`，
   並在回報寫出暴露風險。
 - 手改 `/etc/Caddyfile` 沒用，重啟時會被重新生成。
+- 查 Caddyfile 只看 `basic_auth` 的計數，不要整份讀；原因見 `references/caddy-auth.md`。
 
 ## Phase 5：端到端驗收
 
@@ -149,6 +152,7 @@ curl -s -o out.png "http://<public_ip>:<port>/view?filename=<檔名>&subfolder=<
 | 禁止 | 為什麼 | 怎麼驗 |
 | --- | --- | --- |
 | 改 `/etc/Caddyfile` | 啟動時由 `caddy_config_manager.py` 重生，改了會消失 | 重啟 caddy 後看設定還在不在 |
+| 整份 `cat /etc/Caddyfile` 或 `grep token` | 裡面有明文 token，貼進對話等於交出入口 | 只用 `grep -c basic_auth` 之類的計數查法 |
 | `stop` caddy／instance_portal／tunnel_manager | 官方指南列為管理面；restart 可以，stop 會斷入口 | `supervisorctl status` |
 | 把 token、IP、instance id 寫進對話或 commit | 進版控等於外流 | 提交前跑隱私掃描 |
 | 把模型放到 `models` 以外 | ComfyUI 看不到，且下次換機會漏 | Phase 3 第 3 項驗證 |

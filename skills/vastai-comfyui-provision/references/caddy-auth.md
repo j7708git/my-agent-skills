@@ -26,6 +26,23 @@ Www-Authenticate: Basic realm="restricted"
 `127.0.0.1`，實際的內部 port 由 `/etc/portal.yaml` 決定，不要假設固定值。
 `/etc/Caddyfile` 由 `caddy_config_manager.py` 依 `/etc/portal.yaml` 生成。
 
+## 不要整份讀 Caddyfile
+
+`/etc/Caddyfile` 由 `caddy_config_manager.py` 依 env 生成，`basic_auth` 的 hash 與
+cookie／Bearer 的 token 字面值都在裡面。整份貼進對話或 log，等於把這台 instance
+的入口交出去。
+
+只用不會輸出 token 的查法：
+
+```bash
+grep -c basic_auth /etc/Caddyfile
+sed -n '/^:8188 {/,/^}/p' /etc/Caddyfile | grep -c basic_auth
+grep -n '^:[0-9]* {' /etc/Caddyfile
+```
+
+- **不要** `cat /etc/Caddyfile`、不要 `grep token`，也不要把整個 block 貼進對話或 log。
+- 上面三條只輸出計數與 block 開頭的行號，足以判斷某個 port 的 block 有沒有 `basic_auth`。
+
 ## 三種帶 token 的方式（不必改機器）
 
 Caddy 的服務 block 同時接受這幾種憑證：
