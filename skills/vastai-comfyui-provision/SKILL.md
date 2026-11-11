@@ -1,6 +1,6 @@
 ---
 name: vastai-comfyui-provision
-description: 把剛租到的 vast.ai ComfyUI instance 弄到能用 API 出圖的六階段流程：取得 SSH、盤點 GPU 與磁碟與 ComfyUI 版本、依模型清單從 Hugging Face 下載並驗 SHA256、處理 Caddy 入口的 401、用一張真圖驗收、把實測數字回填。主機規格與模型清單都由現場盤點與 manifest 決定，不寫死任何型號或檔名。當使用者說「租了一台 vast.ai 的 ComfyUI」「幫我把模型搬上去」「本機 API 打這台回 401」時使用。
+description: 把剛租到的 vast.ai ComfyUI instance 弄到能用 API 出圖的七階段流程：取得 SSH、盤點 GPU 與磁碟與 ComfyUI 版本、依模型清單從 Hugging Face 下載並驗 SHA256、處理 Caddy 入口的 401、用一張真圖驗收、把實測數字回填。主機規格與模型清單都由現場盤點與 manifest 決定，不寫死任何型號或檔名。當使用者說「租了一台 vast.ai 的 ComfyUI」「幫我把模型搬上去」「本機 API 打這台回 401」時使用。
 license: MIT
 compatibility: 純文字流程指引，本身無執行時相依；實際操作需要目標 instance 的 root SSH（或 vastai CLI）、可用的 Hugging Face token，以及專案既有的一份 API 格式工作流。缺少任一項時停在原步回報，不以其他方式冒充已完成。
 ---
