@@ -115,7 +115,7 @@ agent；注入範圍與排除理由如下：
 
 - `agents/pm.md` 與 `skills/project-workflow/assets/templates/task-brief.md` 的
   檔案開頭與內嵌骨架前導句都加了同一句；`pm.md` 骨架保留兩個空格的縮排。
-- 其餘 B 類檔（10 份 `SKILL.md`、7 份 `references/*.md`、根 `AGENTS.md`）只在
+- 其餘 B 類檔（12 份 `SKILL.md`、11 份 `references/*.md`、根 `AGENTS.md`）只在
   檔案開頭加 B1；`skills/writing-contract/` 的規則檔本身豁免，因為它們定義規則，
   不描述程式行為。
 - 其他 adapters agent／command 檔不在本次 B 類清單內，沒有注入；若日後納入，

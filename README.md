@@ -318,12 +318,13 @@ A0–A2 分別記錄（只有單一模型家族的 client 上限是 A1，不得�
 
 這十二個 skill **不會無縫相容於任何 agent client**。下表是 `repo-privacy-audit` 實際驗證過的
 安裝位置；「檔案放對位置」只證明格式與路徑可安裝，**不證明某個 agent 會自動載入它**。
-**這些安裝實測不繼承給 `project-workflow`、七個流程指引 skill**
+**這些安裝實測不繼承給 `project-workflow`、八個流程指引 skill**
 （`web-ui-e2e-smoke`、`independent-rerun-verify`、`review-fix-round`、
-`native-crash-triage`、`release-prep`、`handoff-refresh`、`diagram-guide`）與
+`native-crash-triage`、`release-prep`、`handoff-refresh`、`diagram-guide`、
+`vastai-comfyui-provision`）與
 `academic-paper-search`：它們都只有文件已記載的位置。其中 `academic-paper-search`
 已在 OpenChamber 的 researcher subagent 實測過路由（見上方狀態）；`project-workflow`
-與七個流程指引 skill 的 runtime 仍未實測。
+與八個流程指引 skill 的 runtime 仍未實測。
 
 ### 方式 A：skills CLI
 
