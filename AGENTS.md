@@ -56,7 +56,8 @@
   `adapters/opencode/`：目前包含 `project-workflow` 配套的 `pm`／研究組長
   `researcher` 與四個唯讀來源 worker（`research-github`／`research-papers`／
   `research-social`／`research-web`）／`implementer`／`tester`／`tester-verify`、
-  派工前的選配計畫審查 `plan-reviewer`、獨立審查者 `reviewer`／`reviewer-deep`、
+  派工前的選配計畫審查 `plan-reviewer`、獨立審查者 `reviewer`（含重要節點用的
+  deep 模式；`reviewer-deep` 保留為相容入口）、
   `workflow-optimizer` 健檢 agent、`translator` 翻譯官（把抽象願望問成 brief、
   核可後交給 PM，並把 PM 的回覆翻成白話）、獨立的 `web-search` agent，與
   `/wish`／`/proto`／`/research`／`/optimize` 指令；發行版本刻意移除所有
