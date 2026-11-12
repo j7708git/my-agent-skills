@@ -1,7 +1,7 @@
 # my-agent-skills
 
 `j7708git/my-agent-skills` 是一個 [Agent Skills](https://agentskills.io/specification) 集合 repo。
-目前提供十一個 skill：
+目前提供十二個 skill：
 
 - **`repo-privacy-audit`** —— 對 Git repo 做唯讀的隱私與秘密掃描，
   並附上明確安裝的 hooks、CI 範本與修復手冊。
@@ -27,8 +27,11 @@
   逐條比對交接檔、總覽與計畫的宣稱，只改「現況／下一步」段並回報差異。
 - **`diagram-guide`** —— 圖解指引：圖型選擇、一張圖一件事、節點白話化、圖例門檻、
   改圖門檻、圖的權威位置與驗收分級；預設 Mermaid，升級才用 archify 或對話內 render。
+- **`fizgig-moss-lora`** —— 整理 MOSS 人物資料集與 caption、核對 Fizgig 本機設定、
+  建立試訓配置及比較 checkpoint；附保留原檔的資料整理與設定驗證工具。
 
-這個 repo 不做自動修復，也不替你決定任何不可逆的動作。它只負責**看清楚**、**講明白**。
+掃描工具維持唯讀；資料與設定 helper 可在使用者授權範圍內複製資料、產生新配置。
+這些工具不替使用者決定不可逆的動作。
 
 `skills/` 之外另有選配的 **`adapters/opencode/`**：`project-workflow` 配套的
 OpenCode agent 定義（`pm`／研究組長 `researcher` 與四個來源 worker
@@ -49,7 +52,8 @@ agent，與 `/wish`／`/proto`／`/research`／`/optimize` 指令。發行版本
 > `academic-paper-search` 的路由已在 OpenChamber 環境實測（2026-10-15）：researcher
 > subagent 的 skill 清單含本 skill、`skill` 工具載入成功、`scripts/arxiv_search.py`
 > 兩次 API 呼叫均成功；web-search agent 為 subagent 模式無法直接派發，依同一 skill
-> 發現機制推定可見，**未單獨實測**。**其餘九個 skill 的 agent runtime 尚未實測。**
+> 發現機制推定可見，**未單獨實測**。**其餘九個既有 skill 的 agent runtime 尚未實測。**
+> 新增 `fizgig-moss-lora` 的格式、helper 與 agent runtime 範圍另列於相容性文件。
 > 逐項的可宣稱／不可宣稱範圍見 [docs/compatibility.md](docs/compatibility.md)；
 > 產品行為契約：掃描器見 [docs/specification.md](docs/specification.md)，
 > 流程指引見 [docs/project-workflow.md](docs/project-workflow.md)。
@@ -70,6 +74,7 @@ GitHub 設定檢查仍可能因方案／權限不足回報 incomplete；這與�
 - [release-prep（發版整備）](#release-prep發版整備)
 - [handoff-refresh（交接與現況對帳）](#handoff-refresh交接與現況對帳)
 - [diagram-guide（圖解指引）](#diagram-guide圖解指引)
+- [fizgig-moss-lora（人物訓練資料與設定）](#fizgig-moss-lora人物訓練資料與設定)
 - [OpenCode agent adapters](#opencode-agent-adapters)
 - [安裝 skill](#安裝-skill)
 - [使用掃描器](#使用掃描器)
@@ -221,6 +226,19 @@ Release 驗證 → 紀錄」固定成一份可重複套用的發版清單，讓�
   它是流程指引，不下載或安裝工具，也不自行 commit／push。
 - 完整內容：[skills/diagram-guide/SKILL.md](skills/diagram-guide/SKILL.md)
 
+## fizgig-moss-lora（人物訓練資料與設定）
+
+`fizgig-moss-lora` 讓 agent 依實際圖片整理人物訓練集、修 caption，並按本機版本調整
+Fizgig 的 MOSS 設定。兩個 Python 3.11 標準庫工具提供資料預檢／副本輸出與配置驗證；
+不自行下載模型或啟動訓練。完整流程見 [SKILL.md](skills/fizgig-moss-lora/SKILL.md)。
+
+手動安裝時，將 `skills/fizgig-moss-lora/` **整個目錄**複製到
+`~/.agents/skills/fizgig-moss-lora/`；目的地已存在就先比較，不直接覆蓋。
+[Codex](https://learn.chatgpt.com/docs/build-skills) 與
+[OpenCode](https://opencode.ai/docs/skills/) 官方文件皆支援此共用位置（查閱：2026-11-12），
+只需一份副本。開新對話後可要求「用 fizgig-moss-lora 整理這份人物資料集」；
+Codex 也可用 `$fizgig-moss-lora`。實際 client 載入、GPU 訓練與人物效果須分別驗證。
+
 ## writing-contract（寫作契約）
 
 `writing-contract` 把「人看的敘述文件」與「給 agent 看的指令檔」的寫作要求，
@@ -300,7 +318,7 @@ A0–A2 分別記錄（只有單一模型家族的 client 上限是 A1，不得�
 
 ## 安裝 skill
 
-這十一個 skill **不會無縫相容於任何 agent client**。下表是 `repo-privacy-audit` 實際驗證過的
+這十二個 skill **不會無縫相容於任何 agent client**。下表是 `repo-privacy-audit` 實際驗證過的
 安裝位置；「檔案放對位置」只證明格式與路徑可安裝，**不證明某個 agent 會自動載入它**。
 **這些安裝實測不繼承給 `project-workflow`、七個流程指引 skill**
 （`web-ui-e2e-smoke`、`independent-rerun-verify`、`review-fix-round`、
@@ -564,6 +582,7 @@ skill 自己的文件（安裝後也可用，不依賴本 repo）：
 | `skills/release-prep/SKILL.md` | 發版整備清單、失敗處理與紀錄欄位 |
 | `skills/handoff-refresh/SKILL.md` | 交接文件的現況重生、逐條對帳與差異回報 |
 | `skills/diagram-guide/SKILL.md` | 圖型選擇、節點白話化、改圖門檻、圖的權威位置與驗收分級 |
+| `skills/fizgig-moss-lora/SKILL.md` | MOSS 人物資料整理、caption、Fizgig 設定與 checkpoint 驗證；附自足 references 與兩個 Python helper |
 
 本 repo 的 `docs/` 只放公開文件。完整計畫、todo、session 日誌、驗收紀錄與研究筆記
 是本機工作紀錄，不進版控，也不從公開文件連過去；分流規則見

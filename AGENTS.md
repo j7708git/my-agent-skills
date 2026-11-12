@@ -8,7 +8,7 @@
 ## 這個 repo 是什麼
 
 - 標準 [Agent Skills](https://agentskills.io/specification) 的集合 repo，名稱 `j7708git/my-agent-skills`。
-- 目前有十一個 skill：
+- 目前有十二個 skill：
   - `skills/repo-privacy-audit/`：唯讀的 repo 隱私與秘密掃描。它的**唯讀安全邊界不變**，
     不自動修復、不改寫歷史、不推送、不動任何 GitHub 設定。
   - `skills/project-workflow/`：公開程式碼 repo 與獨立 private 工作紀錄 repo 的流程指引。
@@ -39,6 +39,8 @@
   - `skills/diagram-guide/`：圖解指引（圖型選擇、一張圖一件事、節點白話化、圖例門檻、
     改圖門檻、圖的權威位置與驗收分級）；預設 Mermaid，升級才用 archify 或對話內
     render。
+  - `skills/fizgig-moss-lora/`：MOSS 人物資料、caption、Fizgig 設定與驗證流程；
+    Python 3.11 標準庫 helper 提供 copy-only 資料整理和靜態配置驗證，不下載模型或開訓。
   - `project-workflow` 與 `web-ui-e2e-smoke`／`independent-rerun-verify`／
     `review-fix-round`／`native-crash-triage`／`release-prep`／`handoff-refresh`／
     `diagram-guide` 都是**純文字流程指引**：不下載或安裝工具、不自行 commit／push，
