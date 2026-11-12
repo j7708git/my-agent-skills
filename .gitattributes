@@ -1,0 +1,4 @@
+# Bash 腳本一律以 LF 存放與 checkout：CRLF 會讓 Linux／WSL 的 bash 讀到
+# $'\r' 而直接語法錯誤（`set -o pipefail`、`case` 分支都會壞），
+# 連帶讓 tests/repo-privacy-audit 與 tests/scaffold 的腳本測試整批失敗。
+*.sh text eol=lf

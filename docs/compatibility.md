@@ -223,7 +223,8 @@ session 中偵測到這張 skill，並列出可用名單與正確的 description
 `project-workflow` 配套的 `pm`、研究組長 `researcher` 與四個來源 worker
 （`research-github`／`research-papers`／`research-social`／`research-web`）、
 `implementer`／`tester`、可選的獨立複驗 `tester-verify`、派工前的選配計畫審查
-`plan-reviewer`、獨立審查者 `reviewer`／`reviewer-deep`、`workflow-optimizer`
+`plan-reviewer`、獨立審查者 `reviewer`（含 deep 模式；`reviewer-deep` 保留為相容入口）、
+`workflow-optimizer`
 健檢 agent、`translator` 翻譯官、獨立的 `web-search` agent，以及
 `/wish`／`/proto`／`/research`／`/optimize` 指令。
 與 skill 的差別：
@@ -249,7 +250,7 @@ session 中偵測到這張 skill，並列出可用名單與正確的 description
   未實測**——「作者的日常使用」不等於「任何環境裝上就會正常運作」。
 - `pm`／`researcher`／`implementer`／`tester`／`tester-verify`／`plan-reviewer` 預設採用 `project-workflow` 的
   慣例（`project-notes/`、自包含簡報等），建議與該 skill 一併安裝；
-  `reviewer`／`reviewer-deep` 審查時對照任務卡驗收條件，同樣引用該慣例；
+  `reviewer`（日常與 deep 兩種模式）審查時對照任務卡驗收條件，同樣引用該慣例；
   `web-search` 為自足，不依賴任何 skill。
 - `translator` 是意圖層的選配 primary agent：把使用者的口語願望整理成自包含
   brief，經使用者核可後交給 `pm`；它不寫程式、不跑 shell、不派其他 subagent

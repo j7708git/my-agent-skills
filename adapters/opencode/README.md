@@ -21,8 +21,8 @@ agent 是平台專屬的角色、權限與模型設定，skill 是純文字流�
 | `agents/tester.md` | 測試員：依任務卡的驗證方式執行驗收並回報，不改程式碼 |
 | `agents/tester-verify.md` | 獨立複驗測試員（選配）：不讀第一份 tester 報告，重跑關鍵驗收並加負向／對照組，不改程式碼 |
 | `agents/plan-reviewer.md` | 計畫審查員（選配）：派工前讀計畫與任務卡，抓矛盾、漏項與不可驗證的驗收；不改檔、不跑測試 |
-| `agents/reviewer.md` | 獨立審查者（日常階段審查）：不改檔、不跑測試、不啟動服務 |
-| `agents/reviewer-deep.md` | 獨立審查者（重要節點審查，如公開到 GitHub 前）：不改檔、不跑測試、不啟動服務 |
+| `agents/reviewer.md` | 獨立審查者：日常階段審查，重要節點用 deep 模式；不改檔、不跑測試、不啟動服務 |
+| `agents/reviewer-deep.md` | 相容入口（stub）：指向 `reviewer.md` 的 deep 模式，不再維護獨立 checklist |
 | `agents/workflow-optimizer.md` | 工作流優化：專案階段健檢流程並探勘 skill 提案（提案制、唯讀，只寫報告與提案） |
 | `agents/translator.md` | 翻譯官（選配）：把抽象願望問成自包含交接單，核可後交給 `pm`，並把 PM 的回覆翻成三段式白話 |
 | `agents/web-search.md` | 網路研究 agent（獨立功能，與 project-workflow 無關） |
@@ -95,10 +95,9 @@ cp commands/*.md ~/.config/opencode/commands/
   比文采重要；模型太小容易漏掉假設或問錯問題。
 - **workflow-optimizer**：健檢以讀文件與分析為主（唯讀、不改檔、不跑測試），
   flash 級模型即可；它的價值在對照既有紀錄找證據，而非知識廣度。
-- **reviewer／reviewer-deep**：審查以讀碼與分析為主（不改檔、不跑測試），
-  不用太強也能抓大部分問題；
-  `reviewer` 供日常階段審查、`reviewer-deep` 供重要節點（如公開到 GitHub 前），
-  後者可用比前者高一級的模型。
+- **reviewer**：審查以讀碼與分析為主（不改檔、不跑測試），不用太強也能抓大部分問題；
+  日常階段審查用預設模式，重要節點（如公開到 GitHub 前）由 PM 指定 **deep 模式**，
+  這時可用比日常高一級的模型。`reviewer-deep.md` 只是相容入口，不再另配模型。
 
 ## 與作者本機設定的差異
 
@@ -147,7 +146,7 @@ cp commands/*.md ~/.config/opencode/commands/
   慣例（內部紀錄放 `project-notes/`、公開知識進程式碼 repo 的 `docs/`、
   自包含任務簡報等）。**建議一併安裝該 skill**，否則這些 agent 的指引
   會引用到不存在的流程文件。
-- `reviewer.md`／`reviewer-deep.md` 審查時以任務卡的驗收條件逐條對照，
+- `reviewer.md` 審查時以任務卡的驗收條件逐條對照（deep 模式另加對照表與失敗模式），
   同樣引用該 workflow 的慣例；獨立使用時可不安裝 skill，但對照會失準。
 - `researcher.md` 的 edit 權限只允許寫 `project-notes/` 下的研究筆記；
   若你的工作區不用這個慣例，需自行調整它的 permissions。它的 shell 也只留唯讀

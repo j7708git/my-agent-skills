@@ -41,7 +41,7 @@
 OpenCode agent 定義（`pm`／研究組長 `researcher` 與四個來源 worker
 （GitHub、論文與 Hugging Face、社群、網路）／`implementer`／`tester`／可選的
 獨立複驗 `tester-verify`、派工前的選配計畫審查 `plan-reviewer`、獨立審查者
-`reviewer`／`reviewer-deep`、`workflow-optimizer` 健檢、把抽象願望整理成
+`reviewer`（含 deep 模式）、`workflow-optimizer` 健檢、把抽象願望整理成
 brief 的 `translator` 翻譯官）、獨立的 `web-search`
 agent，與 `/wish`／`/proto`／`/research`／`/optimize` 指令。發行版本已移除所有模型綁定，
 安裝者依自己環境自選。格式層面僅保證 OpenCode（`pm`／`implementer`／`translator`
@@ -285,7 +285,7 @@ Codex 也可用 `$fizgig-moss-lora`。實際 client 載入、GPU 訓練與人物
 配套的 `pm`／研究組長 `researcher` 與四個來源 worker（`research-github`／
 `research-papers`／`research-social`／`research-web`）／`implementer`／`tester`／
 可選的獨立複驗 `tester-verify`、派工前的選配計畫審查 `plan-reviewer`、獨立審查者
-`reviewer`／`reviewer-deep`、`workflow-optimizer` 健檢 agent、把抽象願望整理成
+`reviewer`（含 deep 模式）、`workflow-optimizer` 健檢 agent、把抽象願望整理成
 brief、核可後交給 `pm` 的 `translator` 翻譯官、獨立的 `web-search` agent，
 與 `/wish`／`/proto`／`/research`／`/optimize` 指令。把檔案複製到
 `~/.config/opencode/` 對應目錄即可使用；
