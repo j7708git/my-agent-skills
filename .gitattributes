@@ -2,3 +2,7 @@
 # $'\r' 而直接語法錯誤（`set -o pipefail`、`case` 分支都會壞），
 # 連帶讓 tests/repo-privacy-audit 與 tests/scaffold 的腳本測試整批失敗。
 *.sh text eol=lf
+
+# Git hook 模板沒有副檔名，會被原樣複製到 .git/hooks 並以 shebang 執行；
+# CRLF 會讓 hook 以「/usr/bin/env: ‘bash\r’: No such file or directory」失敗。
+skills/repo-privacy-audit/assets/hook-* text eol=lf
