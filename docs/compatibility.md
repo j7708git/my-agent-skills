@@ -200,6 +200,23 @@ session 中偵測到這張 skill，並列出可用名單與正確的 description
 - 本 skill 的載入實測只在這台機器、這個 OpenCode 版本；其他 client 與版本未測。
 - 本 skill 的驗證結果不繼承 `repo-privacy-audit` 的安裝實測或 runtime 行為。
 
+## fizgig-moss-lora 的狀態
+
+本 skill 採標準 `SKILL.md` 與相對資源，兩個 helper 使用 Python 3.11 以上標準庫。
+[Codex](https://learn.chatgpt.com/docs/build-skills) 與
+[OpenCode](https://opencode.ai/docs/skills/) 官方文件皆列 `~/.agents/skills/` 為載入位置
+（查閱：2026-11-12）；整包安裝一份即可。這項文件確認不繼承其他 skill 的 runtime 實測。
+
+| 範圍 | 驗證方式與限制 |
+| --- | --- |
+| Skill 格式與自足資源 | 使用 repo 格式驗證器；不保證 agent 會觸發或遵守 |
+| 本機 helper | `tests/fizgig-moss-lora/` 合成測試；使用者的 OS 與 Python 版本須記錄，Windows 通過不代表 Linux／macOS 已測 |
+| Fizgig 配置 | 自動產生器只涵蓋已核對的 v9.5.1 revision；其他版本可盤點並由 agent 查證目前 schema |
+| Codex／OpenCode 真實載入與操作 | 本 skill 尚未完成兩個 client 的對話驗收；格式與安裝路徑不能替代它 |
+| GPU 訓練與人物效果 | 未隨 skill 測試；需使用實際素材、模型與硬體另行試訓 |
+
+操作入口見 [skill](../skills/fizgig-moss-lora/SKILL.md)，測試指令見 [development.md](development.md)。
+
 ## OpenCode adapters（`adapters/opencode/`）
 
 `adapters/opencode/` 收錄作者實際在用的 OpenCode agent／command 定義：

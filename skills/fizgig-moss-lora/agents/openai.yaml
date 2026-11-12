@@ -1,0 +1,6 @@
+interface:
+  display_name: "Fizgig MOSS 人物 LoRA"
+  short_description: "整理人物訓練集與 caption，核對 Fizgig 設定並驗證相似度及可控性"
+  default_prompt: "使用 $fizgig-moss-lora 依我的素材與本機版本整理訓練集、調整 Fizgig 設定並說明驗證結果。"
+policy:
+  allow_implicit_invocation: true

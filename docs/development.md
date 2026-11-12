@@ -19,6 +19,7 @@
 | `tests/repo-privacy-audit/` | 掃描核心與 hooks 的測試（全部使用合成 fixture） |
 | `tests/project-workflow/` | `project-workflow` 的契約測試（模板欄位、自足引用、隔離複製、平台中立、隱私 placeholder、授權敘述） |
 | `tests/academic-paper-search/` | `academic-paper-search` 檢索腳本的離線契約測試（查詢建構、Atom 解析、輸出格式、退出碼） |
+| `tests/fizgig-moss-lora/` | 資料整理與 Fizgig 配置 helper 的合成契約測試，不載入模型或使用 GPU |
 
 `scripts/run-checks.sh` **只維護這個集合 repo**，不是 skill 的執行入口；
 skill 安裝到使用者的專案後，這個腳本不會跟著走。
@@ -52,12 +53,18 @@ skill 安裝到使用者的專案後，這個腳本不會跟著走。
 | `tests/scaffold/test_validate_writing.py` | 契約測試 | 8 條機械檢查的正例、假綠對照、diff 範圍、四態與降級規則不誤報 |
 | `tests/project-workflow/test_skill_contract.py` | 契約測試 | `project-workflow`：模板欄位、自足引用、隔離複製、平台中立、隱私 placeholder、授權敘述 |
 | `tests/academic-paper-search/test_arxiv_search.py` | 54 | arXiv 檢索腳本契約：查詢建構與 URL 編碼、Atom 解析、json/text/bibtex 輸出、退出碼 |
+| `tests/fizgig-moss-lora/` | 以測試檔為準 | 圖片盤點、selection、來源保留、路徑與洩漏阻擋、配置產生與變更驗證 |
 
 上面掃描核心的項目數是既有數字；`tests/project-workflow/` 的契約測試**不硬寫項目數**，
 以測試檔為準，避免文件數字過期。新增測試時同步更新這張表的「覆蓋對象」即可。
 
 fixtures 全部是合成資料；完整假憑證只在暫存測試 repo 的執行期組合，原始碼保留分段字串。
 秘密掃描設定不放行任何值或目錄（理由見下方 `.gitleaks.toml`）。
+
+只檢查 `fizgig-moss-lora` helper 時，以 Python 3.11 以上執行
+`python -m unittest discover -s tests/fizgig-moss-lora -p "test_*.py" -v`。
+這些測試不證明 agent runtime 載入、真實權重相容、GPU 訓練或人物相似度；格式另由
+`python scripts/validate_skills.py --check-docs --strict` 檢查，完整 repo 檢查仍用統一入口。
 
 ## 為什麼自己寫驗證器
 
