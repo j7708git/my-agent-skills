@@ -8,7 +8,7 @@
 ## 這個 repo 是什麼
 
 - 標準 [Agent Skills](https://agentskills.io/specification) 的集合 repo，名稱 `j7708git/my-agent-skills`。
-- 目前有十三個 skill：
+- 目前有十四個 skill：
   - `skills/repo-privacy-audit/`：唯讀的 repo 隱私與秘密掃描。它的**唯讀安全邊界不變**，
     不自動修復、不改寫歷史、不推送、不動任何 GitHub 設定。
   - `skills/project-workflow/`：公開程式碼 repo 與獨立 private 工作紀錄 repo 的流程指引。
@@ -46,6 +46,9 @@
     （SSH 存取、盤點、依 manifest 下載並驗 SHA256、處理 Caddy 入口的 401、
     端到端出圖驗收與回填）；下載模型與重啟 Caddy 各自需要當輪明確授權，
     載入它不等於授權。
+  - `skills/workspace-sync/`：換機／換 agent 的開工同步；執行 agent 依使用者的同步請求，
+    偵測 notes、skills 與專案的遠端預設主線，安全切換並快轉；保留阻擋同步的本機工作。
+    它是純文字流程，不 push、不解決分岔、不更新所有已安裝 skill 副本。
   - `project-workflow` 與 `web-ui-e2e-smoke`／`independent-rerun-verify`／
     `review-fix-round`／`native-crash-triage`／`release-prep`／`handoff-refresh`／
     `diagram-guide` 都是**純文字流程指引**：不下載或安裝工具、skill 本身不自行

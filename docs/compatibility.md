@@ -217,6 +217,23 @@ session 中偵測到這張 skill，並列出可用名單與正確的 description
 
 操作入口見 [skill](../skills/fizgig-moss-lora/SKILL.md)，測試指令見 [development.md](development.md)。
 
+## workspace-sync 的狀態
+
+`workspace-sync` 是單檔純文字流程，由執行 agent 呼叫現有 Git 與 shell；不帶同步
+程式、不安裝工具，也不依賴特定 client 的工具名稱。格式入口見
+[SKILL.md](../skills/workspace-sync/SKILL.md)。
+
+| 範圍 | 驗證方式與限制 |
+| --- | --- |
+| Skill 格式與自足性 | 用 repo 格式驗證器檢查；不需要安裝集合 repo 的其他檔案 |
+| Git 流程 | 須在隔離 repo 驗證快轉、保留本機變更、分岔停止與 worktree 佔用；格式通過不代表這些行為通過 |
+| Windows／macOS／Linux | 指令參數由 agent 適配目前 shell；各平台須分別驗證，不繼承掃描器的支援範圍 |
+| client 載入與觸發 | 各 client 的真實對話驗收未完成；可直接讀取 SKILL.md 作手動入口 |
+| 已安裝 skill 副本 | 只比較 link／copy／未知狀態；來源 repo 更新不證明副本或現有 session 已更新 |
+
+同步請求只涵蓋偵測、fetch、安全切換主線與快轉；不包含 push、自動整合分岔或
+覆蓋 skill 安裝目錄。網路未確認、repo 被阻擋與部分成功都要分別回報。
+
 ## OpenCode adapters（`adapters/opencode/`）
 
 `adapters/opencode/` 收錄作者實際在用的 OpenCode agent／command 定義：
