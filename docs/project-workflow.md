@@ -16,8 +16,9 @@
 - **獨立 private 工作紀錄 repo**：計畫、進度、研究、驗收與任務卡。
 
 它涵蓋：確認工作區與兩個 repo 根、以 `status.md` 管現況並把歷史放 `log/`、依
-S／M／L 車道分級、規劃（含先做最小原型）、用已知／假設／未知收斂需求、撰寫自足
-任務簡報、派工與並行紀律、實際驗收，以及跨機同步與交接。
+S／M／L 車道分級、分支模型與開工預檢、worktree 政策、ship／PR 閘門、規劃（含先做
+最小原型）、用已知／假設／未知收斂需求、撰寫自足任務簡報、派工與並行紀律、
+實際驗收，以及跨機同步與交接。
 
 ## 這個 skill 不是什麼
 
@@ -25,11 +26,15 @@ S／M／L 車道分級、規劃（含先做最小原型）、用已知／假設�
   隱私掃描請用 [specification.md](specification.md) 描述的 `repo-privacy-audit`。
 - **是純文字指引，不是自動腳本。** 它不會自己執行任何動作；但在使用者已明確授權的
   任務範圍內，執行 agent 可以照本流程寫入與實作，不必每個細節都停下來重問。
-- **不會自動動手。** 不建立 repo、不建立 remote、不 commit、不 push、不安裝 git hooks、
-  不變更可見度、不盤點或搬移既有檔案。
-- **載入不等於授權。** 讀取或被載入這個 skill，不構成對任何寫入或不可逆動作的授權。
-  push、安裝 hooks、改可見度與搬移舊檔案，都需要使用者針對該動作的明確授權。
-  commit 是例外：依索引紀律，commit 不需事前授權，但仍受明確檔案清單與 hooks 限制。
+- **skill 本身不會自動動手。** 它不建立 repo、不建立 remote、不安裝 git hooks、
+  不變更可見度、不盤點或搬移既有檔案。commit 依索引紀律可在 checkpoint 直接進行。
+- **push 預設仍需明確授權。** 讀取或被載入這個 skill，不構成對任何寫入或不可逆動作
+  的授權。只有使用者已於該工作區明確授權時，執行 agent 才可照 ship 協議 push
+  **非預設分支**並開 draft PR；**PR 合併、tag、force、改歷史與改可見度仍由使用者
+  決定**。skill 本身不授予這個授權，也不把自動 push 寫成 universal 預設。
+- **載入不等於授權。** 安裝 hooks、改可見度與搬移舊檔案，都需要使用者針對該動作的
+  明確授權。commit 是例外：依索引紀律，commit 不需事前授權，但仍受明確檔案清單與
+  hooks 限制。
 - **不能強制權限。** skill 內對權限的敘述只是說明，不是權限設定；這個 skill 無法
   強制任何 client 的 allow／deny 行為。
 
@@ -52,9 +57,40 @@ skill 自足：`SKILL.md` 與其相對資源只引用 skill 目錄內的檔案�
 | [assets/templates/task-brief.md](../skills/project-workflow/assets/templates/task-brief.md) | 任務簡報空白模板 |
 | [assets/templates/research.md](../skills/project-workflow/assets/templates/research.md) | 研究空白模板 |
 | [assets/templates/acceptance.md](../skills/project-workflow/assets/templates/acceptance.md) | 驗收空白模板 |
+| [assets/templates/pull-request.md](../skills/project-workflow/assets/templates/pull-request.md) | PR body 空白模板（目標、驗證、掃描 exit code、風險與回滾） |
 
 模板是**空白起點**：每份都含 placeholder 欄位與填寫規則，複製後再填。
-所有模板都不含真實帳號、真實 repo、真實電腦路徑或特定 CI／session 紀錄。
+共 **九份**：overview、status、log、plan、task-brief、research、acceptance、
+pull-request，以及 legacy 的 progress。所有模板都不含真實帳號、真實 repo、
+真實電腦路徑或特定 CI／session 紀錄。
+
+## 分支、開工預檢與 ship 的契約
+
+- **分支模型**：遠端預設分支是唯一主線，**不引入 `develop`**。所有變更從
+  `origin/<default>` 開短命分支（`feat`／`fix`／`chore`／`hotfix`／`release`），
+  PR base 是 `<default>`；任務卡記錄 base SHA。預設分支以
+  `git ls-remote --symref origin HEAD` 或 `gh repo view --json defaultBranchRef`
+  偵測，不寫死 `main`。合併預設 squash，repo 有慣例時依慣例。
+- **開工預檢**：`plan` 唯讀，不 fetch／pull／開分支；`prepare`（Build／PM 開工、
+  派工前）才 fetch、`pull --ff-only`、開分支／worktree；`ship` 才 commit、push
+  非預設分支與開 PR。dirty、diverged、缺 hooks 或 detached HEAD 時停止回報，
+  不自動 stash／reset／rebase。
+- **worktree**：S（單側、1 個實作檔、無契約變更）用主 checkout 開分支；
+  M／L 或並行任務用 worktree。push **一律 `cd` 進 repo／worktree** 再執行
+  `git push`，不用 `git -C … push`，因為後者不會命中非預設分支的 allow 規則。
+  清理只在 PR 合併後做；刪遠端分支要 PR 已合併、不是 default、使用者已授權。
+- **ship 閘門**：分支從 `origin/<default>` 開且有 base SHA；測試結果可引用；
+  明確 `git add` 與繁中 commit；pre-commit exit 0；public 文字檢查通過；
+  pre-push exit 0；只推非預設分支；開 draft PR。base 落後不擋 push，但 PR 標
+  「需 rebase」，由使用者決定何時 rebase。PR body 至少含目標、變更摘要、
+  驗證指令與結果、隱私掃描 exit code、風險與回滾、已知限制。
+- **notes 例外**：notes 只在它的預設分支寫入，不開 notes 分支／worktree；以
+  ff-only 對齊，經受保護的 notes push 工具與隱私閘門後可 push。diverged 就停，
+  不自動 merge／rebase。
+- **三段權限**：`ask → allow → deny`，`deny` 必須最後（last-match-wins）。
+  base policy 是 `* allow`，**未命中不是 ask**；危險命令要逐條 deny。
+  權限 allow 只是技術護欄，**不構成授權**；沒有 workspace 的明確授權，agent 仍須
+  逐次問。assets 的 PR 模板與 `references/privacy-and-sync.md` 有完整欄位與規則。
 
 ## 安裝（預設 project scope）
 
@@ -126,7 +162,9 @@ code repo 的
 - 不確定可見度時不要上傳，也不要自動變更可見度。
 - 兩個 repo 的 commit 與 push **無法原子化**，各自獨立；成功與失敗要分別回報。
   不 `--force`、不改寫歷史。
-- commit 不需事前授權；**push 仍須人工確認**。建立檔案或寫入筆記，不等於已同步。
+- commit 不需事前授權；**push 預設仍需明確授權**。只有使用者已於該工作區明確授權
+  時，才照 ship 協議 push 非預設分支與 notes 的預設分支。建立檔案或寫入筆記，
+  不等於已同步。
 
 ## 平台中立
 
@@ -150,3 +188,5 @@ code repo 的
 2. 不保證任何 repo 已備份、已同步或已正確分類。
 3. 不是掃描器，不提供任何安全保證，也不能取代 `repo-privacy-audit`。
 4. 不替使用者做任何不可逆的動作；授權範圍外的動作一律交回使用者決定。
+5. 不能宣稱任何工作區已授權自動 push，也不能把「已授權工作區的 ship 例外」
+   寫成 universal auto-push。skill 本身不授予授權。

@@ -16,7 +16,10 @@ compatibility: 純文字流程指引，無執行時相依，也不需要特定�
 - 它是**純文字指引，不是自動腳本**，不會自己執行任何動作。但在使用者已明確授權的
   任務範圍內，執行 agent 可以照本流程寫入與實作，不必每個細節都停下來重問；
   未被授權的動作則不得自行執行。
-- 它**不會**自動建立 repo、commit、push、安裝 git hooks、調整可見度，或搬移既有檔案。
+- 它**不會自行**建立 repo、安裝 git hooks、調整可見度或搬移既有檔案。commit 依
+  索引紀律可在 checkpoint 直接進行；**push 預設仍需明確授權**，只有使用者已於該
+  工作區明確授權時，執行 agent 才可照「Ship」一節 push 非預設分支並開 draft PR；
+  **PR 合併仍由使用者決定**。
 - **載入這個 skill 不等於授權任何寫入或不可逆動作。** 需要寫入、同步或發布時，
   照「授權邊界」一節處理。
 
@@ -101,6 +104,126 @@ compatibility: 純文字流程指引，無執行時相依，也不需要特定�
 判準用途是決定**驗收強度與派工數**，不是拿來省掉必要步驟。實際量測顯示
 「diff 大小不預測成本，驗收輪數才是主因」：小任務若驗收抓到問題，一樣會多出
 修正與複驗。
+
+## 分支、開工預檢與 worktree
+
+**主線只有一條。** 遠端預設分支（多數 repo 是 `main`，也可能是 `master`）是唯一主線，
+**不引入 `develop`**。預設分支用 `git ls-remote --symref origin HEAD` 或
+`gh repo view --json defaultBranchRef` 偵測，**不要寫死 `main`**。
+
+| 分支 | 用途 | 起點 | PR base |
+| --- | --- | --- | --- |
+| `<default>` | 唯一主線，永遠可發布 | — | — |
+| `feat` 前綴 | 新功能 | `origin` 的 `<default>` | `<default>` |
+| `fix` 前綴 | 非緊急修 bug | `origin` 的 `<default>` | `<default>` |
+| `chore` 前綴 | 文件、工具、設定 | `origin` 的 `<default>` | `<default>` |
+| `hotfix` 前綴 | 正式線緊急修復 | `origin` 的 `<default>` | `<default>` |
+| `release` 前綴 | 需要穩定期才開 | `origin` 的 `<default>` | `<default>` |
+
+- 分支名用 `<prefix>/<task-id>-<slug>`；prefix 是 feat／fix／chore／hotfix／release。
+- 一律從 `origin` 的 `<default>` 開，不從本機主線開；任務卡記錄 base SHA。
+- 分支名稱只用小寫 ASCII、數字、`-`、`/`；同一個任務不要重用不同分支。
+- 合併預設 squash；repo 已有慣例時依慣例（看 `.github` 既有 PR，或直接問使用者）。
+- 發版標籤與 Release 走 `release-prep` 的較嚴格授權，**不包含在 ship 的 push 授權內**。
+
+### 開工預檢（plan／prepare／ship）
+
+| 模式 | 使用時機 | 可做什麼 |
+| --- | --- | --- |
+| `plan` | Plan agent 開始規劃前 | **唯讀**：不 fetch、不 pull、不開分支 |
+| `prepare` | Build／PM 開始開工、派工前 | 可 fetch、`pull --ff-only`、開分支／worktree |
+| `ship` | commit／push／PR 前 | 可 commit、push 非預設分支、開 draft PR |
+
+預檢依序查：目錄存在、遠端預設分支、`git status --short --branch`、
+`git worktree list`、目前分支與 upstream、遠端主線 SHA、hooks 是否在
+（`git rev-parse --path-format=absolute --git-path hooks`）、目前分支是否已有
+open PR。`plan` 需要遠端事實時用 `git ls-remote`，不修改本機 refs。
+
+決策原則（只適用 code repo）：
+
+- 乾淨、在 default、落後：`prepare` 用 `git pull --ff-only` 對齊；`plan` 只回報。
+- 乾淨、在 default、領先或 diverged：**停**，不 reset。
+- dirty／untracked：`plan` 可讀但標「開工前先清理」；`prepare` **停**，不 stash。
+- 在 feature branch 落後：回報，不自動 rebase／merge。
+- 分支已在 origin、本機沒有：先確認是否另一台機器在做。
+- 已有 open PR：續用同一分支，不重開 PR。
+- 沒有 remote：開 local branch，不 push；ship 只到 commit。
+- 缺 hooks、detached HEAD：**停**。
+
+### Worktree 政策
+
+| 情境 | 做法 |
+| --- | --- |
+| S（單側、1 個實作檔、無契約變更） | 主 checkout 開分支，不新增 worktree |
+| M（單側、2–10 檔） | worktree |
+| L（雙側、契約變更、跨 3 子系統） | worktree |
+| 並行任務 | 每個任務各自 worktree，即使 S |
+| 同一任務已有 worktree | 乾淨且分支相符才重用；否則停 |
+
+- 建立：`git worktree add -b <branch> <path> <remote>/<default>`。
+- 執行：一般 git 指令可用 `git -C <worktree>`；**push 一律
+  `cd <repo 或 worktree> && git push …`**。shell 權限比對的是整串命令文字，
+  `git -C … push` 不會命中「`git push -u origin` ＋非預設分支」的 allow。
+- 清理：PR 合併後才 `git worktree remove`、刪本地分支；未合併或關閉的 PR 不刪。
+  刪遠端分支要三條件齊備：PR 已合併、不是 default、使用者已授權清理。
+- **hooks 與 worktree**：hook 目錄由所有 worktree 共用。新 repo 先裝 hooks 再開
+  worktree；已有多個 worktree 又缺 hooks 時**停**，由使用者決定先移除多餘
+  worktree，或把該 repo 標為暫不適用。不得用 `--no-verify` 或改 hook 繞過。
+
+## Ship：commit → push → PR
+
+### 授權前提
+
+- **預設 push 仍需明確授權。** 這個 skill 本身不授予任何授權；載入 skill、寫了
+  任務簡報、或權限設定 allow，都不等於授權。
+- 只有**使用者已於該工作區明確授權**（例如 workspace 的 `AGENTS.md` 寫明允許）時，
+  執行 agent 才可照本節 ship：push **非預設分支**並開 draft PR。
+- 即使已授權，**PR 合併、tag、force push、改歷史、改可見度仍由使用者決定**。
+- 沒有 remote、或授權狀態不明：只到 commit，回報「僅本機」。
+
+### 閘門（全部通過才 push）
+
+1. 分支從 `origin` 的 `<default>` 開，任務卡記錄 base SHA；base 落後不擋 push，
+   PR 標註「需 rebase」，由使用者決定何時 rebase。
+2. 專案檢查與測試已跑，結果可引用。
+3. 明確 `git add <檔案>`；commit message 用繁體中文；pre-commit hook exit 0。
+4. public 文字檢查：commit message 與 PR body 不得含 private notes 路徑、
+   `.local`、`.openchamber`、本機絕對路徑、機器名、內部帳號或 private URL。
+   固定 pattern 至少涵蓋 private notes 目錄名、`.local`、`.openchamber` 與
+   本機絕對路徑；對 commit range 與 body file 各跑一次，命中即停。
+5. pre-push hook exit 0（掃本次要推的 range）。
+6. `cd <repo 或 worktree> && git push -u origin <branch>`；只推非預設分支。
+7. `gh pr create --draft --base <default> --head <branch> --body-file <tmp>`；
+   tmp 放 workspace 的 `.tmp`。
+8. PR URL、commit SHA、掃描 exit code 寫進 `status.md` 與 `log`。
+
+### PR 內容
+
+- 目標、變更摘要、驗證指令與結果、隱私掃描 exit code、風險與回滾、已知限制。
+- 不得連結 private notes 的具體檔案；任務標題與非敏感 ID 可以寫。
+- 先 draft；tester／PM 驗收通過後才 `gh pr ready`。**合併由使用者決定。**
+- 公開 repo 不開早期 WIP draft；等任務完成且閘門通過才開。私有 repo 可在第一個
+  可運行 checkpoint 先推 draft。
+
+### 停止條件
+
+任何掃描 exit 1／2、push 被拒、分支不符、需要 force、hooks 缺失、repo 可見度與
+預期不符、PR body 無法去掉 private 內容、沒有 remote 卻要求 PR：停止回報，
+不用 `--no-verify`、不 force、不改歷史。
+
+## Notes 的 push 例外
+
+- notes repo 只在它的預設分支寫入（目前多為 `main`），**不開 notes 分支／worktree**；
+  需要隔離時，同一個 checkout 一次只有一個 writer。
+- 變更前先 `git status`；無關的 dirty／untracked 只警告、不擋，但不得 stage。
+  `git pull --ff-only` 若會覆蓋那些路徑就停。
+- 明確檔案 commit、pre-commit hook exit 0 後，才可用受保護的 notes push 工具
+  （由 workspace 安裝並限制可改寫性）push notes 的預設分支。
+- 工具會確認 repo 是 notes、分支是 notes 的 default、remote 可見度 private、
+  已 ff-only；完整性無法驗證時退回人工確認。
+- push 被拒通常是 diverged；`pull --ff-only` 無法解決。**停止回報**，
+  由使用者決定 merge／rebase；本流程不自動做。
+- code 與 notes 的 push 分開回報；未推的寫「僅本機」。
 
 ## 私有筆記的目錄主幹
 
@@ -194,16 +317,20 @@ Dashboard 是投影，不是第二權威；不能 commit，也不能取代 `stat
 所以簡報必須包含以下固定區塊（空白模板見 `assets/templates/task-brief.md`）：
 
 1. **任務類型與目標**：類型從五選一（實作／研究／文件／驗收／原型）；要做什麼、怎麼算完成。
-2. **repo 根與路徑基準**：工作區根、code-root 與 notes-root 的實際路徑，並說明路徑基準。
+2. **repo 根與路徑基準**：工作區根、code-root 與 notes-root 的實際路徑、路徑基準，
+   以及開工預檢結論；另記分支、base SHA 與 worktree（S 用主 checkout；M／L 或並行
+   用 worktree）。
 3. **必讀背景**：相對路徑清單，以及為什麼要讀。
 4. **已知／假設／未知**：把不確定性寫進簡報，不要留給 worker 猜。
 5. **範圍與 non-goals**：做什麼、明確不做什麼。
 6. **行為、輸入輸出與錯誤處理**：或研究問題與證據標準。
-7. **驗收方法與成果**：要用什麼指令或觀察來驗證，並說明預期成果。
+7. **驗收方法與成果**：要用什麼指令或觀察來驗證，並說明預期成果與 ship 方式
+   （commit → 文字檢查 → hooks → push 非預設分支 → draft PR；合併由使用者決定）。
 8. **限制與停止條件**：卡住時何時停下來回報。
 9. **允許寫入的檔案或目錄**：明確列出。
 10. **worker 禁止事項**：不得超出授權範圍、不得 `git add .`／`--no-verify`；
-    commit 可在自己的 branch／worktree 進行，push 仍須人工確認。
+    commit 可在自己的 branch／worktree 進行；push 預設仍需明確授權，只有該工作區
+    已明確授權時才照 ship 流程 push 非預設分支並開 PR。
 
 本清單與 `assets/templates/task-brief.md` 的骨架**同源**；改了這邊就要同步那邊，
 契約測試會擋住不一致。
@@ -221,7 +348,8 @@ Dashboard 是投影，不是第二權威；不能 commit，也不能取代 `stat
   但仍須用**明確檔案清單**、跑 hooks、不得 `--no-verify`。
 - 並行的 worker 在**各自的 branch／worktree** commit；共用同一個 notes checkout 時，
   **一次只有一個 writer**，避免搶 index。
-- **push 仍須人工確認**；不 `--force`、不改寫歷史、不改可見度。
+- **push 預設仍需明確授權**；只有該 workspace 已明確授權時，才照「Ship」與
+  「Notes 的 push 例外」處理。不 `--force`、不改寫歷史、不改可見度。
 - 寫入 private notes 的內容，同樣不得含憑證、真名、私人 email、帳號 ID、
   內網位址或個人絕對路徑。
 - 若把任務卡複製到某個本機展示位置（例如 client 的計畫面板），權威仍是 notes repo
@@ -257,14 +385,16 @@ Dashboard 是投影，不是第二權威；不能 commit，也不能取代 `stat
 - 要拉取更新時只用 `git pull --ff-only`；不要覆蓋未 commit 的工作。
 - **push 是兩個 repo 各自獨立、非原子**的動作；成功與失敗要分別回報，
   程式碼未 push 要寫清楚。不 `--force`、不改寫歷史。
-- commit 依本流程可在 checkpoint 直接進行；**push 仍須人工確認**。
+- commit 依本流程可在 checkpoint 直接進行；**push 預設仍需明確授權**。
+  只有使用者已於該工作區明確授權時，才照「Ship」與「Notes 的 push 例外」處理；
   建立檔案或寫入內容**不等於**已同步。
 
 ## 授權邊界（重要）
 
 以下動作需要使用者針對該動作的**明確授權**，這個 skill 本身**不會**代為決定或執行：
 
-- 建立新 repo、建立 remote、**push**。
+- 建立新 repo、建立 remote、**push**（預設仍需明確授權；已授權工作區的 ship
+  是唯一例外，見「Ship」與「Notes 的 push 例外」）。
 - 安裝或移除 git hooks（新機器要另外安裝，未經授權不做）。
 - 變更任何 repo 的可見度。
 - 盤點、複製、移動或刪除舊的 `.local`、`.scratch` 或其他既有檔案。
@@ -273,8 +403,20 @@ Dashboard 是投影，不是第二權威；不能 commit，也不能取代 `stat
 - 公開 repo **絕不** stage notes、本機設定或 `.env`；private 內容是否進版控，
   由獲得明確授權的人以明確的檔案清單處理。
 
+### 權限三段（技術護欄，不是授權）
+
+權限規則固定 `ask → allow → deny`，`deny` 必須放在最後；規則是 last-match-wins。
+**base policy 是 `* allow`，沒有規則命中不是 ask**，所以危險命令要逐條列出。
+`ask`／`deny` 只有在真正命中時才生效；`git push *` 與 `git * push *` 是 push 的
+broad ask，但其他未列出的危險命令仍可能落到 base allow。
+
+push 一律用 `cd` 進 repo／worktree 的標準形式；`git -C … push` 只會停在 ask，
+不會命中「`git push -u origin` ＋非預設分支」的 allow。權限 allow **不構成授權**；
+沒有 workspace 的明確授權，agent 仍須逐次問。
+
 **commit 是本流程的例外**：依「私有筆記的索引紀律」，commit 不需事前授權，
-但仍受明確檔案清單、hooks 與單一 writer 的限制；push 不在例外內。
+但仍受明確檔案清單、hooks 與單一 writer 的限制。**push 預設不在例外內**；
+只有使用者已於該工作區明確授權時，才可照 ship 流程 push 非預設分支。
 
 ## 平台中立與相容性
 
@@ -295,8 +437,10 @@ Dashboard 是投影，不是第二權威；不能 commit，也不能取代 `stat
 
 ## 深入文件
 
-- `references/workflow-details.md`：現況／歷史、車道、規劃、簡報、研究、驗收與交接的細節。
-- `references/privacy-and-sync.md`：公開／私有隔離、索引紀律與同步步驟。
+- `references/workflow-details.md`：現況／歷史、車道、開工預檢、worktree、ship、
+  規劃、簡報、研究、驗收與交接的細節。
+- `references/privacy-and-sync.md`：公開／私有隔離、三段權限、notes push、
+  索引紀律與同步步驟。
 - `references/client-compatibility.md`：各 client 的已確認與未確認狀態、手動 fallback。
 
 ## 模板
@@ -310,6 +454,7 @@ Dashboard 是投影，不是第二權威；不能 commit，也不能取代 `stat
 - `assets/templates/task-brief.md`
 - `assets/templates/research.md`
 - `assets/templates/acceptance.md`
+- `assets/templates/pull-request.md`（PR body；含驗證、掃描 exit code、風險與回滾）
 - `assets/templates/progress.md`（**legacy**：只給沒有 `status.md` 的舊專案）
 
 ## 明確不做與不能宣稱的事

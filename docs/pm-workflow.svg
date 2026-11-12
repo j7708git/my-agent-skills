@@ -214,7 +214,7 @@
   <text x="110" y="1271" font-size="13.5" font-weight="600" fill="#1f2328">更新紀錄與提交</text>
   <text x="72" y="1289" font-size="11.3" fill="#59636e">status＋log＋acceptance；勾計畫、更新知識面板</text>
   <text x="72" y="1305" font-size="11.3" fill="#59636e">PM 分開提交 private notes 與可公開 docs</text>
-  <text x="72" y="1321" font-size="11.3" fill="#59636e">push 前掃描＋人工確認（不 force、不改歷史）</text>
+  <text x="72" y="1321" font-size="11.3" fill="#59636e">push 前掃描；非預設分支依授權 ship（不 force）</text>
   <path d="M236 1333 V1346" fill="none" stroke="#59636e" stroke-width="1.4" marker-end="url(#arrow)"/>
 
   <!-- 12 還有任務？ -->

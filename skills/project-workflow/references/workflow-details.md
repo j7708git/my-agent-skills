@@ -14,6 +14,10 @@
 - 兩個 repo 各自的 `git status` 為何？**寫入與同步要分開看**：已授權的任務內可以
   照流程寫入；只有同步或上傳前才要求乾淨，dirty／diverged 或可能被覆蓋的他人變更
   才需要停下回報。本任務自己授權範圍內產生的變更不在此限。
+- 開工預檢是哪一種模式？`plan` 只讀；`build`／`pm` 的 `prepare` 才 fetch、
+  `pull --ff-only`、開分支／worktree；`ship` 才 commit／push／開 PR。
+- 目前分支、base SHA、是否要用 worktree？S 用主 checkout 分支；M／L 或並行用
+  worktree；分支一律從 `origin/<default>` 開，不引入 `develop`。
 - notes repo 是不是 private？不確定就當作「未知」，不要把 notes 上傳。
 - 每個 repo 的 remote、branch、以及本機相對遠端的位置（領先／落後／分歧）。
   沒有 remote 時，notes 可在取得建立授權後於本機建立並記錄 pending。
@@ -81,16 +85,19 @@ shared/research/
 一份可用的簡報應該讓「沒有你上下文的人或 agent」能獨立完成。逐項確認：
 
 - [ ] 任務類型與目標清楚，完成定義可判定。
-- [ ] repo 根與路徑基準都寫了：工作區根、code-root、notes-root。
+- [ ] repo 根與路徑基準都寫了：工作區根、code-root、notes-root；另附開工預檢、
+      分支、base SHA 與 worktree（S 用主 checkout；M／L 或並行用 worktree）。
 - [ ] 必讀背景以相對路徑列出，並說明原因。
 - [ ] 已知／假設／未知都寫了，沒有把不確定性留給 worker 猜。
 - [ ] 範圍與 non-goals 都寫了。
 - [ ] 行為、輸入輸出與錯誤處理，或研究問題與證據標準寫了。
-- [ ] 驗收方法與成果寫了，每條都附驗證方式。
+- [ ] 驗收方法與成果寫了，每條都附驗證方式；另寫 ship 方式（commit → 文字檢查 →
+      hooks → push 非預設分支 → draft PR；合併由使用者決定）。
 - [ ] 限制與停止條件寫了。
 - [ ] 允許寫入的檔案或目錄明確列出。
 - [ ] worker 禁止事項寫了：不得超出範圍、不得 `git add .`／`--no-verify`；
-      private notes 的 commit 可在自己的 branch／worktree 進行，push 仍須人工確認。
+      private notes 的 commit 可在自己的 branch／worktree 進行；push 預設仍需
+      明確授權，只有該工作區已明確授權時才照 ship 流程 push 非預設分支並開 PR。
 
 ## 6. 並行與派工
 
@@ -99,7 +106,8 @@ shared/research/
 - commit 不需事前授權：worker 可在自己的 branch／worktree commit 簡報指定的檔案，
   但仍須用明確檔案清單、跑 hooks、不得 `--no-verify`。
 - 共用同一個 notes checkout 時，**一次只有一個 writer**；並行工作請各自用
-  branch／worktree，避免搶 index。push 仍須人工確認。
+  branch／worktree，避免搶 index。push 預設仍需明確授權；只有該工作區已明確
+  授權時，才照 ship 流程 push 非預設分支並開 PR。
 - worker 遇到範圍外的需要，回報後由 PM 決定，不要自行擴大。
 - 任務卡的**權威在 notes repo**；任何本機展示副本（例如 client 的計畫面板）
   都只是派生，不是第二權威，也不要雙寫兩份。
@@ -132,7 +140,71 @@ shared/research/
 - 分支 diverged，或 `git pull --ff-only` 無法乾淨套用。
 - notes repo 可見度未知，而工作需要動到 notes 或上傳。
 - 需要 push、安裝 hooks、改可見度或搬移舊檔案，但尚未取得明確授權。
-  （commit 不需事前授權；但仍受明確檔案清單與 hooks 限制。）
+  （commit 不需事前授權；但 push 預設仍需明確授權，只有該工作區已明確授權時
+  才照 ship 流程處理。仍受明確檔案清單與 hooks 限制。）
+- 任何隱私掃描 exit 1／2、push 被拒、分支不符、需要 force、hooks 缺失、
+  repo 可見度與預期不符、PR body 無法去掉 private 內容、沒有 remote 卻要求 PR。
 - 驗收失敗且原因不明，或錯誤超出本次簡報範圍。
 - code-root 為 N/A 時不要對不存在的 repo 跑 git；notes repo 尚無 remote 時，
   取得建立授權後可先在本機建立並記錄 pending，等上傳前再做嚴格 private 檢查。
+
+## 9. 開工預檢與分支
+
+預檢分三種模式，Plan 與 Build／PM 的權限不同：
+
+| 模式 | 使用時機 | 可做什麼 |
+| --- | --- | --- |
+| `plan` | Plan agent 開始規劃前 | 唯讀；不 fetch、不 pull、不開分支 |
+| `prepare` | Build／PM 開始開工、派工前 | 可 fetch、`pull --ff-only`、開分支／worktree |
+| `ship` | commit／push／PR 前 | 可 commit、push 非預設分支、開 draft PR |
+
+檢查項目：目錄存在、遠端預設分支與 remote、`git status --short --branch`、
+`git worktree list`、目前分支與 upstream、遠端主線 SHA、hooks 路徑與檔案、
+目前分支是否已有 open PR。`plan` 需要遠端事實時用 `git ls-remote`，不改本機 refs。
+
+分支模型：遠端預設分支是唯一主線（不引入 `develop`）；`feat`／`fix`／`chore`／
+`hotfix`／`release` 一律從 `origin/<default>` 開，PR base 是 `<default>`；任務卡
+記錄 base SHA。預設分支用 `git ls-remote --symref origin HEAD` 或
+`gh repo view --json defaultBranchRef` 偵測，不寫死 `main`。合併預設 squash；
+repo 已有慣例時依慣例。發版 tag／Release 走 `release-prep`，不在 ship 授權內。
+
+## 10. Worktree 與 ship
+
+worktree 的選擇：
+
+| 情境 | 做法 |
+| --- | --- |
+| S（單側、1 個實作檔、無契約變更） | 主 checkout 開分支，不新增 worktree |
+| M（單側、2–10 檔） | worktree |
+| L（雙側、契約變更、跨 3 子系統） | worktree |
+| 並行任務 | 每個任務各自 worktree，即使 S |
+| 同一任務已有 worktree | 乾淨且分支相符才重用；否則停 |
+
+建立用 `git worktree add -b <branch> <path> origin/<default>`。一般 git 指令可用
+`git -C <worktree>`；**push 一律 `cd <repo 或 worktree> && git push …`**，因為
+shell 權限比對整串命令文字，`git -C … push` 不會命中 `git push -u origin feat/*`
+的 allow。PR 合併後才移除 worktree、刪本地分支；未合併或關閉的 PR 不刪。刪遠端
+分支需 PR 已合併、不是 default、使用者已授權清理。
+
+hooks 由所有 worktree 共用：新 repo 先裝 hooks 再開 worktree；已有多個 worktree
+又缺 hooks 時停下來，由使用者決定先移除多餘 worktree 或標為暫不適用。不得用
+`--no-verify` 或改 hook 繞過。
+
+ship 的閘門：
+
+1. 分支從 `origin/<default>` 開，任務卡有 base SHA；base 落後不擋 push，
+   PR 標「需 rebase」，由使用者決定何時 rebase。
+2. 專案檢查與測試已跑，結果可引用。
+3. 明確 `git add <檔案>`；commit message 用繁體中文；pre-commit hook exit 0。
+4. public 文字檢查：commit message 與 PR body 不得含 private notes 路徑、
+   `.local/`、`.openchamber/`、本機絕對路徑、機器名、內部帳號或 private URL；
+   對 commit range 與 body file 各跑一次，命中即停。
+5. pre-push hook exit 0（掃本次要推的 range）。
+6. `cd <repo 或 worktree> && git push -u origin <branch>`；只推非預設分支。
+7. `gh pr create --draft --base <default> --head <branch> --body-file <tmp>`；
+   tmp 放 workspace 的 `.tmp/`。
+8. PR URL、commit SHA、掃描 exit code 寫進 `status.md`／`log/`。
+
+**預設 push 仍需明確授權**；只有使用者已於該工作區明確授權時，才可照上述流程
+push 非預設分支並開 draft PR。PR 合併、tag、force、改歷史、改可見度仍由使用者
+決定。沒有 remote 或授權不明時只到 commit，回報「僅本機」。

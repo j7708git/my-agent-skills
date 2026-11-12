@@ -8,12 +8,13 @@
 ## 這個 repo 是什麼
 
 - 標準 [Agent Skills](https://agentskills.io/specification) 的集合 repo，名稱 `j7708git/my-agent-skills`。
-- 目前有十二個 skill：
+- 目前有十三個 skill：
   - `skills/repo-privacy-audit/`：唯讀的 repo 隱私與秘密掃描。它的**唯讀安全邊界不變**，
     不自動修復、不改寫歷史、不推送、不動任何 GitHub 設定。
   - `skills/project-workflow/`：公開程式碼 repo 與獨立 private 工作紀錄 repo 的流程指引。
-    它**只提供指引**，不會自動授權或執行任何寫入、commit、push、安裝 hooks、調整可見度
-    或搬移檔案；載入它不等於授權。
+    它**只提供指引**，skill 本身不執行 push、不安裝 hooks、不調整可見度，也不搬移檔案；
+    push 預設仍需明確授權，只有使用者已於該工作區明確授權時，執行 agent 才照 ship
+    流程處理非預設分支與 draft PR。載入它不等於授權。
   - `skills/writing-contract/`：人看的文件與給 agent 看的指令檔的寫作契約
     （8 條機械檢查、B1 優先序句、四張自檢清單、重複句白名單與上游許可）；它是規則與詞表，
     不自動改寫檔案，也不執行檢查器。
@@ -41,10 +42,15 @@
     render。
   - `skills/fizgig-moss-lora/`：MOSS 人物資料、caption、Fizgig 設定與驗證流程；
     Python 3.11 標準庫 helper 提供 copy-only 資料整理和靜態配置驗證，不下載模型或開訓。
+  - `skills/vastai-comfyui-provision/`：vast.ai ComfyUI instance 的上線流程指引
+    （SSH 存取、盤點、依 manifest 下載並驗 SHA256、處理 Caddy 入口的 401、
+    端到端出圖驗收與回填）；下載模型與重啟 Caddy 各自需要當輪明確授權，
+    載入它不等於授權。
   - `project-workflow` 與 `web-ui-e2e-smoke`／`independent-rerun-verify`／
     `review-fix-round`／`native-crash-triage`／`release-prep`／`handoff-refresh`／
-    `diagram-guide` 都是**純文字流程指引**：不下載或安裝工具、不自行 commit／push，
-    也不提供任何安全保證；載入它們不等於授權。`writing-contract` 同為純文字規則
+    `diagram-guide` 都是**純文字流程指引**：不下載或安裝工具、skill 本身不自行
+    commit／push，也不提供任何安全保證；載入它們不等於授權。`project-workflow`
+    的已授權 ship 由執行 agent 依其協議處理。`writing-contract` 同為純文字規則
     與詞表，邊界相同。
 - 平台專屬 agent（OpenCode 的 agent／command 定義）屬於**選配**，收錄在
   `adapters/opencode/`：目前包含 `project-workflow` 配套的 `pm`／研究組長
@@ -74,11 +80,18 @@
    由使用者決定是否取得。
 6. **不新增相依套件**：掃描核心只用 Bash 與 Python 3 標準函式庫。安裝工具（skills CLI）只是可選安裝路徑。
 7. **不自動改 GitHub 設定**：CI 只用唯讀權限；branch protection、required checks 等由維護者手動設定。
-8. **commit 不需事前授權；push 仍需明確授權**：
+8. **分支與授權：commit 不需事前授權；push 預設仍需明確授權，已授權工作區例外**：
+   - 分支模型：遠端預設分支是唯一主線，**不引入 `develop`**；所有變更從
+     `origin/<default>` 開短命分支（`feat`／`fix`／`chore`／`hotfix`／`release`），
+     PR 回 default。預設分支用 `ls-remote --symref` 或 `gh repo view` 偵測，不寫死。
+   - 開工預檢：`plan` 唯讀；Build／PM 的 `prepare` 才 fetch、`pull --ff-only`、
+     開分支／worktree。worktree：S 用主 checkout 分支；M／L 或並行用 worktree；
+     push 一律 `cd` 進 repo／worktree，不用 `git -C … push`（不會命中 allow）。
    - commit 用明確檔案清單、跑 hooks，不得 `--no-verify`；`.env`、`.local/`、
      `.scratch/`、`.tmp/`、`.openchamber/` 不入版控。
-   - push、建立 remote、改分支保護、調整可見度、`--force` 推送與歷史改寫
-     仍需明確授權。
+   - push 預設仍需明確授權；只有使用者已於該工作區明確授權時，才可照 ship 流程
+     push 非預設分支並開 draft PR。PR 合併、tag、建立 remote、改分支保護、調整
+     可見度、`--force` 推送與歷史改寫仍由使用者決定。
    - 除非該流程另有更嚴格規定（例如 `release-prep` 的發版提交），以更嚴格者為準。
    - 首次發布流程仍照既有授權範圍執行。
 9. **不改 repo 的可見度**：可見度是維護者的決定。文件不要把「private」或「public」

@@ -1,13 +1,15 @@
 # my-agent-skills
 
 `j7708git/my-agent-skills` 是一個 [Agent Skills](https://agentskills.io/specification) 集合 repo。
-目前提供十二個 skill：
+目前提供十三個 skill：
 
 - **`repo-privacy-audit`** —— 對 Git repo 做唯讀的隱私與秘密掃描，
   並附上明確安裝的 hooks、CI 範本與修復手冊。
 - **`project-workflow`** —— 引導「公開程式碼 repo」與「獨立 private 工作紀錄 repo」
-  的規劃、拆工、驗收與同步流程。它只是**流程指引**，不是掃描器，
-  也不會自行建立 repo、push、安裝 hooks 或搬移檔案。
+  的分支、開工預檢、worktree、ship／PR、規劃、拆工、驗收與同步流程。它只是
+  **流程指引**，不是掃描器，也不會自行建立 repo、安裝 hooks 或搬移檔案。
+  push 預設仍需明確授權；只有使用者已於該工作區明確授權時，執行 agent 才可照
+  ship 協議 push 非預設分支並開 draft PR，PR 合併仍由使用者決定。
 - **`writing-contract`** —— 人看的文件與給 agent 看的指令檔的寫作契約：
   8 條機械檢查、人工自檢清單、四張自檢清單、重複句白名單與上游許可。它是規則與詞表，
   不自動改寫檔案，也不執行檢查器。
@@ -29,6 +31,8 @@
   改圖門檻、圖的權威位置與驗收分級；預設 Mermaid，升級才用 archify 或對話內 render。
 - **`fizgig-moss-lora`** —— 整理 MOSS 人物資料集與 caption、核對 Fizgig 本機設定、
   建立試訓配置及比較 checkpoint；附保留原檔的資料整理與設定驗證工具。
+- **`vastai-comfyui-provision`** —— vast.ai ComfyUI instance 的上線流程：盤點、
+  依 manifest 下載並驗 SHA256、處理 Caddy 入口的 401、端到端出圖驗收與回填。
 
 掃描工具維持唯讀；資料與設定 helper 可在使用者授權範圍內複製資料、產生新配置。
 這些工具不替使用者決定不可逆的動作。
@@ -52,7 +56,7 @@ agent，與 `/wish`／`/proto`／`/research`／`/optimize` 指令。發行版本
 > `academic-paper-search` 的路由已在 OpenChamber 環境實測（2026-10-15）：researcher
 > subagent 的 skill 清單含本 skill、`skill` 工具載入成功、`scripts/arxiv_search.py`
 > 兩次 API 呼叫均成功；web-search agent 為 subagent 模式無法直接派發，依同一 skill
-> 發現機制推定可見，**未單獨實測**。**其餘九個既有 skill 的 agent runtime 尚未實測。**
+> 發現機制推定可見，**未單獨實測**。**其餘十個既有 skill 的 agent runtime 尚未實測。**
 > 新增 `fizgig-moss-lora` 的格式、helper 與 agent runtime 範圍另列於相容性文件。
 > 逐項的可宣稱／不可宣稱範圍見 [docs/compatibility.md](docs/compatibility.md)；
 > 產品行為契約：掃描器見 [docs/specification.md](docs/specification.md)，
@@ -75,6 +79,7 @@ GitHub 設定檢查仍可能因方案／權限不足回報 incomplete；這與�
 - [handoff-refresh（交接與現況對帳）](#handoff-refresh交接與現況對帳)
 - [diagram-guide（圖解指引）](#diagram-guide圖解指引)
 - [fizgig-moss-lora（人物訓練資料與設定）](#fizgig-moss-lora人物訓練資料與設定)
+- [vastai-comfyui-provision（vast.ai ComfyUI 上線）](#vastai-comfyui-provisionvastai-comfyui-上線)
 - [OpenCode agent adapters](#opencode-agent-adapters)
 - [安裝 skill](#安裝-skill)
 - [使用掃描器](#使用掃描器)
@@ -110,16 +115,20 @@ bash <skill>/scripts/repo-privacy-audit.sh --staged --repo .
 
 **`project-workflow`** 不是掃描器，而是一份工作流程指引：
 把「公開程式碼 repo」與「獨立 private 工作紀錄 repo」分開管理，
-涵蓋確認兩個 repo 根、規劃或先做最小原型、撰寫自足任務簡報、派工與並行紀律、
-實際驗收，以及跨機同步與交接。
+涵蓋確認兩個 repo 根、分支模型與開工預檢、worktree、ship／PR、規劃或先做最小
+原型、撰寫自足任務簡報、派工與並行紀律、實際驗收，以及跨機同步與交接。
 
-它**不會**自動建立 repo、commit、push、安裝 hooks、調整可見度或搬移既有檔案；
-**載入這個 skill 也不等於授權**任何寫入或不可逆動作。
+它**不會自行執行**任何動作：不建立 repo、不安裝 hooks、不改可見度、不搬移既有
+檔案。commit 依索引紀律可在 checkpoint 直接進行；**push 預設仍需明確授權**，
+只有使用者已於該工作區明確授權時，執行 agent 才可照 ship 協議 push 非預設分支
+並開 draft PR；**合併仍由使用者決定**。**載入這個 skill 也不等於授權**任何寫入或
+不可逆動作。
 
 - 快速了解用途與邊界：[docs/project-workflow.md](docs/project-workflow.md)
 - 完整流程與固定任務簡報區塊：[skills/project-workflow/SKILL.md](skills/project-workflow/SKILL.md)
-- 可複製的空白模板：`skills/project-workflow/assets/templates/` 內的八份檔案
-  （overview、status、log、plan、task-brief、research、acceptance、legacy progress）
+- 可複製的空白模板：`skills/project-workflow/assets/templates/` 內的九份檔案
+  （overview、status、log、plan、task-brief、research、acceptance、pull-request、
+  legacy progress）
 - 各 client 的已確認與未確認狀態：
   [references/client-compatibility.md](skills/project-workflow/references/client-compatibility.md)
 - 預設以 project scope 安裝（OpenCode `.opencode/skills`、pi `.pi/skills`、
@@ -254,6 +263,22 @@ Codex 也可用 `$fizgig-moss-lora`。實際 client 載入、GPU 訓練與人物
   規則本體：[a-human-docs.md](skills/writing-contract/references/a-human-docs.md) 與
   [b-agent-docs.md](skills/writing-contract/references/b-agent-docs.md)。
 
+## vastai-comfyui-provision（vast.ai ComfyUI 上線）
+
+`vastai-comfyui-provision` 把「剛租到一台 vast.ai ComfyUI」到「能用 API 出圖」固定成
+六個階段：取得 SSH、盤點 GPU 與磁碟與 ComfyUI 版本、依 manifest 從 Hugging Face
+下載並驗 SHA256、處理 Caddy 入口的 401、用一張真圖驗收、把實測數字回填。
+
+- **載入時機**：剛租到一台 vast.ai 的 ComfyUI，上面還沒有專案要的模型；本機 API
+  打這台回 401 或連不上；或換了不同 GPU 的機器，要重跑一次「盤點 → 下載 → 驗收」時。
+- 主機規格與模型清單都由現場盤點與 manifest 決定，不寫死型號或檔名；
+  ComfyUI 的內部 port 一律從 `/etc/portal.yaml` 讀，不假設固定值。
+- 它是流程指引，不是安裝器：不下載模型、不代管 token。下載模型與重啟 Caddy
+  各自需要當輪明確授權，**載入這個 skill 不等於授權**。
+- 入口的 401、`AUTH_EXCLUDE` 與 env 位置見
+  [references/caddy-auth.md](skills/vastai-comfyui-provision/references/caddy-auth.md)；
+  完整內容：[skills/vastai-comfyui-provision/SKILL.md](skills/vastai-comfyui-provision/SKILL.md)
+
 ## OpenCode agent adapters
 
 `adapters/opencode/` 收錄這套流程的**選配** OpenCode 設定：`project-workflow`
@@ -318,14 +343,15 @@ A0–A2 分別記錄（只有單一模型家族的 client 上限是 A1，不得�
 
 ## 安裝 skill
 
-這十二個 skill **不會無縫相容於任何 agent client**。下表是 `repo-privacy-audit` 實際驗證過的
+這十三個 skill **不會無縫相容於任何 agent client**。下表是 `repo-privacy-audit` 實際驗證過的
 安裝位置；「檔案放對位置」只證明格式與路徑可安裝，**不證明某個 agent 會自動載入它**。
-**這些安裝實測不繼承給 `project-workflow`、七個流程指引 skill**
+**這些安裝實測不繼承給 `project-workflow`、八個流程指引 skill**
 （`web-ui-e2e-smoke`、`independent-rerun-verify`、`review-fix-round`、
-`native-crash-triage`、`release-prep`、`handoff-refresh`、`diagram-guide`）與
+`native-crash-triage`、`release-prep`、`handoff-refresh`、`diagram-guide`、
+`vastai-comfyui-provision`）與
 `academic-paper-search`：它們都只有文件已記載的位置。其中 `academic-paper-search`
 已在 OpenChamber 的 researcher subagent 實測過路由（見上方狀態）；`project-workflow`
-與七個流程指引 skill 的 runtime 仍未實測。
+與八個流程指引 skill 的 runtime 仍未實測。
 
 ### 方式 A：skills CLI
 
@@ -567,7 +593,7 @@ skill 自己的文件（安裝後也可用，不依賴本 repo）：
 | `skills/project-workflow/references/workflow-details.md` | 規劃、簡報、研究、驗收與交接的細節 |
 | `skills/project-workflow/references/privacy-and-sync.md` | 公開／私有隔離、索引紀律與同步步驟 |
 | `skills/project-workflow/references/client-compatibility.md` | client 的已確認與未確認狀態、手動 fallback |
-| `skills/project-workflow/assets/templates/` | 八份空白模板（overview、status、log、plan、task-brief、research、acceptance、legacy progress） |
+| `skills/project-workflow/assets/templates/` | 九份空白模板（overview、status、log、plan、task-brief、research、acceptance、pull-request、legacy progress） |
 | `skills/writing-contract/SKILL.md` | 寫作契約的入口、兩類文件與規則邊界 |
 | `skills/writing-contract/references/a-human-docs.md` | A 類規則、衝突對、中文門檻、五種異味與自檢清單 |
 | `skills/writing-contract/references/b-agent-docs.md` | B1 優先序句、插入位置、B2／B3 建議與同步對象 |
@@ -583,6 +609,7 @@ skill 自己的文件（安裝後也可用，不依賴本 repo）：
 | `skills/handoff-refresh/SKILL.md` | 交接文件的現況重生、逐條對帳與差異回報 |
 | `skills/diagram-guide/SKILL.md` | 圖型選擇、節點白話化、改圖門檻、圖的權威位置與驗收分級 |
 | `skills/fizgig-moss-lora/SKILL.md` | MOSS 人物資料整理、caption、Fizgig 設定與 checkpoint 驗證；附自足 references 與兩個 Python helper |
+| `skills/vastai-comfyui-provision/SKILL.md` | vast.ai ComfyUI 上線流程、模型 manifest、Caddy 入口與出圖驗收 |
 
 本 repo 的 `docs/` 只放公開文件。完整計畫、todo、session 日誌、驗收紀錄與研究筆記
 是本機工作紀錄，不進版控，也不從公開文件連過去；分流規則見

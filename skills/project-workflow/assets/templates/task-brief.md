@@ -28,6 +28,10 @@
 - code-root：<路徑；研究任務寫 N/A>
 - notes-root：<路徑>
 - 路徑基準：<通常填「工作區根」；若本任務改用其他目錄為基準，在這裡寫明並說明原因>
+- 開工預檢：<plan 唯讀／prepare 才 fetch、pull --ff-only、開分支／worktree>
+- 分支與 base SHA：<branch；一律從 origin/<default> 開；base SHA>
+- worktree：<S 用主 checkout 開分支；M／L 或並行用 worktree；worktree 路徑；
+  push 一律 cd 進 repo／worktree，不用 git -C … push>
 
 ## 3. 必讀背景
 
@@ -52,6 +56,8 @@
 
 - 驗收方法：<實際指令或觀察方式>
 - 預期成果：<產出檔案／報告>
+- ship：<commit → public 文字檢查 → pre-commit／pre-push → push 非預設分支 →
+  draft PR；合併由使用者決定；無 remote 只到 commit>
 
 ## 8. 限制與停止條件
 
@@ -68,7 +74,13 @@
 - 不要 `git add .`／`git add -A`；不得 `--no-verify`。
 - private notes 的 commit 可在**自己的 branch／worktree** 進行；共用同一個
   checkout 時一次只有一個 writer。
-- 簡報不構成 push／安裝／發布的授權；**push 仍須使用者確認**。
+- private notes 只在它的 **default 分支**寫入；push 只能經由受保護的 push 工具，
+  先 ff-only，diverged 就停，不自動 merge／rebase。
+- 簡報不構成 push／安裝／發布的授權；**push 預設仍需使用者明確授權**。
+  只有使用者已於該工作區明確授權時，才可照 ship 流程 push 非預設分支並開 PR；
+  PR 合併仍由使用者決定。
+- 權限模型固定 `ask → allow → deny`，`deny` 必須最後；base policy 是 `* allow`，
+  **未命中不是 ask**。權限 allow 只是技術護欄，不構成授權。
 ```
 
 ## 欄位填寫規則
@@ -77,11 +89,15 @@
 | --- | --- |
 | 任務類型與目標 | 類型從五選一：實作／研究／文件／驗收／原型；目標要可判定 |
 | repo 根與路徑基準 | 工作區根、code-root、notes-root 都寫實際路徑（研究任務的 code-root 寫 N/A）；路徑基準明說以哪個目錄為準，避免 worker 猜 |
+| 開工預檢 | 寫明 plan／prepare／ship 哪一種；plan 唯讀，prepare 才 fetch、pull --ff-only、開分支／worktree |
+| 分支與 base SHA | 分支一律從 origin/<default> 開，不引入 develop；記 base SHA，PR base 是 default |
+| worktree | S 用主 checkout 分支；M／L 或並行用 worktree；寫出 worktree 路徑與分支；push 一律 cd 進 repo／worktree，不用 git -C … push |
 | 必讀背景 | 用相對路徑，並說明為什麼要讀 |
 | 已知／假設／未知 | 把不確定性寫進簡報，不要留給 worker 猜 |
 | 範圍／non-goals | 兩者都要寫，避免 worker 自行擴大 |
 | 行為與輸入輸出 | 實作任務寫清楚；研究任務改成研究問題與證據標準 |
 | 驗收方法 | 要能實際執行或觀察，每條都要附驗證方式，不要只寫「確認正確」 |
+| ship | 寫明 commit → 文字檢查 → hooks → push 非預設分支 → draft PR；合併由使用者決定；無 remote 只到 commit |
 | 限制與停止條件 | 限制與停止條件都要寫，卡住時才知道何時回報 |
 | 允許寫入 | 明確列出檔案或目錄，不用「專案目錄」這種模糊範圍 |
-| worker 禁止事項 | 必含不得動 private repo index、不得擴大範圍；簡報不構成授權 |
+| worker 禁止事項 | 必含不得動 private repo index、不得擴大範圍；簡報不構成授權；push 預設需明確授權，已授權工作區才照 ship 流程；權限三段是 ask → allow → deny，deny 最後、未命中不是 ask |
