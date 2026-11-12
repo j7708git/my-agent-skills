@@ -118,9 +118,10 @@ git diff --name-status -z --no-renames HEAD refs/remotes/REMOTE/DEFAULT_BRANCH
    從本機 repo `.` 拉取這個固定 SHA，避免 pull 再次連網取得未經路徑檢查的新版本：
 
    ```text
-   git -c pull.rebase=false -c merge.autoStash=false -c rebase.autoStash=false pull --ff-only --no-rebase --no-autostash --no-recurse-submodules --no-prune --no-tags . VERIFIED_SHA
+   git -c pull.rebase=false -c merge.autoStash=false -c rebase.autoStash=false pull --ff-only --no-squash --no-rebase --no-autostash --no-recurse-submodules --no-prune --no-tags . VERIFIED_SHA
    ```
 
+   `--no-squash` 避免繼承分支的 squash 選項，確保快轉會推進 HEAD。
    這仍是 ff-only pull，不依賴 upstream，也不遞迴更新 submodule。notes 的 dirty
    例外尤其需要停用 autostash。命令失敗即停，不改設定或換整合策略重試。
 4. 重新查遠端 default 的 symref／SHA，核對本機 HEAD、default 與 tracking ref 相同，
