@@ -272,7 +272,7 @@ permissions:
   PR base 是 `<default>`；任務卡記錄 base SHA。預設分支用
   `git ls-remote --symref origin HEAD` 或 `gh repo view --json defaultBranchRef`
   偵測，不寫死 `main`。
-- **worktree**：S（單側、1 個實作檔、無契約變更）用主 checkout 開分支；
+- **worktree**：S（單一子系統、0–1 個實作檔、無契約變更）用主 checkout 開分支；
   M／L 或並行任務用 worktree。建立用
   `git worktree add -b <branch> <path> origin/<default>`；一般 git 指令可用
   `git -C <worktree>`，但 **push 一律 `cd` 進 repo／worktree**，因為

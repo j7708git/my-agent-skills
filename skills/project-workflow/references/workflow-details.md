@@ -174,9 +174,9 @@ worktree 的選擇：
 
 | 情境 | 做法 |
 | --- | --- |
-| S（單側、1 個實作檔、無契約變更） | 主 checkout 開分支，不新增 worktree |
-| M（單側、2–10 檔） | worktree |
-| L（雙側、契約變更、跨 3 子系統） | worktree |
+| S（單一子系統、0–1 個實作檔、無契約變更） | 主 checkout 開分支，不新增 worktree |
+| M（單一子系統、2–10 個實作／測試檔、可 additive） | worktree |
+| L（≥11 檔、跨 ≥2 子系統、或契約 breaking） | worktree |
 | 並行任務 | 每個任務各自 worktree，即使 S |
 | 同一任務已有 worktree | 乾淨且分支相符才重用；否則停 |
 

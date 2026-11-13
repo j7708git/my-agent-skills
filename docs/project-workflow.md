@@ -75,7 +75,7 @@ pull-request，以及 legacy 的 progress。所有模板都不含真實帳號、
   派工前）才 fetch、`pull --ff-only`、開分支／worktree；`ship` 才 commit、push
   非預設分支與開 PR。dirty、diverged、缺 hooks 或 detached HEAD 時停止回報，
   不自動 stash／reset／rebase。
-- **worktree**：S（單側、1 個實作檔、無契約變更）用主 checkout 開分支；
+- **worktree**：S（單一子系統、0–1 個實作檔、無契約變更）用主 checkout 開分支；
   M／L 或並行任務用 worktree。push **一律 `cd` 進 repo／worktree** 再執行
   `git push`，不用 `git -C … push`，因為後者不會命中非預設分支的 allow 規則。
   清理只在 PR 合併後做；刪遠端分支要 PR 已合併、不是 default、使用者已授權。
