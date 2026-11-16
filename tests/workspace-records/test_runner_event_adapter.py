@@ -307,5 +307,76 @@ class Tests(unittest.TestCase):
         self.assertEqual(self.sessions, 0)
 
 
+
+class ExecutableTests(unittest.TestCase):
+    def setUp(self):
+        import tempfile
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.directory = pathlib.Path(self.temp.name).resolve()
+        self.exe = self.directory / 'synthetic-codex.exe'
+        self.exe.write_bytes(b'synthetic executable pin, never launched')
+        self.config = {'client': {'codex_executable': {'path': str(self.exe),
+                       'sha256': core.sha(self.exe.read_bytes()), 'size': self.exe.stat().st_size}}}
+
+    def test_missing_path_red_and_pinned_real_session_metadata_green(self):
+        import codex_action_transport as transport
+        calls = []
+        readers, writers = set(adapter.canonical_writer.READERS), set(adapter.canonical_writer.WRITERS)
+        enabled = readers | writers
+        class Rpc:
+            def __init__(inner, executable, *args):
+                self.assertEqual(executable, str(self.exe))
+            def initialize(inner): pass
+            def close(inner): return {'settled': True}
+            def call(inner, method, arguments):
+                calls.append(method)
+                if method == 'app/installed':
+                    return {'apps': [{'id': 'drive', 'runtimeName': 'google drive', 'enabled': True, 'callable': True}]}
+                if method == 'app/read':
+                    return {'apps': [{'toolSummaries': [{'name': name, 'isReadOnly': name in readers} for name in enabled]}]}
+                if method == 'config/read':
+                    return {'config': {'apps': {'_default': {'enabled': False}, 'drive': {'default_tools_enabled': False,
+                            'tools': {name: {'enabled': True, 'approval_mode': 'prompt'} for name in enabled}}}}}
+                if method == 'thread/start': return {'thread': {'id': 'synthetic'}}
+                raise AssertionError(method)
+        with patch('shutil.which', return_value=None):
+            with self.assertRaises(core.RecordError) as red:
+                adapter.managed_session(self.directory, {})
+            self.assertEqual(red.exception.code, 'CONNECTOR_UNAVAILABLE')
+            with patch.object(transport, 'Rpc', Rpc):
+                session = adapter.managed_session(self.directory, self.config)
+                self.assertEqual(session.executable, str(self.exe))
+                self.assertEqual(session.open(), ('drive', 'synthetic'))
+                session.rpc.close()
+                self.assertEqual(session.turns_started, 0)
+        self.assertEqual(calls, ['app/installed', 'app/read', 'config/read', 'thread/start'])
+
+    def test_missing_hash_size_and_relative_pins_refused(self):
+        changes = [{'sha256': '0' * 64}, {'size': 1}, {'path': str(self.directory / 'missing.exe')}, {'path': 'relative.exe'}]
+        for change in changes:
+            config = copy.deepcopy(self.config)
+            config['client']['codex_executable'].update(change)
+            with self.subTest(change=change), self.assertRaises(core.RecordError):
+                adapter.managed_session(self.directory, config)
+
+    def test_alias_and_hash_change_between_factories_refused(self):
+        import os
+        alias = self.directory / 'alias.exe'
+        os.link(self.exe, alias)
+        with self.assertRaises(core.RecordError):
+            adapter.trusted_executable(self.config)
+        alias.unlink()
+        self.assertEqual(adapter.trusted_executable(self.config), str(self.exe))
+        self.exe.write_bytes(b'changed')
+        with self.assertRaises(core.RecordError):
+            adapter.managed_session(self.directory, self.config)
+
+    def test_untrusted_payload_does_not_configure_executable(self):
+        self.assertIsNone(adapter.trusted_executable({'payload': self.config['client']}))
+        for bad in ({'client': {}}, {'client': {'codex_executable': {}, 'extra': True}}):
+            with self.assertRaises(core.RecordError):
+                adapter.trusted_executable(bad)
+
 if __name__ == '__main__':
     unittest.main()

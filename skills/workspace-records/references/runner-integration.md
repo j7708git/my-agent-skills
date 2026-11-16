@@ -8,6 +8,8 @@
 
 固定 package 提供 `runner_event_adapter.py`、`dispatch_guard.py`、`canonical_writer.py` 與 `codex_action_transport.py`，並依賴原 managed connector／Git store／scanner。來源檔存在不代表已安裝；部署者須核准並固定完整 package、設定與原 workflow 變更。
 
+固定的 `runner.json` 可選配 `client.codex_executable`，內容只能有 `path`（絕對路徑）、`sha256`（64 位小寫 hex）與 `size`（正整數）。這是部署者核准的主機設定，不能從 Issue、request 或環境變數指定。每次 session factory 建構前重驗檔案及祖先無 symlink／reparse、檔案為一般檔且無 hardlink alias、精確 size/hash；不存在或漂移就拒絕。不設定 `client` 時保留原本 PATH 發現行為，不修改全域 PATH。驗證後透過既有 `CodexActionSession(executable=...)` 傳入；tool metadata、readOnly、精確參數及 approval gates 不變。建構成功不等於事件執行或寫入成功。
+
 既有 Actions job 呼叫：
 
 ```text

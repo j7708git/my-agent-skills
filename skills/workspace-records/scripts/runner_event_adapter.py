@@ -8,6 +8,7 @@ import json
 import os
 import pathlib
 import re
+import stat
 import subprocess
 import sys
 
@@ -489,6 +490,54 @@ def dispatch(registry, config, event_context, session_factory):
 
 
 
+def trusted_executable(config):
+    """Optional executable pin from the fixed trusted runner config only."""
+    if 'client' not in config:
+        return None
+    client = config['client']
+    if not isinstance(client, dict) or set(client) != {'codex_executable'}:
+        raise RecordError('INVALID_ARGUMENT')
+    pin = client['codex_executable']
+    if (not isinstance(pin, dict) or set(pin) != {'path', 'sha256', 'size'}
+            or not isinstance(pin['path'], str) or not pathlib.Path(pin['path']).is_absolute()
+            or not isinstance(pin['sha256'], str) or not re.fullmatch('[a-f0-9]{64}', pin['sha256'])
+            or type(pin['size']) is not int or pin['size'] < 1):
+        raise RecordError('INVALID_ARGUMENT')
+    path = pathlib.Path(pin['path'])
+    try:
+        git_store.safe_dir(path.parent)
+        component = pathlib.Path(path.anchor)
+        for part in path.parts[1:]:
+            component = git_store.canonical_child(component, part)
+            info = component.lstat()
+            if stat.S_ISLNK(info.st_mode) or getattr(info, 'st_file_attributes', 0) & 1024:
+                raise RecordError('FORBIDDEN')
+        info = path.lstat()
+        if (not stat.S_ISREG(info.st_mode) or info.st_nlink != 1
+                or str(path.resolve(strict=True)) != str(path)
+                or info.st_size != pin['size'] or sha(path.read_bytes()) != pin['sha256']):
+            raise RecordError('FORBIDDEN')
+    except OSError:
+        raise RecordError('CONNECTOR_UNAVAILABLE') from None
+    return str(path)
+
+
+def managed_session(directory, config):
+    from codex_action_transport import CodexActionSession
+    readers, writers = set(canonical_writer.READERS), set(canonical_writer.WRITERS)
+    if config.get('detail_projection'):
+        import detail_projection_driver
+        readers.update(detail_projection_driver.READERS)
+        writers.update(detail_projection_driver.WRITERS)
+    projection = config.get('portfolio_projection')
+    if projection and projection.get('enabled') is True:
+        if set(projection) != {'enabled', 'sheet_title'} or not isinstance(projection['sheet_title'], str) or not projection['sheet_title']:
+            raise RecordError('INVALID_ARGUMENT')
+        readers.add('get_spreadsheet_cells')
+        writers.add('batch_update_spreadsheet')
+    return CodexActionSession(directory, readers=readers, writers=writers, executable=trusted_executable(config))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--managed', required=True, action='store_true')
@@ -504,26 +553,14 @@ def main():
         registry = routing.Registry(workspace)
         config = git_store.read_json(routing.private_file(workspace, CONFIG))
         required = {'repository', 'owner', 'workflow_path', 'whitelist', 'projects'}
-        if not required <= set(config) or set(config) - required - {'legacy_git_issues', 'reviewed_operations', 'portfolio_projection', 'detail_projection'}:
+        if not required <= set(config) or set(config) - required - {'legacy_git_issues', 'reviewed_operations', 'portfolio_projection', 'detail_projection', 'client'}:
             raise RecordError('INVALID_ARGUMENT')
         directory = workspace / routing.RUNTIME / 'runner-apps'
         if not os.path.lexists(directory):
             directory.mkdir(mode=0o700)
         directory = git_store.safe_dir(directory)
         def factory():
-            from codex_action_transport import CodexActionSession
-            readers, writers = set(canonical_writer.READERS), set(canonical_writer.WRITERS)
-            if config.get('detail_projection'):
-                import detail_projection_driver
-                readers.update(detail_projection_driver.READERS)
-                writers.update(detail_projection_driver.WRITERS)
-            projection = config.get('portfolio_projection')
-            if projection and projection.get('enabled') is True:
-                if set(projection) != {'enabled', 'sheet_title'} or not isinstance(projection['sheet_title'], str) or not projection['sheet_title']:
-                    raise RecordError('INVALID_ARGUMENT')
-                readers.add('get_spreadsheet_cells')
-                writers.add('batch_update_spreadsheet')
-            return CodexActionSession(directory, readers=readers, writers=writers)
+            return managed_session(directory, config)
         if args.recover_projections is not None:
             if args.prepare_operation or args.request_file or args.review_id or args.route_only:
                 raise RecordError('INVALID_ARGUMENT')
