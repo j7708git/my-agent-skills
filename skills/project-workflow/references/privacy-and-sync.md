@@ -2,6 +2,8 @@
 
 # 隱私分流與同步
 
+工作紀錄已啟用可選路由時，先依[記錄路由](record-routing.md)核對 binding；以下本機 notes 路徑僅對 Git 分支生效，Google 分支使用相同 kind 的受管 records。未啟用者維持原 Git 流程。
+
 本文件說明 `project-workflow` 的公開／私有隔離規則與跨機同步步驟。
 它是流程指引；本 skill 不會自行 commit、push、改可見度或搬移檔案。
 
@@ -11,8 +13,10 @@
 | --- | --- | --- | --- |
 | 使用說明、產品契約、教學、架構成品 | code repo 的 README 與 docs | 公開 | 所有人 |
 | 程式碼與測試 | code repo | 公開 | 所有人 |
-| 完整計畫、現況、歷史、研究、驗收、任務卡 | notes repo 的專案目錄與 `shared` | private | 僅協作者 |
+| Git 模式的計畫、現況、歷史、研究、驗收、任務卡 | notes repo 的專案目錄與 `shared` | private Git | 僅協作者 |
 | 暫存與一次生產物 | workspace 的 `.tmp` | 忽略 | 無 |
+
+Google mode 的專案 records 存於受管 Doc authority／immutable segments；notes repo 仍保存共用規則與未遷移 Git 專案紀錄。同步 notes repo 不會更新 Google authority，Google 不可讀時不可把舊 notes 當 fallback。
 
 判準很簡單：這是「專案對外的知識」還是「我怎麼做出來的過程」？
 前者蒸餾成**自足**內容放公開 repo；後者放 private notes。
@@ -93,7 +97,7 @@ push 的注意事項：
 
 - `status.md` 的 `now`／`next`／`blocker`／`needs`／`updated`。
 - `log/YYYY-MM.md` 追加一則（≤10 行），寫日期、做了什麼、證據與下一步。
-- 不再追加 `progress.md`；它只作舊專案的 fallback。
+- 不再追加 `progress.md`；它只作 Git 路由下舊專案的 fallback。
 - code repo 的分支與 commit（真實已存在，不是預期值）。
 - 哪些只在本機、尚未 push。
 - 兩個 repo 各自的同步狀態、仍待決定的問題與下一步。

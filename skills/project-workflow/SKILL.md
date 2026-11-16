@@ -1,6 +1,6 @@
 ---
 name: project-workflow
-description: 引導在單一工作區內協調「公開程式碼 repo」與「獨立 private 工作紀錄 repo」的專案流程：以每個專案一份 status.md 管現況、log 管歷史、Git 管分支與 push，依 S／M／L 車道分級，撰寫自足任務簡報、派工與並行、實際驗收、跨機同步與交接。當使用者要開新專案、把想法變成計畫、先看原型、拆工派工、寫任務卡、做驗收，或討論 Git 同步、可見度與授權邊界時使用。這個 skill 只是流程指引，不是掃描器，也不自行建立 repo、push、安裝 hooks 或搬移檔案。
+description: 引導在單一工作區內協調「公開程式碼 repo」與「獨立 private 工作紀錄 repo」的專案流程：依已選紀錄權威管現況與歷史、Git 管分支與 push，依 S／M／L 車道分級，撰寫自足任務簡報、派工與並行、實際驗收、跨機同步與交接。當使用者要開新專案、把想法變成計畫、先看原型、拆工派工、寫任務卡、做驗收，或討論 Git 同步、可見度與授權邊界時使用。這個 skill 只是流程指引，不是掃描器，也不自行建立 repo、push、安裝 hooks 或搬移檔案。
 license: MIT
 compatibility: 純文字流程指引，無執行時相依，也不需要特定工具或模型；任何能讀取檔案的 agent client 都可用手動載入的方式使用。
 ---
@@ -44,9 +44,13 @@ compatibility: 純文字流程指引，無執行時相依，也不需要特定�
   不要在文件或指令裡把它寫死。
 - 路徑一律以**工作區根**為基準解析，不要依賴子 session 當下的工作目錄。
 
+## 工作紀錄路由（讀寫前）
+
+工作區已啟用可選 `workspace-records` 政策時，先讀[記錄路由](references/record-routing.md)，完成 binding／control 核對後才讀寫管理資料。未啟用的 Git 工作區照原流程；本 skill 不自行建立 registry 或切換權威。
+
 ## 單一現況，歷史分開
 
-同一個問題只能有一個權威。其他都是投影或提示。
+同一個問題只能有一個權威。其他都是投影或提示。下表是 Git 模式的映射；Google 模式依已核對的 routing／head／manifest 讀寫同種 records，Sheet 只是衍生總覽。
 
 | 問題 | 權威 | 不是權威 |
 | --- | --- | --- |
@@ -70,12 +74,14 @@ compatibility: 純文字流程指引，無執行時相依，也不需要特定�
 - `## 需要你決定` 選填，固定用 `- [ ]`／`- [x]`。
 - 白話寫 `now`／`next`，不要只寫代號；`status.md` 不描述歷史。
 
-### Fallback
+### Git 模式 fallback
 
-- 有 `status.md`：先讀 `status.md`＋Git 事實。
-- 沒有 `status.md`：才讀 `progress.md` 最新段＋Git 事實（遷移期相容）。
-- `status.md` 與 Git 衝突：**Git 事實優先**；`branch`／`HEAD`／push 欄位只是提示。
-- `status.md` 與 `progress.md`／`overview.md` 衝突：**停止並對帳**，不要自己挑一份。
+以下實體路徑規則只適用未啟用路由或 positive `unmigrated_git` 專案。managed Google 必須依上方 route binding 讀寫 logical records；不得回讀舊 notes、套用 progress fallback 或用本機快取代替權威。
+
+- Git 模式且有 `status.md`：先讀 `status.md`＋code Git 事實。
+- Git 模式且沒有 `status.md`：才讀 `progress.md` 最新段＋code Git 事實（遷移期相容）。
+- Git 模式中 `status.md` 與 code Git 衝突：Git 事實只決定 branch／HEAD／push；記錄內容矛盾要停下對帳。
+- Git 模式中 `status.md` 與 `progress.md`／`overview.md` 衝突：**停止並對帳**，不要自己挑一份。
 - 舊 `progress.md` 不重寫、不刪除；檔頭加一行
   `> 歷史紀錄（冷凍）。最新狀態見 status.md；新日誌寫在 log 目錄。` 之後停止追加。
 
@@ -240,9 +246,9 @@ open PR。`plan` 需要遠端事實時用 `git ls-remote`，不修改本機 refs
 - code repo 的 `.gitignore` 應排除暫存；公開的 code repo 放程式碼、測試、README 與對外
   docs，**不得**含 private 工作筆記。
 - workspace 或 code repo 內的 `.tmp` 都應被 ignore，且**絕不自動清理**。
-- **跨機接手時**的閱讀順序：`status.md` → 兩個 repo 的 Git 事實 → `acceptance` 目錄 →
+- **Git 模式跨機接手時**的閱讀順序：`status.md` → 兩個 repo 的 Git 事實 → `acceptance` 目錄 →
   任務卡 → `log` 目錄 最近幾則；需要時再讀 `plan.md`／`research` 目錄。
-  只有在沒有 `status.md` 的舊專案，才退回讀 `progress.md` 最新段。
+  僅 Git 模式且沒有 `status.md` 的舊專案，才退回讀 `progress.md` 最新段。
 
 ## 隱私分流（公開與私有嚴格隔離）
 
@@ -372,7 +378,7 @@ Dashboard 是投影，不是第二權威；不能 commit，也不能取代 `stat
 
 - 更新 `status.md` 的 `now`／`next`／`blocker`／`needs`／`updated`。
 - 在 `log` 目錄的當月檔（`YYYY-MM.md`） 追加一則（≤10 行），寫下日期、做了什麼、證據、下一步。
-- 不再追加 `progress.md`；它只作舊專案的 fallback 與歷史。
+- 不再追加 `progress.md`；它只作 Git 路由下舊專案的 fallback 與歷史。
 
 內容至少涵蓋：
 

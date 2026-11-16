@@ -65,3 +65,5 @@
 | 已知限制 | 誠實列出未涵蓋的範圍，不要把半成品寫成完成 |
 | 驗收與合併 | 合併由使用者決定；agent 不自動 merge、不 force、不改歷史 |
 | 隱私 | 不寫 private notes 的具體檔案、本機絕對路徑、機器名、內部帳號或 private URL |
+
+<!-- 記錄路由：本模板是 Git 模式的實體文字映射。已啟用路由時先核對 binding/head；managed Google 不讀寫封存 notes，沿用同 kind 的 logical record、明確 scope 與版本回執。status/log/decision 僅 PM 寫入，worker 限派定 scope；人類決策先寫入 Doc authority，Sheet 只作衍生 view。實際 locator 僅保存在私有配置。 -->

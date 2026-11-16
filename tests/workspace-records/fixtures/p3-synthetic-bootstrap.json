@@ -1,0 +1,140 @@
+{
+  "private_dir": "REPLACE_WITH_ABSOLUTE_PRIVATE_DIR",
+  "request": {
+    "schema_version": 1,
+    "request_id": "example-request",
+    "project_id": "Demo",
+    "actor_role": "pm",
+    "scope": {
+      "project_id": "Demo",
+      "actions": [
+        "replace"
+      ],
+      "records": [
+        {
+          "record_id": "status",
+          "path": "status.md",
+          "fields": [
+            "body"
+          ]
+        }
+      ]
+    },
+    "operation_id": "example-bootstrap",
+    "action": "bootstrap",
+    "target_record_id": null,
+    "payload": {
+      "recordset_sha256": "9d58c6b24f0b44a59920e005166a07346e0a57e842110d147db01c078d83ead8"
+    },
+    "expected": {
+      "mode": "google",
+      "phase": "frozen",
+      "epoch": 2,
+      "version": 1
+    }
+  },
+  "recordset": {
+    "schema_version": 1,
+    "project_id": "Demo",
+    "control": {
+      "mode": "git",
+      "phase": "frozen",
+      "epoch": 2,
+      "version": 1,
+      "policy_version": "1"
+    },
+    "version": 1,
+    "records": [
+      {
+        "record_id": "status",
+        "kind": "status",
+        "created_at": null,
+        "updated_at": null,
+        "source": {
+          "relative_path": "status.md",
+          "content_sha256": "54594e2db4b7e2cf3159a95a469ddf6aeafbebac487c788d3de0c4ebe2e78400",
+          "original_time": null
+        },
+        "body": {
+          "format": "utf-8",
+          "content": "# Example\r\n\r\nschema: 1\r\nstate: active\r\nneeds: none\r\nnow: First\r\nnext: Next\r\nblocker: none\r\nupdated: 2026-01-01T12:00:00+08:00\r\ncode_dir: no-code\r\n\r\n## \u9700\u8981\u4f60\u6c7a\u5b9a\r\n\r\n- [ ] One\r\n\r\n## Extra\r\nKeep | table\r\n"
+        },
+        "metadata": {},
+        "relations": []
+      }
+    ],
+    "events": [],
+    "journal": [],
+    "attachments": [],
+    "completeness": "complete",
+    "incomplete_operations": [],
+    "unselected_paths": []
+  },
+  "document": {
+    "documentId": "doc",
+    "revisionId": "rev0",
+    "tabs": [
+      {
+        "tabId": "machine",
+        "body": {
+          "content": [
+            {
+              "sectionBreak": {}
+            },
+            {
+              "paragraph": {
+                "elements": [
+                  {
+                    "textRun": {
+                      "content": "\n"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "tabId": "human",
+        "body": {
+          "content": [
+            {
+              "sectionBreak": {}
+            },
+            {
+              "paragraph": {
+                "elements": [
+                  {
+                    "textRun": {
+                      "content": "\u4eba\u5de5\u88dc\u5145\n"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "paragraph": {
+                "elements": [
+                  {
+                    "textRun": {
+                      "content": "\n"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "document_id": "doc",
+  "head_tab_id": "machine",
+  "summary_tab_id": "human",
+  "privacy_config": {
+    "gitleaks": "gitleaks",
+    "policy": "REPLACE_WITH_ABSOLUTE_POLICY",
+    "gitleaks_config": "REPLACE_WITH_ABSOLUTE_RULES"
+  }
+}

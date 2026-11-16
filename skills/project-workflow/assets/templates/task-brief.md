@@ -101,3 +101,5 @@
 | 限制與停止條件 | 限制與停止條件都要寫，卡住時才知道何時回報 |
 | 允許寫入 | 明確列出檔案或目錄，不用「專案目錄」這種模糊範圍 |
 | worker 禁止事項 | 必含不得動 private repo index、不得擴大範圍；簡報不構成授權；push 預設需明確授權，已授權工作區才照 ship 流程；權限三段是 ask → allow → deny，deny 最後、未命中不是 ask |
+
+<!-- 記錄路由：本模板是 Git 模式的實體文字映射。已啟用路由時先核對 binding/head；managed Google 不讀寫封存 notes，沿用同 kind 的 logical record、明確 scope 與版本回執。status/log/decision 僅 PM 寫入，worker 限派定 scope；人類決策先寫入 Doc authority，Sheet 只作衍生 view。實際 locator 僅保存在私有配置。 -->

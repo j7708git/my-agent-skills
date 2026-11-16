@@ -12,6 +12,12 @@ license: MIT
 repo 的結果與專案下一步。這是給 agent 使用現有 Git 與 shell 執行的流程，
 不綁定作業系統或 client，沒有背景服務或獨立 CLI。
 
+## 可選工作紀錄路由
+
+工作區已啟用 `workspace-records` 政策時，先以 workspace 內 fixed package 的 `routing.py` 的 `bind` 和 `check` 操作 核對 project、registry digest、private runtime 與當前 control。positive 未遷移 Git 離線沿用原路徑；managed Google 須驗完整 head，缺失／失聯／frozen／binding 改變即停止管理寫入，不 fallback 封存 notes，也不改 request 路徑繞過。未啟用的 Git 工作區保持原流程。程式碼／工具同步仍可獨立完成；Google authority 不可讀時分開回報管理現況未確認，不能宣稱全部開工就緒。
+
+後文 status／log／task 檔案路徑是 Git 分支映射；Google 分支沿用同 kind、role／scope 與版本回執，Sheet 不是權威。同步 code repo 與 notes repo 的 Git refs 不會刷新 Google 專案 records；查閱／更新 managed project 前仍須 route check，失聯時回報現況未知，不回退舊 notes。此 skill 仍是純文字指引，不提供身份驗證或強制隔離；權限與 client 支援不擴張。
+
 ## 呼叫與範圍
 
 - 使用者呼叫 `$workspace-sync` 或要求「開工同步／對齊最新主線」，即執行本次範圍內的
@@ -140,8 +146,9 @@ link 要解析確認目標；copy 比較內容／hash 並回報差異；未知�
 **repo 更新不等於已安裝副本或目前 session 已更新**；只報差異，不覆蓋所有已裝 skills、
 重載 client 或修改全域設定。需要安裝更新時，另行明確指定目標與範圍。
 
-從 notes 的專案索引確認對應 project-id，再讀其 `status.md` 的現況、下一步、卡點與
-待決事項；存在時優先於舊 `progress.md`。只有缺少 status 才讀 progress 最新段加 Git。
+從 notes 的專案索引確認對應 project-id，再先核對工作紀錄 route。Git 路由讀 `status.md`
+的現況、下一步、卡點與待決事項；只有 Git 路由缺少 status 才讀 progress 最新段加 Git。
+managed Google 從受管 authority 讀取相同 logical records；Google 不可讀時不回退封存 notes。
 branch／HEAD／是否已 push 以實際 Git 為準；若進度宣稱與 Git 矛盾，保留兩側證據，
 停在對帳，不自選其中一份或順手改筆記。需要任務細節才讀對應任務卡／驗收紀錄。
 

@@ -84,3 +84,5 @@
 | 風險與緩解 | 風險要搭配緩解，不要只列名稱 |
 | 授權需求 | 分開寫 commit（不需事前授權）、push（預設需明確授權或該工作區已授權 ship）與其他不可逆動作（合併、tag、改可見度） |
 | 開頭四欄 | 標題後先用 blockquote 放讀者（含熟悉度）、一句話、現在要做、依據；四欄都要有實質內容。 |
+
+<!-- 記錄路由：本模板是 Git 模式的實體文字映射。已啟用路由時先核對 binding/head；managed Google 不讀寫封存 notes，沿用同 kind 的 logical record、明確 scope 與版本回執。status/log/decision 僅 PM 寫入，worker 限派定 scope；人類決策先寫入 Doc authority，Sheet 只作衍生 view。實際 locator 僅保存在私有配置。 -->

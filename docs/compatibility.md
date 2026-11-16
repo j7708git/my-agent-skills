@@ -12,11 +12,14 @@
 | Gitleaks 8.30.1（linux x64） | 已驗證 | 版本與校驗和見 [development.md](development.md)；歷史與 staged 掃描皆實跑過 |
 | 真實 GitHub Actions（push） | 已實跑（2026-10-25，run `40199845818`） | 首次執行因環境相依 bug 失敗；已於下一個 commit 修正 |
 | skills@1.7.0 安裝（global／project × copy／symlink） | 已驗證（僅安裝） | 四個 case 全部退出碼 0 且資源齊全，詳見下方「安裝路徑」 |
-| hooks 安裝／移除／實際觸發 | 已驗證 | `tests/repo-privacy-audit/test_hooks.py`：68 項，含真 `git commit`／`git push` 的擋下行為 |
+| hooks 安裝／移除／實際觸發 | 已驗證；依平台分別判讀 | `tests/repo-privacy-audit/test_hooks.py`；實際 case／skip 數以當次 runner 輸出為準 |
 | macOS + Bash 3.2 | **未驗證** | 掃描腳本設計為相容，但沒有實際跑過本 repo 檢查 |
 | Windows 原生 shell | **不支援** | 未測試，不宣稱 |
+| Windows Git Bash repo-local hooks | **已驗證限定範圍** | Windows path normalization cases 通過；11 個環境限定 skip 不代表通過，見本文件下方說明 |
 | WSL | **未驗證** | 推測可用，但沒有實測 |
 | Git 2.30 及更早 | **不支援 hooks** | hooks 需要 `--path-format=absolute`（Git 2.31 引入）；拿不到絕對路徑時明確拒絕而不是猜。掃描模式本身未在該版本實測 |
+
+Windows Git Bash 的 hooks 專項執行：65 PASS、11 environment skips、0 fail/error。新增 8 個 Windows path-normalization cases 全 PASS，已包含於 65 PASS 中。7 個 skip 是 native symlink 權限 1314，3 個是 POSIX chmod/geteuid 模擬受限，1 個是 NTFS mode 無法證明 0600；MSYS symlink fallback 的 guard 有實測。此結果不延伸為 Windows native shell、NTFS ACL 安全屬性或其他 OS 驗收；Linux/macOS 本輪未重驗。
 
 ## 掃描器的實際版本
 
@@ -33,6 +36,12 @@
 - 本 repo 的驗證器只支援**首版 frontmatter 子集**（單行純量欄位），規格中的
   `metadata` 映射等寫法會報錯。完整規格請用官方的 `skills-ref validate`。
 - SKILL.md 內的資源引用以 skill 根目錄為基準；本 repo 的驗證器會確認這些檔案存在。
+
+## workspace-records 的狀態
+
+`workspace-records` 的 managed local Git CLI、固定路由與 P2 record model 已有真資料隔離往返證據；Windows 8.3 短檔名 alias 的實際檔案系統情境，以及完整 repo 整合檢查仍未驗，因此不宣稱 P2 已完成日常部署驗收。Google connector 已有隔離 head/CAS、完整 graph/object readback、snapshot restore 與 derived projection 實測；P4 promotion/return 介面亦有 isolated same-runtime 路徑證據，但都不等於已部署 live pilot。較長可讀內容以分段副本保存且逐物件驗證 bytes/hash；Project 複合問答仍可能漏掉尾段，指定來源 part 才能補查。canonical 完整性以完整 graph 與 hash 為準，不保證語意搜尋一次回傳全文。
+
+helper 依賴同一 repo 中的 `repo-privacy-audit` scanner、Gitleaks 和固定位置的 local policy/configuration。缺少任何必要 scanner dependency、掃描未完成、內容 hash 不符或有發現時，操作必須 fail closed。個資偵測不完整，敏感正文仍需人工檢視。skill 單獨安裝不會攜帶上述 runtime dependencies；runtime 載入與實際行為也未驗證。Google authorization 由 connector/runtime 提供，helper 不保存憑證；Google route 無法確認時不回退到 Git。
 
 ## 安裝路徑
 

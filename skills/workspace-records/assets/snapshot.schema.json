@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Workspace Records complete snapshot receipt v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "snapshot_id",
+    "project_id",
+    "source_revision",
+    "source_epoch",
+    "source_version",
+    "root_manifest",
+    "objects",
+    "manifests",
+    "completed_at",
+    "completeness",
+    "external_exclusivity",
+    "future_gap"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "snapshot_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "project_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_revision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_epoch": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "source_version": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "root_manifest": {
+      "$ref": "#/$defs/ref"
+    },
+    "objects": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ref"
+      }
+    },
+    "manifests": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ref"
+      }
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completeness": {
+      "const": "complete"
+    },
+    "external_exclusivity": {
+      "const": "not_proven"
+    },
+    "future_gap": {
+      "const": "unknown"
+    }
+  },
+  "$defs": {
+    "ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "sha256",
+        "size"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "encoding": {
+          "const": "inline-empty-v1"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "encoding"
+            ]
+          },
+          "then": {
+            "properties": {
+              "id": {
+                "const": "inline-empty-v1"
+              },
+              "size": {
+                "const": 0
+              },
+              "sha256": {
+                "const": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "id": {
+                "not": {
+                  "const": "inline-empty-v1"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -73,3 +73,5 @@
 - 需要重跑才能確認的，重跑後再更新本檔。
 - 不要把未測寫成通過，也不要用「看起來沒問題」代替結果。
 - 同步狀態要與實際 `git status` 一致，兩個 repo 分開寫。
+
+<!-- 記錄路由：本模板是 Git 模式的實體文字映射。已啟用路由時先核對 binding/head；managed Google 不讀寫封存 notes，沿用同 kind 的 logical record、明確 scope 與版本回執。status/log/decision 僅 PM 寫入，worker 限派定 scope；人類決策先寫入 Doc authority，Sheet 只作衍生 view。實際 locator 僅保存在私有配置。 -->

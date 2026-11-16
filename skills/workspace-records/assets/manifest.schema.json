@@ -1,0 +1,150 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Workspace Records immutable manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "project_id",
+    "version",
+    "records",
+    "attachments",
+    "history_pages",
+    "source_root"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "project_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "record",
+          "object"
+        ],
+        "properties": {
+          "record": {
+            "type": "object",
+            "required": [
+              "record_id",
+              "kind",
+              "created_at",
+              "updated_at",
+              "source",
+              "body",
+              "metadata",
+              "relations"
+            ]
+          },
+          "object": {
+            "$ref": "#/$defs/ref"
+          }
+        }
+      }
+    },
+    "attachments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "attachment",
+          "object"
+        ],
+        "properties": {
+          "attachment": {
+            "type": "object",
+            "required": [
+              "attachment_id",
+              "size",
+              "sha256",
+              "source_relative_path"
+            ]
+          },
+          "object": {
+            "$ref": "#/$defs/ref"
+          }
+        }
+      }
+    },
+    "history_pages": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ref"
+      }
+    },
+    "source_root": {
+      "type": "object"
+    }
+  },
+  "$defs": {
+    "ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "sha256",
+        "size"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "encoding": {
+          "const": "inline-empty-v1"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "encoding"
+            ]
+          },
+          "then": {
+            "properties": {
+              "id": {
+                "const": "inline-empty-v1"
+              },
+              "size": {
+                "const": 0
+              },
+              "sha256": {
+                "const": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "id": {
+                "not": {
+                  "const": "inline-empty-v1"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

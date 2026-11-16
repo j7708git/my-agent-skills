@@ -1,7 +1,7 @@
 # my-agent-skills
 
 `j7708git/my-agent-skills` 是一個 [Agent Skills](https://agentskills.io/specification) 集合 repo。
-目前提供十四個 skill：
+目前提供十五個 skill：
 
 - **`repo-privacy-audit`** —— 對 Git repo 做唯讀的隱私與秘密掃描，
   並附上明確安裝的 hooks、CI 範本與修復手冊。
@@ -35,6 +35,7 @@
   依 manifest 下載並驗 SHA256、處理 Caddy 入口的 401、端到端出圖驗收與回填。
 - **`workspace-sync`** —— 換機或換 agent 後，把 notes、skills 與目前／指定專案
   安全對齊遠端預設主線，保留未完成工作並回報接手脈絡。
+- **`workspace-records`** —— 依固定專案路由管理 canonical records；local Git 與 Google head 是不同 authority mode，Sheet／Project 閱讀面為衍生資料。Google 更新採 Doc revision CAS，離線或 route 不明時拒絕寫入。
 
 掃描工具維持唯讀；資料與設定 helper 可在使用者授權範圍內複製資料、產生新配置。
 這些工具不替使用者決定不可逆的動作。
@@ -84,6 +85,7 @@ GitHub 設定檢查仍可能因方案／權限不足回報 incomplete；這與�
 - [fizgig-moss-lora（人物訓練資料與設定）](#fizgig-moss-lora人物訓練資料與設定)
 - [vastai-comfyui-provision（vast.ai ComfyUI 上線）](#vastai-comfyui-provisionvastai-comfyui-上線)
 - [workspace-sync（開工同步）](#workspace-sync開工同步)
+- [workspace-records（專案紀錄）](#workspace-records專案紀錄)
 - [OpenCode agent adapters](#opencode-agent-adapters)
 - [安裝 skill](#安裝-skill)
 - [使用掃描器](#使用掃描器)
@@ -309,6 +311,20 @@ $workspace-sync 只檢查
 client 未提供名稱觸發時，直接請 agent 讀取 [SKILL.md](skills/workspace-sync/SKILL.md)
 並執行即可。各平台的載入與行為驗證範圍見 [相容性說明](docs/compatibility.md)。
 
+## workspace-records（專案紀錄）
+
+`workspace-records` 是用於明確設定專案的受控紀錄工具。managed CLI 透過固定 workspace registry 取得專案路由；Google mode 以 bounded Doc head 做唯一 CAS authority，並以不可變物件保存完整 canonical records 與操作歷史。使用單一 writer 協作，衍生 Sheet／Project 閱讀面不回寫 authority。
+
+Google connector 授權由執行端 runtime 提供；helper 不保存 token。路由、head、revision 或 connector 不可確認時拒絕寫入，不 fallback 到另一種 authority。工具依賴同一 repo 的 `repo-privacy-audit` scanner、Gitleaks 與固定位置的 local policy/configuration；缺少或未完整掃描時拒絕寫入。獨立安裝這張 skill 不會自動帶入 runtime scanner，不能宣稱完整 PII 偵測。P4 snapshot/promotion/transition/route publication 的來源介面已實作；部署前仍需 P6 writer fence 與 exact-scope pilot。snapshot 保存 canonical records 與引用物件，不等於還原原生 Docs 的格式、任意 tabs 或 comments。
+
+- 入口與範圍：[skills/workspace-records/SKILL.md](skills/workspace-records/SKILL.md)
+- canonical records、hash 與寫入契約：[references/contract.md](skills/workspace-records/references/contract.md)
+- fixed registry、mode 路由與停止條件：[references/routing.md](skills/workspace-records/references/routing.md)
+- Google mode 設定與授權邊界：[references/google-setup.md](skills/workspace-records/references/google-setup.md)
+- snapshot、restore、promotion 與 transition 界線：[references/backup-restore.md](skills/workspace-records/references/backup-restore.md)
+- project-workflow 的選用 route registry 與失敗條件：[record-routing.md](skills/project-workflow/references/record-routing.md)
+- 各環境實測範圍見 [docs/compatibility.md](docs/compatibility.md)。
+
 ## OpenCode agent adapters
 
 `adapters/opencode/` 收錄這套流程的**選配** OpenCode 設定：`project-workflow`
@@ -373,7 +389,7 @@ A0–A2 分別記錄（只有單一模型家族的 client 上限是 A1，不得�
 
 ## 安裝 skill
 
-這十四個 skill **不會無縫相容於任何 agent client**。下表是 `repo-privacy-audit` 實際驗證過的
+這十五個 skill **不會無縫相容於任何 agent client**。下表是 `repo-privacy-audit` 實際驗證過的
 安裝位置；「檔案放對位置」只證明格式與路徑可安裝，**不證明某個 agent 會自動載入它**。
 **這些安裝實測不繼承給 `project-workflow`、八個流程指引 skill**
 （`web-ui-e2e-smoke`、`independent-rerun-verify`、`review-fix-round`、
@@ -642,6 +658,11 @@ skill 自己的文件（安裝後也可用，不依賴本 repo）：
 | `skills/fizgig-moss-lora/SKILL.md` | MOSS 人物資料整理、caption、Fizgig 設定與 checkpoint 驗證；附自足 references 與兩個 Python helper |
 | `skills/vastai-comfyui-provision/SKILL.md` | vast.ai ComfyUI 上線流程、模型 manifest、Caddy 入口與出圖驗收 |
 | `skills/workspace-sync/SKILL.md` | notes、skills 與專案的開工同步、保留本機工作與接手回報 |
+| `skills/workspace-records/SKILL.md` | fixed route 下的 canonical records 操作與 fail-closed 邊界 |
+| `skills/workspace-records/references/contract.md` | RecordSet、authority、request hash、privacy 與衍生面界線 |
+| `skills/workspace-records/references/routing.md` | managed registry、mode 路由與停止條件 |
+| `skills/workspace-records/references/google-setup.md` | Google connector/runtime 前提與 authority 設定邊界 |
+| `skills/workspace-records/references/backup-restore.md` | canonical snapshot 範圍、restore、promotion 與 transition 界線 |
 
 本 repo 的 `docs/` 只放公開文件。完整計畫、todo、session 日誌、驗收紀錄與研究筆記
 是本機工作紀錄，不進版控，也不從公開文件連過去；分流規則見
