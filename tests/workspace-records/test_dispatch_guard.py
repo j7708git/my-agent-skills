@@ -5,6 +5,7 @@ import pathlib
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 from concurrent.futures import ThreadPoolExecutor
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2] / 'skills/workspace-records/scripts'))
@@ -65,6 +66,78 @@ class TestDispatchGuard(unittest.TestCase):
         with ThreadPoolExecutor(max_workers=5) as pool:
             results = list(pool.map(lambda _: guard.claim(self.registry, prepared), range(5)))
         self.assertEqual(sum(x['launch'] for x in results), 1)
+
+    def assert_created_after_directory_snapshot(self, filename):
+        target = self.root / routing.RUNTIME / filename
+        original_scan = guard.git_store.os.scandir
+        original_child = guard.git_store.canonical_child
+        injected = []
+        current = []
+
+        class Snapshot:
+            def __init__(self, entries):
+                self.entries = entries
+            def __enter__(self):
+                return iter(self.entries)
+            def __exit__(self, *args):
+                return False
+
+        def scan(directory):
+            with original_scan(directory) as entries:
+                snapshot = list(entries)
+            if pathlib.Path(directory) == target.parent and current == [filename] and not injected:
+                target.touch()
+                injected.append(True)
+            return Snapshot(snapshot)
+
+        def child(parent, part, **kwargs):
+            current[:] = [part]
+            try:
+                return original_child(parent, part, **kwargs)
+            finally:
+                current.clear()
+
+        with patch.object(guard.git_store.os, 'scandir', side_effect=scan), \
+                patch.object(guard.git_store, 'canonical_child', side_effect=child):
+            receipt = guard.claim(self.registry, self.prepare())
+        self.assertEqual(injected, [True])
+        self.assertTrue(receipt['launch'])
+        self.assertFalse(guard.claim(self.registry, self.prepare())['launch'])
+
+    def test_journal_created_after_directory_snapshot(self):
+        guard.database(self.registry).close()
+        self.assert_created_after_directory_snapshot('dispatch-ledger.sqlite3-journal')
+
+    def test_database_created_after_directory_snapshot(self):
+        self.assert_created_after_directory_snapshot('dispatch-ledger.sqlite3')
+
+    def test_auxiliary_alias_and_directory_refused(self):
+        root = self.root / routing.RUNTIME
+        alias = root / 'dispatch-ledger.sqlite3-JOURNAL'
+        alias.touch()
+        with self.assertRaisesRegex(RecordError, 'FORBIDDEN'):
+            guard.database(self.registry)
+        alias.unlink()
+        (root / 'dispatch-ledger.sqlite3-journal').mkdir()
+        with self.assertRaisesRegex(RecordError, 'FORBIDDEN'):
+            guard.database(self.registry)
+
+    def test_journal_removed_before_lstat(self):
+        guard.database(self.registry).close()
+        journal = self.root / routing.RUNTIME / 'dispatch-ledger.sqlite3-journal'
+        journal.touch()
+        original = guard.os.lstat
+        removed = []
+
+        def observe(path, *args, **kwargs):
+            if pathlib.Path(path) == journal and not removed:
+                journal.unlink()
+                removed.append(True)
+            return original(path, *args, **kwargs)
+
+        with patch.object(guard.os, 'lstat', side_effect=observe):
+            self.assertTrue(guard.claim(self.registry, self.prepare())['launch'])
+        self.assertEqual(removed, [True])
 
     def test_owner_and_ready_gate(self):
         self.event['owner_verified'] = False

@@ -68,16 +68,30 @@ def business_prepared(value):
     return {key: item for key, item in value.items() if key != 'observation_proof'}
 
 
+def database_path(root, name):
+    # SQLite creates/removes files while other connections validate paths.
+    # Every successful return retains the complete canonical spelling check.
+    for attempt in range(8):
+        try:
+            candidate = git_store.canonical_child(root, name, allow_missing=True)
+        except RecordError as error:
+            if error.code != 'FORBIDDEN' or attempt == 7:
+                raise
+            continue
+        try:
+            info = os.lstat(candidate)
+        except FileNotFoundError:
+            return candidate
+        if not stat.S_ISREG(info.st_mode) or getattr(info, 'st_file_attributes', 0) & git_store.REPARSE:
+            raise RecordError('FORBIDDEN')
+        return candidate
+
+
 def database(registry):
     root = git_store.safe_dir(registry.workspace / routing.RUNTIME)
-    path = git_store.canonical_child(root, 'dispatch-ledger.sqlite3', allow_missing=True)
-    # SQLite auxiliary paths must not point through a pre-existing symlink either.
-    for suffix in ('', '-journal', '-wal', '-shm'):
-        candidate = git_store.canonical_child(root, path.name + suffix, allow_missing=True)
-        if os.path.lexists(candidate):
-            info = os.lstat(candidate)
-            if not stat.S_ISREG(info.st_mode) or getattr(info, 'st_file_attributes', 0) & git_store.REPARSE:
-                raise RecordError('FORBIDDEN')
+    path = database_path(root, 'dispatch-ledger.sqlite3')
+    for suffix in ('-journal', '-wal', '-shm'):
+        database_path(root, path.name + suffix)
     con = sqlite3.connect(str(path), timeout=10, isolation_level=None)
     con.execute('PRAGMA synchronous=FULL')
     con.execute('CREATE TABLE IF NOT EXISTS events (key TEXT PRIMARY KEY, payload BLOB NOT NULL, state TEXT NOT NULL, result TEXT)')
