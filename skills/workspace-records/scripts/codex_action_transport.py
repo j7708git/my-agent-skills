@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from core import RecordError, canonical, object_hash
 import git_store
 import routing
-from codex_portfolio_transport import EventCorrelation, EventTrace, Rpc, safe_error
+from codex_portfolio_transport import EventCorrelation, EventTrace, Rpc, mcp_comparison, safe_error
 
 DYNAMIC = 'record_action'
 
@@ -191,6 +191,7 @@ class CodexActionSession:
         worker = None
         output = None
         trace = None
+        mismatch = None
         stage = 'open'
         try:
             app_id, thread_id = self.open()
@@ -246,6 +247,7 @@ class CodexActionSession:
                     if item.get('type') == 'mcpToolCall':
                         stage = 'mcp_start'
                         if not broker.matches(item):
+                            mismatch = mcp_comparison(broker.current, item)
                             raise RecordError('FORBIDDEN')
                         lifecycle.start(params, broker.current)
                     if item.get('type') in ('commandExecution', 'fileChange', 'collabAgentToolCall'):
@@ -276,7 +278,7 @@ class CodexActionSession:
             output = {'outcome': 'error', 'code': code, 'model_turns': self.turns_started,
                     'tool_receipts': copy.deepcopy(broker.receipts), 'last_tool_diagnostic': broker.diagnostic,
                     'last_request_diagnostic': self.last_request, 'failure_stage': stage,
-                    'event_trace': list(trace.events) if trace is not None else []}
+                    'event_trace': list(trace.events) if trace is not None else [], 'mcp_start_diagnostic': mismatch}
             return output
         finally:
             if worker is not None and worker.is_alive():

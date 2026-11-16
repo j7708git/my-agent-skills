@@ -38,6 +38,71 @@ def safe_error(value):
     return text[:600]
 
 
+def mcp_comparison(action, item):
+    """Error-only bounded comparison: categories/paths/hashes, never values."""
+    known_keys = {'spreadsheet_id', 'document_id', 'requests', 'updateCells', 'range', 'rows', 'values',
+                  'userEnteredValue', 'stringValue', 'fields', 'sheetId', 'startRowIndex', 'endRowIndex',
+                  'startColumnIndex', 'endColumnIndex', 'ranges', 'cell_fields', 'fileId', 'body', 'name',
+                  'mimeType', 'parents', 'url', 'download_raw_file', 'include_base64', 'writeControl',
+                  'requiredRevisionId', 'insertText', 'deleteContentRange', 'text', 'location', 'index', 'tabId'}
+    known_tools = {'get_spreadsheet_cells', 'batch_update_spreadsheet', 'get_document', 'fetch',
+                   'upload_file', 'batch_update_document', 'get_file_metadata', 'list_files', 'update_file'}
+    missing = object()
+    action = action if isinstance(action, dict) else {}
+    item = item if isinstance(item, dict) else {}
+    def kind(value):
+        return 'missing' if value is missing else {dict:'object',list:'array',str:'string',bool:'boolean',
+            int:'number',float:'number',type(None):'null'}.get(type(value),'other')
+    def encoded(value):
+        try:
+            return core.canonical(value) if value is not missing else None
+        except Exception:
+            return None
+    def digest(value):
+        raw = encoded(value)
+        return core.sha(raw) if raw is not None else None
+    def segment(key):
+        return key if key in known_keys else '<key:'+core.sha(str(key).encode('utf-8'))[:12]+'>'
+    expected, actual = action.get('arguments', missing), item.get('arguments', missing)
+    differences, stack, visited, truncated = [], [(expected, actual, '$', 0)], 0, False
+    while stack and len(differences) < 8 and visited < 2048:
+        left, right, path, depth = stack.pop(); visited += 1
+        category = None
+        if left is missing or right is missing:
+            category = 'extra' if left is missing else 'missing'
+        elif type(left) is not type(right):
+            category = 'type'
+        elif depth >= 20:
+            truncated = True
+            if encoded(left) != encoded(right): category = 'depth_limit'
+        elif isinstance(left, dict):
+            from itertools import chain, islice
+            keys = list(islice(chain(left, (key for key in right if key not in left)), 257))
+            if len(keys) > 256: truncated = True
+            children = [(left.get(key, missing), right.get(key, missing), path+'.'+segment(key), depth+1) for key in keys[:256]]
+            stack.extend(reversed(children)); continue
+        elif isinstance(left, list):
+            if len(left) != len(right): category = 'length'
+            else:
+                count = min(len(left), 2048-visited)
+                if count < len(left): truncated = True
+                stack.extend((left[index], right[index], path+'['+str(index)+']', depth+1) for index in reversed(range(count)))
+                continue
+        elif encoded(left) != encoded(right):
+            category = 'value'
+        if category:
+            differences.append({'path':path[:240], 'category':category, 'expected_type':kind(left),
+                'actual_type':kind(right), 'expected_sha256':digest(left), 'actual_sha256':digest(right)})
+    expected_tool, actual_tool = action.get('tool'), item.get('tool')
+    normalized = actual_tool[len('google_drive.'):] if isinstance(actual_tool,str) and actual_tool.startswith('google_drive.') else None
+    return {'active_action':bool(action), 'tool_name_matches':isinstance(expected_tool,str) and actual_tool=='google_drive.'+expected_tool,
+            'expected_tool':expected_tool if expected_tool in known_tools else 'other',
+            'actual_tool':normalized if normalized in known_tools else 'other',
+            'arguments_exact':type(expected) is dict and type(actual) is dict and encoded(expected)==encoded(actual),
+            'expected_arguments_sha256':digest(expected), 'actual_arguments_sha256':digest(actual),
+            'differences':differences, 'differences_truncated':truncated or bool(stack)}
+
+
 class EventTrace:
     """Bounded shape diagnostics: never copy arguments, IDs or content into events."""
     METHODS = {'item/tool/call', 'mcpServer/elicitation/request', 'tool/requestUserInput',
@@ -568,6 +633,7 @@ class CodexSession:
         worker = None
         output = None
         trace = None
+        mismatch = None
         stage = 'open'
         try:
             app_id, thread_id = self.open()
@@ -636,6 +702,7 @@ class CodexSession:
                     if item.get('type') == 'mcpToolCall':
                         stage = 'mcp_start'
                         if not broker.matches(item) or (broker.current['kind'] == 'write' and not self.allow_write):
+                            mismatch = mcp_comparison(broker.current, item)
                             raise RecordError('FORBIDDEN')
                         lifecycle.start(params, broker.current)
                     elif item.get('type') in ('commandExecution', 'fileChange', 'collabAgentToolCall'):
@@ -669,7 +736,7 @@ class CodexSession:
             output = {'outcome': 'error', 'code': code, 'model_turns': self.turns_started,
                     'tool_receipts': copy.deepcopy(broker.receipts), 'last_tool_diagnostic': broker.diagnostic,
                     'last_request_diagnostic': self.request_diagnostic, 'failure_stage': stage,
-                    'event_trace': list(trace.events) if trace is not None else []}
+                    'event_trace': list(trace.events) if trace is not None else [], 'mcp_start_diagnostic': mismatch}
             return output
         finally:
             self.receipts = copy.deepcopy(broker.receipts)
