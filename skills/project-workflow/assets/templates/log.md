@@ -34,3 +34,5 @@
 - 不要用日誌取代 `status.md`：現況只看 `status.md`，日誌是歷史。
 - 不要把整份測試輸出貼進來；留摘要與證據位置。
 - 舊 `progress.md` 不再追加；新日誌一律寫在 `log/`。
+
+<!-- 記錄路由：本模板是 Git 模式的實體文字映射。已啟用路由時先核對 binding/head；managed Google 不讀寫封存 notes，沿用同 kind 的 logical record、明確 scope 與版本回執。status/log/decision 僅 PM 寫入，worker 限派定 scope；人類決策先寫入 Doc authority，Sheet 只作衍生 view。實際 locator 僅保存在私有配置。 -->

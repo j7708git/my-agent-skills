@@ -1,6 +1,6 @@
 ---
 name: handoff-refresh
-description: 交接與現況文件的重生對帳流程：以 status.md 的現況與兩個 repo 的 Git 事實為唯一來源，逐條比對交接檔、總覽與計畫的宣稱，只改「現況／下一步」並附證據位置，輸出宣稱與事實的差異清單。當 session 收尾要交接、里程碑或 PR 合併、發版之後要更新現況，或發現交接文件與 status.md 互相矛盾時使用。
+description: 交接與現況文件的重生對帳流程：以已選紀錄權威的現況與 code Git 事實為來源，逐條比對交接檔、總覽與計畫的宣稱，只改「現況／下一步」並附證據位置，輸出宣稱與事實的差異清單。當 session 收尾要交接、里程碑或 PR 合併、發版之後要更新現況，或發現交接文件與 status.md 互相矛盾時使用。
 license: MIT
 compatibility: 純文字流程指引，沒有執行時相依；需要可讀取的進度紀錄與 Git 版本控制，不綁定特定模型、平台或工具。載入它不構成任何提交、推送或改寫歷史的授權。
 ---
@@ -20,6 +20,12 @@ compatibility: 純文字流程指引，沒有執行時相依；需要可讀取�
   commit 依 `project-workflow` 的索引紀律可在 checkpoint 直接進行；**push 預設仍需
   明確授權**，只有該工作區已明確授權時，才照 ship 流程 push 非預設分支並開 PR。
 
+## 可選工作紀錄路由
+
+工作區已啟用 `workspace-records` 政策時，先以 workspace 內 fixed package 的 `routing.py` 執行 `bind` 和 `check`，核對 project、registry digest、private runtime 與當前 control。positive 未遷移 Git 離線沿用原路徑；managed Google 須驗完整 head，缺失／失聯／frozen／binding 改變即停止管理寫入，不 fallback 封存 notes，也不改 request 路徑繞過。未啟用的 Git 工作區保持原流程。交接以所選 authority 加 code Git 事實為準；Google 不可讀只列未知與未送出候選，不以封存 status.md 重生現況。
+
+後文 status／log／task 檔案路徑是 Git 分支映射；Google 分支沿用同 kind、role／scope 與版本回執，Sheet 不是權威。此 skill 仍是純文字指引，不提供身份驗證或強制隔離；權限與 client 支援不擴張。
+
 ## 什麼時候用
 
 - session 收尾、要交接給新 session／新 agent、或跨機接手之前。
@@ -31,8 +37,8 @@ compatibility: 純文字流程指引，沒有執行時相依；需要可讀取�
 
 | 名詞 | 意義 |
 | --- | --- |
-| 權威來源 | `status.md` 的現況欄位，加上兩個 repo 的 Git 事實（HEAD、tag、工作樹）；歷史看 `log` 目錄 |
-| 舊進度紀錄 | `progress.md` 冷凍；只有沒有 `status.md` 的專案才用它作 fallback |
+| 權威來源 | Git 路由讀 `status.md` 現況欄位；managed Google 讀受管 authority；兩者都要核對相關 Git 事實；歷史看 `log` logical records |
+| 舊進度紀錄 | `progress.md` 冷凍；只有 Git 路由且沒有 `status.md` 的專案才用它作 fallback |
 | 交接檔 | `HANDOFF.md`：只放「兩 repo HEAD＋版本線＋接著做」與接手必須知道的速查 |
 | 總覽 | `overview.md`：入口頁；「目前狀態」只指向權威來源，不重複寫分支與 commit |
 | 計畫 | `plan.md`：任務表只記「完成／已合併」與收案註記，細節指向權威來源 |
@@ -42,7 +48,7 @@ compatibility: 純文字流程指引，沒有執行時相依；需要可讀取�
 
 ## 前置：先確認三件事
 
-1. **權威來源在哪**：`status.md` 的路徑；沒有 `status.md` 的舊專案才退回
+1. **權威來源在哪**：先核對工作紀錄 route。Git 路由讀 `status.md`；managed Google 讀受管 authority。僅 Git 路由沒有 `status.md` 的舊專案才退回
    `progress.md` 最新段（依日期＋時間判斷，不是檔案最後一段）。
 2. **要更新哪幾份文件**：只處理存在的檔案；缺哪一份就在回報裡寫明，不要順手新建。
 3. **寫入範圍與授權**：哪些段落可改（現況／下一步）、哪些一律不動（歷史、流水帳、
@@ -51,12 +57,12 @@ compatibility: 純文字流程指引，沒有執行時相依；需要可讀取�
 ## 步驟
 
 1. **取最新事實**
-   - 有 `status.md` 就讀它的 `now`／`next`／`blocker`／`needs`／`updated`；它是現況唯一
-     權威。沒有 `status.md` 才讀 `progress.md` 的**最新一段**：依「日期＋時間」排序判斷，
+   - 先完成工作紀錄 route check。Git mode 才讀 `status.md` 的 `now`／`next`／`blocker`／`needs`／`updated`；managed Google 從 Doc authority 讀相同 logical record。Google 不可讀或版本未知時停在未知狀態，不讀封存 notes，也不回填 handoff 現況。
+   - Git mode 有 `status.md` 時它是現況權威；沒有 `status.md` 才讀 `progress.md` 的**最新一段**：依「日期＋時間」排序判斷，
      檔案尾端不一定是最新（同日可能有多段）。找不到時間戳時，以段落標題的日期為準，
      並在回報裡標明判斷依據。
    - 再讀 `log` 目錄的當月檔（`YYYY-MM.md`） 最近幾則，補足「為什麼」與證據位置；日誌不取代 `status.md`。
-   - 兩個 repo 各取：`git rev-parse --short HEAD`、`git status --short`、`git log --oneline -n`、
+   - 兩個 code／notes Git repo 各取：`git rev-parse --short HEAD`、`git status --short`、`git log --oneline -n`、
      `git describe --tags --abbrev=0`（或等價的 tag 查詢）。分支清單用唯讀查詢，不要切換分支。
    - 版本線以**已推送的 tag** 為準，逐一確認每個 tag 指向哪個 commit；**不要假設
      「主線 HEAD 就是已發佈版本」**——tag 之後的 commit 屬於下一個版本。

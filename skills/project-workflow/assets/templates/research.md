@@ -79,3 +79,5 @@
 | 未確認 | 查不到就寫未確認，不要推論成不存在 |
 | 收斂結論 | 只寫證據支撐得住的結論，並寫界線 |
 | 下一步 | 用動詞開頭，具體可執行 |
+
+<!-- 記錄路由：本模板是 Git 模式的實體文字映射。已啟用路由時先核對 binding/head；managed Google 不讀寫封存 notes，沿用同 kind 的 logical record、明確 scope 與版本回執。status/log/decision 僅 PM 寫入，worker 限派定 scope；人類決策先寫入 Doc authority，Sheet 只作衍生 view。實際 locator 僅保存在私有配置。 -->

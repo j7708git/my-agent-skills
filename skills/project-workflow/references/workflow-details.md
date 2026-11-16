@@ -2,6 +2,8 @@
 
 # 工作流程細節
 
+工作紀錄已啟用可選路由時，先依[記錄路由](record-routing.md)核對 binding；以下本機 notes 路徑僅對 Git 分支生效，Google 分支使用相同 kind 的受管 records。未啟用者維持原 Git 流程。
+
 本文件是 `project-workflow` 的深入說明，補足 `SKILL.md` 沒有展開的細節。
 所有內容都是流程指引；本 skill 不會代替使用者執行任何寫入或不可逆動作。
 
@@ -38,15 +40,15 @@ projects/<id>/tasks/
 shared/research/
 ```
 
-- `status.md` 是現況的唯一權威；`plan.md` 只講長期路線；`log/` 只講歷史。
+- Git 模式的 `status.md` 是現況權威；managed Google 依 routing/head 讀 canonical status record。`plan.md` 只講長期路線；`log/` 只講歷史。
 - 舊 `progress.md` 冷凍：不重寫、不刪除、不再追加；只在沒有 `status.md` 的專案
   作 fallback。檔頭要加「歷史紀錄（冷凍）。最新狀態見 `status.md`；新日誌寫在 `log/`。」
 - code repo 的 `.gitignore` 要排除暫存；公開的 code repo 放程式碼、測試、README 與對外
   docs，不得含 private 工作筆記。
 - workspace 的 `.tmp` 或 code repo 內的 `.tmp` 都應被 ignore；`.tmp` 絕不自動清理。
-- **跨機接手時**先讀 `status.md` ＋ 兩個 repo 的 Git 事實，再看 `acceptance/`、任務卡、
+- **跨機接手時**先核對專案路由：Git 模式讀 `status.md` ＋兩個 repo 的 Git 事實；managed Google 從受管 authority 讀取，再看 `acceptance/`、任務卡、
   `log/` 最近幾則；需要時才讀 `plan.md`／`research/`。沒有 `status.md` 的舊專案才退回
-  `progress.md` 最新段。
+  `progress.md` 最新段。這個 fallback 僅適用 Git 模式且沒有 `status.md` 的舊專案。
 
 ## 2. 已知／假設／未知的用法
 

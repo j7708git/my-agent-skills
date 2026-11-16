@@ -2,11 +2,17 @@
 
 # 平台中立與 client 相容性
 
+工作紀錄已啟用可選路由時，先依[記錄路由](record-routing.md)核對 binding；以下本機 notes 路徑僅對 Git 分支生效，Google 分支使用相同 kind 的受管 records。未啟用者維持原 Git 流程。
+
 本文件說明 `project-workflow` 對各 agent client 的**已確認**與**未確認**狀態。
 重點：**「文件已確認支援」與「實際 runtime 已測試」是兩件不同的事，必須分開寫。**
 
 這個 skill 不綁定任何模型、provider 或特定 agent 工具名稱。
 它只是一份可以被任何能讀取檔案的 client 手動載入的流程指引。
+
+## 工作紀錄路由的支援界線
+
+`workspace-records` 與 P5 routing 是可選候選，尚未部署到 live workspace；第一批 Google 能力證據限 Windows＋Codex connector。route／skill 文件不代表其他 client 已載入、能使用 helper 或能安全切換。P6 完成指定安裝及必要入口驗收前，不宣稱 live workflow 已支援 Google 模式。
 
 ## 1. 格式層：Agent Skills
 

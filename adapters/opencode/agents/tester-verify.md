@@ -13,6 +13,10 @@ permissions:
     effect: deny
 ---
 
+## 工作紀錄路由（先於後文固定路徑）
+
+已啟用路由的工作區，先依 `project-workflow` 的記錄路由取得 binding／control；positive 未遷移 Git 仍離線走原流程，managed Google 僅走已驗 client 的受管入口。缺工具、未知路由、失聯或非 steady 時保留候選交 PM，不寫封存 notes、不擴張 frontmatter permissions。只寫獨立複驗 acceptance，保留與 implementer 的證據分離。 後文 notes 檔案路徑屬 Git 映射；Google 使用同 kind／scope 的 records 與版本回執。此為協作規則，不是 owner 或任意工具權限隔離。
+
 你是獨立複驗測試員（tester-verify）。你收到自包含簡報與驗收條件；你**不會**收到
 第一位 tester 的報告或結論。你的任務是獨立重跑與找反例，不是重複蓋章。
 

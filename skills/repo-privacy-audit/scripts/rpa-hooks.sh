@@ -160,6 +160,24 @@ for candidate in "$SELF_DIR/../assets" "$SELF_DIR/assets"; do
 done
 [ -n "$ASSET_DIR" ] || die "找不到 hook 範本（assets/hook-pre-commit、assets/hook-pre-push）" 1
 
+# Git for Windows 回報 drive-letter 路徑，但 Bash 的安全檢查使用 POSIX 路徑。
+# 僅轉換 Git 回傳的絕對路徑；不解析 symlink、不猜相對路徑、不修改 Git 設定。
+normalize_git_path() {
+  local path=$1 normalized
+  case $path in
+    [A-Za-z]:[\\/]*)
+      case $(uname -s) in
+        MINGW*|MSYS*|CYGWIN*) ;;
+        *) return 1 ;;
+      esac
+      command -v cygpath >/dev/null 2>&1 || return 1
+      normalized=$(cygpath -u "$path") || return 1
+      case $normalized in /*) printf '%s\n' "$normalized" ;; *) return 1 ;; esac
+      ;;
+    /*) printf '%s\n' "$path" ;;
+    *) return 1 ;;
+  esac
+}
 # ------------------------------------------------------------ repo 解析 -----
 
 repo_top=''
@@ -177,11 +195,14 @@ resolve_repo() {
     die "bare repo 不支援安裝 hook：$path" 1
   fi
   repo_top=$(git -C "$path" rev-parse --show-toplevel) || die "無法取得 repo 根目錄：$path" 1
+  repo_top=$(normalize_git_path "$repo_top") || die "無法正規化 repo 根目錄" 1
   git_dir=$(git -C "$repo_top" rev-parse --absolute-git-dir) || die "無法取得 git 目錄" 1
+  git_dir=$(normalize_git_path "$git_dir") || die "無法正規化 git 目錄" 1
   git_common_dir=$(git -C "$repo_top" rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || git_common_dir=''
   if [ -z "$git_common_dir" ]; then
     git_common_dir=$git_dir
   fi
+  git_common_dir=$(normalize_git_path "$git_common_dir") || die "無法正規化 git common dir" 1
   # linked worktree：--git-dir 與 --git-common-dir 不同。
   case $git_dir in
     "$git_common_dir") is_linked_worktree=0 ;;
@@ -202,6 +223,7 @@ hooks_dir() {
   因為那會在 .git 是相對路徑時算出錯誤的位置（例如 .git/.git/hooks）。
   請升級 Git，或自行手動安裝 hook。" 2
   fi
+  raw=$(normalize_git_path "$raw") || die "拒絕：無法正規化 Git 回報的 hooks 絕對路徑。" 2
   case $raw in
     /*) printf '%s\n' "$raw" ;;
     *)
@@ -281,14 +303,20 @@ EOF
 # hooks 目錄本身不能是符號連結（否則寫入會落到 repo 之外），
 # 且解析後必須仍在 git common dir 底下。
 guard_hooks_dir() {
-  local action=$1 hooks=$2 common_real hooks_real
+  local action=$1 hooks=$2 common_real hooks_real parent_real
   if [ -L "$hooks" ]; then
     die "拒絕$action：hooks 目錄是符號連結，寫入會落到 repo 之外：
   $hooks → $(readlink "$hooks")
   本工具不會跟著符號連結寫入，也不會修改連結目標。" 2
   fi
-  [ -d "$hooks" ] || return 0
   common_real=$(cd -P "$git_common_dir" >/dev/null 2>&1 && pwd) || die "無法解析 git common dir：$git_common_dir" 1
+  if [ ! -d "$hooks" ]; then
+    parent_real=$(cd -P "$(dirname "$hooks")" >/dev/null 2>&1 && pwd) || die "拒絕$action：無法解析 hooks 父目錄。" 2
+    case $parent_real in
+      "$common_real"|"$common_real"/*) return 0 ;;
+      *) die "拒絕$action：hooks 父目錄不在 git common dir 底下。" 2 ;;
+    esac
+  fi
   hooks_real=$(cd -P "$hooks" >/dev/null 2>&1 && pwd) || die "無法解析 hooks 目錄：$hooks" 1
   case $hooks_real in
     "$common_real"/*) ;;
@@ -691,6 +719,9 @@ cmd_uninstall() {
   # 檢查設定檔記錄的 hooks 目錄是否就是現在算出來的。
   if [ "$state_ok" -eq 1 ]; then
     recorded_dir=$(state_value "$sf" hooksDir 2>/dev/null || true)
+    if [ -n "$recorded_dir" ]; then
+      recorded_dir=$(normalize_git_path "$recorded_dir") || die "拒絕移除：設定檔中的 hooks 路徑不是可解析的絕對路徑。" 2
+    fi
     if [ -n "$recorded_dir" ] && [ "$recorded_dir" != "$hooks" ]; then
       die "拒絕移除：設定檔記錄的 hooks 目錄（$recorded_dir）
   與目前計算出的 hooks 目錄（$hooks）不同。

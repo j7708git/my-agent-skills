@@ -47,3 +47,5 @@ branch: <branch 名稱；不知道就省略>
 - 分支、HEAD、是否已 push 以 **Git 即時查詢**為準，`branch` 只是提示。
 - `status.md` 與舊 `progress.md` 衝突時，**停下來對帳**，不要自行挑一份。
 - 不要寫入憑證、真名、私人 email、帳號 ID 或個人絕對路徑。
+
+<!-- 記錄路由：本模板是 Git 模式的實體文字映射。已啟用路由時先核對 binding/head；managed Google 不讀寫封存 notes，沿用同 kind 的 logical record、明確 scope 與版本回執。status/log/decision 僅 PM 寫入，worker 限派定 scope；人類決策先寫入 Doc authority，Sheet 只作衍生 view。實際 locator 僅保存在私有配置。 -->

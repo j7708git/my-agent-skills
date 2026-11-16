@@ -27,12 +27,39 @@ from helpers import (
     GitRepoFixture,
     HOOKS_SH,
     SKILL_DIR,
-    run_hooks,
+    run_hooks as _run_hooks,
+    CliResult,
     write_script,
 )
 
 HOOK_MARKER = "# repo-privacy-audit-hook:v1"
 HOOK_NAMES = ("pre-commit", "pre-push")
+
+
+def bash_executable() -> str:
+    """Windows 明確選 Git Bash，避免 CreateProcess 先找到 System32 的 WSL。"""
+    if os.name == "nt":
+        return str(Path(os.environ.get("ProgramFiles", "C:/Program Files")) / "Git" / "bin" / "bash.exe")
+    return "bash"
+
+
+def run_hooks(args: Sequence[str], *, env: Optional[Dict[str, str]] = None) -> CliResult:
+    if os.name != "nt":
+        return _run_hooks(args, env=env)
+    base = dict(os.environ)
+    for key in ("REPO_PRIVACY_AUDIT_GITLEAKS", "REPO_PRIVACY_AUDIT_GH", "REPO_PRIVACY_AUDIT_POLICY", "REPO_PRIVACY_AUDIT_BIN", "REPO_PRIVACY_AUDIT_ARGS"):
+        base.pop(key, None)
+    if env:
+        base.update(env)
+    command = [bash_executable(), str(HOOKS_SH), *args]
+    if env and "PATH" in env:
+        shim_dir = env["PATH"].split(os.pathsep)[0]
+        command = [bash_executable(), "-c", 'export PATH="$(cygpath -u "$1"):$PATH"; shift; exec bash "$@"', "fixture", shim_dir, str(HOOKS_SH), *args]
+    proc = subprocess.run(
+        command,
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=base, check=False, timeout=30,
+    )
+    return CliResult(proc.returncode, proc.stdout.decode("utf-8", "replace"), proc.stderr.decode("utf-8", "replace"), args)
 
 # 安全的 mock core：只印出收到的參數，然後回傳 MOCK_CORE_EXIT。
 # 它不掃描任何東西，也不會修改 repo。
@@ -111,6 +138,15 @@ class HookTestCase(unittest.TestCase):
         self.mock_exit = "0"
         self.repos: List[GitRepoFixture] = []
 
+
+    def native_symlink(self, link: Path, target: Path) -> None:
+        try:
+            link.symlink_to(target, target_is_directory=target.is_dir())
+        except OSError as exc:
+            if os.name == "nt" and getattr(exc, "winerror", None) == 1314:
+                self.skipTest("Windows native symlink 權限不足 (1314)；MSYS guard 另有專項實測")
+            raise
+
     def make_repo(self, name: str) -> GitRepoFixture:
         repo = GitRepoFixture(name)
         self.repos.append(repo)
@@ -156,7 +192,17 @@ class HookTestCase(unittest.TestCase):
         ) / "repo-privacy-audit" / "hooks.json"
 
     def read_state(self, repo: GitRepoFixture) -> Dict:
-        return json.loads(self.state_file(repo).read_text(encoding="utf-8"))
+        state = json.loads(self.state_file(repo).read_text(encoding="utf-8"))
+        if os.name == "nt":
+            for key in ("repo", "hooksDir", "cli", "policy"):
+                value = state.get(key)
+                if value:
+                    # fixture 位於本機 drive；純字串轉換保留 shell meta 字元，
+                    # 不讓 Windows -> MSYS argv parsing 再次解讀單引號。
+                    if len(value) >= 3 and value[0] == "/" and value[1].isalpha() and value[2] == "/":
+                        value = value[1].upper() + ":" + value[2:]
+                    state[key] = str(Path(value))
+        return state
 
     def commit_with_env(
         self,
@@ -245,7 +291,7 @@ class TestInstall(HookTestCase):
         repo = self.make_repo("hooks-dir-consistency")
         expected = run_git(repo, ["rev-parse", "--path-format=absolute", "--git-path", "hooks"]).stdout.decode().strip()
         self.install(repo)
-        self.assertEqual(str(self.hooks_dir(repo)), expected)
+        self.assertEqual(self.hooks_dir(repo), Path(expected))
 
     def test_hooks_do_not_embed_paths(self) -> None:
         """hook 內容不含路徑；設定改由旁邊 JSON 提供。"""
@@ -283,7 +329,7 @@ class TestInstall(HookTestCase):
         """dangling symlink 也算「已存在」，不可被視為空位而覆寫。"""
         repo = self.make_repo("dangling-symlink")
         target = self.hook_path(repo, "pre-push")
-        target.symlink_to(repo.root / "does-not-exist")
+        self.native_symlink(target, repo.root / "does-not-exist")
         self.assertFalse(target.exists(), "前置條件：這是 dangling symlink")
         self.assertTrue(target.is_symlink())
 
@@ -367,6 +413,8 @@ class TestInstall(HookTestCase):
         ``.../a``、``dir``、``with``、``spaces/.git/hooks/pre-commit``，
         結果是該刪的沒刪、不該刪的被刪。改成陣列後逐一比對完整路徑。
         """
+        if os.name == "nt":
+            self.skipTest("Windows ACL 不等同 POSIX chmod 權限故障模擬")
         if os.geteuid() == 0:
             self.skipTest("root 不受目錄權限限制，無法用權限模擬失敗")
         repo = self.repo_with_spaces("rollback-spaces")
@@ -425,7 +473,7 @@ class TestInstall(HookTestCase):
         hooks.rename(target_dir)
         outside_marker = target_dir / "outside-marker.txt"
         outside_marker.write_text("不該被這個工具碰到\n", encoding="utf-8")
-        hooks.symlink_to(target_dir)
+        self.native_symlink(hooks, target_dir)
 
         proc = self.install(repo, expect_rc=2)
         # 兩種守門任一觸發都算拒絕：符號連結本身，或解析後落在 repo 之外。
@@ -499,6 +547,8 @@ class TestInstall(HookTestCase):
         觸發方式：狀態目錄先存在但唯讀。安裝會順利寫完兩個 hook，最後在搬設定檔
         時失敗——正好落在需要回滾的位置，而且只有「本次建立的檔案」可以被刪。
         """
+        if os.name == "nt":
+            self.skipTest("Windows ACL 不等同 POSIX chmod 權限故障模擬")
         if os.geteuid() == 0:
             self.skipTest("root 不受目錄權限限制，無法用權限模擬失敗")
         repo = self.make_repo("install-rollback")
@@ -522,6 +572,8 @@ class TestInstall(HookTestCase):
 
     def test_failed_install_does_not_block_a_later_install(self) -> None:
         """失敗回滾之後必須還能重新安裝，不留阻擋下一次執行的殘骸。"""
+        if os.name == "nt":
+            self.skipTest("Windows ACL 不等同 POSIX chmod 權限故障模擬")
         if os.geteuid() == 0:
             self.skipTest("root 不受目錄權限限制，無法用權限模擬失敗")
         repo = self.make_repo("install-retry")
@@ -547,6 +599,8 @@ class TestInstall(HookTestCase):
         self.assertEqual(proc.returncode, 0, _text(proc))
 
     def test_install_succeeds_with_read_only_state_dir(self) -> None:
+        if os.name == "nt":
+            self.skipTest("Windows ACL 無法由 POSIX stat mode 證明 0600")
         """安裝成功時設定檔權限必須是 0600（內容含 CLI 與政策路徑）。"""
         repo = self.make_repo("state-mode")
         self.install(repo)
@@ -598,7 +652,7 @@ class TestInstall(HookTestCase):
         target = outside / "hijacked.json"
         target.write_text("{}\n", encoding="utf-8")
         link = state_dir / "hooks.json"
-        link.symlink_to(target)
+        self.native_symlink(link, target)
 
         proc = self.install(repo, expect_rc=2)
         self.assertIn("符號連結", proc.stderr)
@@ -635,7 +689,7 @@ class TestInstall(HookTestCase):
             encoding="utf-8",
         )
         state.unlink()
-        state.symlink_to(payload)
+        self.native_symlink(state, payload)
 
         proc = run_hooks(["uninstall", "--repo", str(repo.root)], env=git_env(repo))
         self.assertEqual(proc.returncode, 2, _text(proc))
@@ -672,7 +726,7 @@ class TestInstall(HookTestCase):
             encoding="utf-8",
         )
         state_dir.rename(elsewhere / "saved")
-        state_dir.symlink_to(elsewhere)
+        self.native_symlink(state_dir, elsewhere)
 
         proc = run_hooks(["uninstall", "--repo", str(repo.root)], env=git_env(repo))
         self.assertEqual(proc.returncode, 2, _text(proc))
@@ -684,7 +738,7 @@ class TestInstall(HookTestCase):
         repo = self.make_repo("state-dir-symlink-install")
         elsewhere = Path(tempfile.mkdtemp(prefix="outside-state-", dir=ensure_scratch()))
         self.addCleanup(shutil.rmtree, elsewhere, True)
-        (repo.git_dir / "repo-privacy-audit").symlink_to(elsewhere)
+        self.native_symlink(repo.git_dir / "repo-privacy-audit", elsewhere)
 
         proc = self.install(repo, expect_rc=2)
         self.assertIn("符號連結", proc.stderr)
@@ -1008,7 +1062,7 @@ class TestArgumentHandling(HookTestCase):
     def _bounded(self, args: Sequence[str], env: Optional[Dict] = None, timeout: int = 20) -> subprocess.CompletedProcess:
         try:
             return subprocess.run(
-                ["bash", str(HOOKS_SH), *args],
+                [bash_executable(), str(HOOKS_SH), *args],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 env={**os.environ, **(env or {})},
@@ -1072,7 +1126,13 @@ class TestHookExecution(HookTestCase):
         output = _text(proc)
         self.assertIn("--staged", output)
         self.assertIn("--repo", output)
-        self.assertIn(str(repo.root), output)
+        expected_repo = str(repo.root)
+        if os.name == "nt":
+            expected_repo = subprocess.run(
+                [bash_executable(), "-c", 'cygpath -u "$1"', "fixture", str(repo.root)],
+                capture_output=True, check=True, text=True, timeout=10,
+            ).stdout.strip()
+        self.assertIn(expected_repo, output)
 
     def test_hook_runs_via_symlink(self) -> None:
         """hook 被 symlink 呼叫時仍要能解析自身位置。"""
@@ -1080,7 +1140,7 @@ class TestHookExecution(HookTestCase):
         self.install(repo)
         real = self.hook_path(repo, "pre-commit")
         link = self.tool_dir / "linked-pre-commit"
-        link.symlink_to(real)
+        self.native_symlink(link, real)
 
         repo.write("payload.txt", "y\n")
         run_git(repo, ["add", "-A"], check=True)
@@ -1088,7 +1148,7 @@ class TestHookExecution(HookTestCase):
         env["REPO_PRIVACY_AUDIT_BIN"] = str(self.mock_core)
         env["MOCK_CORE_EXIT"] = "0"
         proc = subprocess.run(
-            ["bash", str(link)],
+            [bash_executable(), str(link)],
             cwd=str(repo.root),
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -1295,6 +1355,171 @@ class TestHookExecution(HookTestCase):
         second = self.hook_path(repo, "pre-commit").read_text(encoding="utf-8")
         self.assertEqual(first, second)
         self.assertEqual(self.read_state(repo)["cli"], str(self.mock_core))
+
+
+@unittest.skipUnless(os.name == 'nt', 'Windows Git Bash 專項測試')
+class TestWindowsGitBash(unittest.TestCase):
+    """以真 Git Bash 驗證 Windows 路徑與安全護欄；fixtures 僅含合成資料。"""
+
+    def setUp(self):
+        self.bash = Path(os.environ.get('ProgramFiles', 'C:/Program Files')) / 'Git' / 'bin' / 'bash.exe'
+        self.git_bin = shutil.which('git')
+        if not self.bash.is_file() or not self.git_bin:
+            self.skipTest('Git for Windows Bash/Git 不可用')
+        self.temp = tempfile.TemporaryDirectory(dir=ensure_scratch(), prefix='fixture-')
+        self.dir = Path(self.temp.name)
+        self.repo = self.dir / 'repo with spaces'
+        self.repo.mkdir()
+        self.assertTrue(self.dir.resolve().is_relative_to(SCRATCH_ROOT.resolve()))
+        self.env = os.environ.copy()
+        for key in ('REPO_PRIVACY_AUDIT_BIN', 'REPO_PRIVACY_AUDIT_POLICY', 'REPO_PRIVACY_AUDIT_ARGS', 'REPO_PRIVACY_AUDIT_CONFIG', 'REPO_PRIVACY_AUDIT_GITLEAKS', 'GITLEAKS_CONFIG', 'GITLEAKS_CONFIG_TOML', 'GIT_DIR', 'GIT_WORK_TREE', 'GIT_COMMON_DIR', 'GIT_INDEX_FILE'):
+            self.env.pop(key, None)
+        self.env.update({'GIT_CONFIG_NOSYSTEM': '1', 'GIT_CONFIG_GLOBAL': os.devnull})
+        self.git('init', '-q')
+        self.fake = self.dir / 'fake-audit.sh'
+        self.fake.write_text('#!/usr/bin/env bash\nprintf "%s\\n" "$@" > "$RPA_FIXTURE_CAPTURE"\nexit "${RPA_FIXTURE_EXIT:-0}"\n', encoding='utf-8')
+        self.env['REPO_PRIVACY_AUDIT_BIN'] = self.fake.as_posix()
+        self.env['RPA_FIXTURE_CAPTURE'] = (self.dir / 'capture.txt').as_posix()
+
+    def tearDown(self):
+        self.temp.cleanup()
+
+    def git(self, *args):
+        return subprocess.run([self.git_bin, '-C', str(self.repo), *args], env=self.env, capture_output=True, text=True, timeout=20, check=True)
+
+    def tool(self, cmd, repo=None):
+        return subprocess.run([str(self.bash), '-c', 'if [ -n "${RPA_TEST_SHIMS:-}" ]; then export PATH="$(cygpath -u "$RPA_TEST_SHIMS"):$PATH"; fi; exec bash "$@"', 'fixture', str(HOOKS_SH), cmd, '--repo', str(repo or self.repo)], env=self.env, capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=30)
+
+    def test_status_install_and_hooks(self):
+        before = self.tool('status')
+        self.assertEqual(before.returncode, 0, before.stderr)
+        install = self.tool('install')
+        self.assertEqual(install.returncode, 0, install.stderr)
+        hooks = self.repo / '.git' / 'hooks'
+        state = self.repo / '.git' / 'repo-privacy-audit' / 'hooks.json'
+        self.assertTrue((hooks / 'pre-commit').is_file())
+        self.assertTrue((hooks / 'pre-push').is_file())
+        self.assertTrue(state.is_file())
+        payload = json.loads(state.read_text(encoding='utf-8'))
+        self.assertEqual(payload['tool'], 'repo-privacy-audit')
+        for name, flag in [('pre-commit', '--staged'), ('pre-push', '--pre-push')]:
+            run = subprocess.run([str(self.bash), str(hooks / name)], env=self.env, cwd=self.repo, input='', capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=30)
+            self.assertEqual(run.returncode, 0, run.stderr)
+            self.assertIn(flag, (self.dir / 'capture.txt').read_text())
+        self.assertEqual(self.tool('status').returncode, 0)
+        self.assertEqual(self.tool('install').returncode, 0)
+        removed = self.tool('uninstall')
+        self.assertEqual(removed.returncode, 0, removed.stderr + removed.stdout)
+        self.assertFalse((hooks / 'pre-commit').exists())
+        self.assertFalse((hooks / 'pre-push').exists())
+        self.assertTrue(state.exists())
+
+    def test_real_scanner_precommit(self):
+        self.env['REPO_PRIVACY_AUDIT_BIN'] = (SKILL_DIR / 'scripts' / 'repo-privacy-audit.sh').as_posix()
+        scanner = shutil.which('gitleaks')
+        if not scanner:
+            self.skipTest('真實 Gitleaks 不可用，未驗 scanner integration')
+        self.env['REPO_PRIVACY_AUDIT_GITLEAKS'] = scanner
+        policy = self.dir / 'strict-policy.json'
+        policy.write_text(json.dumps({'schemaVersion': '1.0', 'paths': {'personalPathSeverity': 'high'}}), encoding='utf-8')
+        self.env['REPO_PRIVACY_AUDIT_POLICY'] = str(policy)
+        (self.repo / 'safe.txt').write_text('synthetic safe content\n', encoding='utf-8')
+        self.git('add', 'safe.txt')
+        result = self.tool('install')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        configured = json.loads((self.repo / '.git' / 'repo-privacy-audit' / 'hooks.json').read_text(encoding='utf-8'))
+        self.assertEqual(Path(configured['policy']).resolve(), policy.resolve())
+        self.env.pop('REPO_PRIVACY_AUDIT_POLICY')
+        run = subprocess.run([str(self.bash), str(self.repo / '.git' / 'hooks' / 'pre-commit')], env=self.env, cwd=self.repo, input='', capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=60)
+        self.assertEqual(run.returncode, 0, run.stderr + '\n' + run.stdout)
+        synthetic_path = 'C:' + chr(92) + 'Users' + chr(92) + 'private-person' + chr(92) + 'project'
+        (self.repo / 'safe.txt').write_text(synthetic_path + '\n', encoding='utf-8')
+        self.git('add', 'safe.txt')
+        strict = subprocess.run([str(self.bash), str(self.repo / '.git' / 'hooks' / 'pre-commit')], env=self.env, cwd=self.repo, input='', capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=60)
+        self.assertEqual(strict.returncode, 1, 'stored strict policy must block synthetic personal path')
+        (self.repo / 'safe.txt').write_text('ghp_' + '0123456789abcdefghijklmnopqrstuvwxyzAB' + '\n', encoding='utf-8')
+        self.git('add', 'safe.txt')
+        blocked = subprocess.run([str(self.bash), str(self.repo / '.git' / 'hooks' / 'pre-commit')], env=self.env, cwd=self.repo, input='', capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=60)
+        self.assertEqual(blocked.returncode, 1, 'synthetic secret should be blocked')
+        self.env['REPO_PRIVACY_AUDIT_GITLEAKS'] = str(self.dir / 'missing-gitleaks')
+        incomplete = subprocess.run([str(self.bash), str(self.repo / '.git' / 'hooks' / 'pre-commit')], env=self.env, cwd=self.repo, input='', capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=60)
+        self.assertEqual(incomplete.returncode, 2, 'missing scanner must fail closed')
+
+    def test_existing_hook_not_overwritten(self):
+        hook = self.repo / '.git' / 'hooks' / 'pre-commit'
+        hook.write_text('existing\n')
+        self.assertEqual(self.tool('install').returncode, 2)
+        self.assertEqual(hook.read_text(), 'existing\n')
+        self.assertFalse((self.repo / '.git' / 'hooks' / 'pre-push').exists())
+
+    def test_git_reported_external_hooks_path_refused(self):
+        shims = self.dir / 'shims'
+        shims.mkdir()
+        wrapper = shims / 'git'
+        wrapper.write_text('#!/usr/bin/env bash\ncase " $* " in *" --git-path hooks "*) cygpath -u "$RPA_TEST_OUTSIDE"; exit 0;; esac\nexec "$RPA_TEST_REAL_GIT" "$@"\n', encoding='utf-8')
+        wrapper.chmod(493)
+        self.env['RPA_TEST_SHIMS'] = str(shims)
+        self.env['RPA_TEST_REAL_GIT'] = self.git_bin
+        outside = self.dir / 'external'
+        outside.mkdir()
+        for target in (outside, outside / 'not-yet-created'):
+            self.env['RPA_TEST_OUTSIDE'] = str(target)
+            with self.subTest(exists=target.exists()):
+                result = self.tool('install')
+                self.assertEqual(result.returncode, 2, result.stderr)
+                self.assertEqual(list(outside.iterdir()), [])
+
+    def test_uninstall_refuses_changed_recorded_hook_dir(self):
+        self.assertEqual(self.tool('install').returncode, 0)
+        state = self.repo / '.git' / 'repo-privacy-audit' / 'hooks.json'
+        data = json.loads(state.read_text(encoding='utf-8'))
+        data['hooksDir'] = (self.dir / 'different').as_posix()
+        state.write_text(json.dumps(data), encoding='utf-8')
+        removed = self.tool('uninstall')
+        self.assertEqual(removed.returncode, 2)
+        self.assertTrue((self.repo / '.git' / 'hooks' / 'pre-commit').exists())
+        self.assertTrue((self.repo / '.git' / 'hooks' / 'pre-push').exists())
+
+    def test_hooks_path_rejected(self):
+        self.git('config', 'core.hooksPath', 'elsewhere')
+        result = self.tool('install')
+        self.assertEqual(result.returncode, 2)
+        self.assertIn('core.hooksPath', result.stderr)
+
+    def test_other_worktree_refused_main_and_linked(self):
+        (self.repo / 'fixture.txt').write_text('synthetic', encoding='utf-8')
+        self.git('add', 'fixture.txt')
+        self.git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'fixture')
+        linked = self.dir / 'linked'
+        self.git('worktree', 'add', '-qb', 'fixture-branch', str(linked))
+        self.assertEqual(self.tool('install').returncode, 2)
+        self.assertEqual(self.tool('install', linked).returncode, 2)
+        self.assertFalse((self.repo / '.git' / 'hooks' / 'pre-commit').exists())
+
+    def test_symlink_hooks_rejected(self):
+        hooks = self.repo / '.git' / 'hooks'
+        other = self.dir / 'outside'
+        other.mkdir()
+        for file in hooks.iterdir():
+            if file.name.endswith('.sample'):
+                file.unlink()
+        hooks.rmdir()
+        try:
+            os.symlink(other, hooks, target_is_directory=True)
+        except OSError as exc:
+            if getattr(exc, 'winerror', None) != 1314:
+                raise
+            link_env = self.env.copy()
+            link_env['MSYS'] = 'winsymlinks:sys'
+            make = subprocess.run([str(self.bash), '-c', 'ln -s "$(cygpath -u "$1")" "$(cygpath -u "$2")"', 'fixture', str(other), str(hooks)], env=link_env, capture_output=True, text=True, timeout=10)
+            if make.returncode:
+                self.skipTest('native and MSYS directory symlinks unavailable')
+        check = subprocess.run([str(self.bash), '-c', 'test -L "$(cygpath -u "$1")"', 'fixture', str(hooks)], env=self.env, timeout=10)
+        if check.returncode:
+            self.skipTest('Git Bash does not recognise this fixture as a symlink')
+        result = self.tool('install')
+        self.assertEqual(result.returncode, 2, result.stderr)
+        self.assertEqual(list(other.iterdir()), [])
 
 
 if __name__ == "__main__":

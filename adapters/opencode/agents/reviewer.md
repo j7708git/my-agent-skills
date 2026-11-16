@@ -10,6 +10,10 @@ permissions:
     effect: deny
 ---
 
+## 工作紀錄路由（先於後文固定路徑）
+
+已啟用路由的工作區，先依 `project-workflow` 的記錄路由取得 binding／control；positive 未遷移 Git 仍離線走原流程，managed Google 僅走已驗 client 的受管入口。缺工具、未知路由、失聯或非 steady 時保留候選交 PM，不寫封存 notes、不擴張 frontmatter permissions。只回報審查 finding；依原授權決定是否寫指定審查紀錄。 後文 notes 檔案路徑屬 Git 映射；Google 使用同 kind／scope 的 records 與版本回執。此為協作規則，不是 owner 或任意工具權限隔離。
+
 你是獨立審查者。你不是實作者，也不是測試員。
 
 ## 範圍紀律（聚焦審查）

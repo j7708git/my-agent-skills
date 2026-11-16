@@ -20,6 +20,12 @@ S／M／L 車道分級、分支模型與開工預檢、worktree 政策、ship／
 最小原型）、用已知／假設／未知收斂需求、撰寫自足任務簡報、派工與並行紀律、
 實際驗收，以及跨機同步與交接。
 
+## 可選的工作紀錄位置
+
+未啟用 `workspace-records` 的工作區維持 Git 指引。已啟用者在管理資料讀寫前先核對固定 registry 的 binding 與當前 control：未遷移 Git 不依賴 Google；managed Google 以 Doc CAS head 發佈的紀錄為 authority，Sheet 是衍生 view。工具、控制或版本不可確認時停止管理寫入，不回寫封存 notes。
+
+[記錄路由](../skills/project-workflow/references/record-routing.md)定義部署位置、角色、失敗與轉換界線。這是可選工具的協作流程，不是本 skill 自動執行腳本或保證所有 client 支援；既有 branch、hooks、PR 與授權不變。完整資料、附件與歷史需經相應 backup／restore 驗收，不能由小型 CAS 試驗推定。
+
 ## 這個 skill 不是什麼
 
 - **不是掃描器。** 它不做隱私或秘密掃描，不執行任何掃描指令，也不提供安全保證。
@@ -47,6 +53,7 @@ skill 自足：`SKILL.md` 與其相對資源只引用 skill 目錄內的檔案�
 | --- | --- |
 | [skills/project-workflow/SKILL.md](../skills/project-workflow/SKILL.md) | 流程主文與固定任務簡報區塊 |
 | [references/workflow-details.md](../skills/project-workflow/references/workflow-details.md) | 規劃、簡報、研究、驗收與交接的細節 |
+| [references/record-routing.md](../skills/project-workflow/references/record-routing.md) | 選用工作紀錄路由、固定 registry、拒寫與轉換界線 |
 | [references/privacy-and-sync.md](../skills/project-workflow/references/privacy-and-sync.md) | 公開／私有隔離、索引紀律與同步步驟 |
 | [references/client-compatibility.md](../skills/project-workflow/references/client-compatibility.md) | client 的已確認與未確認狀態、手動 fallback |
 | [assets/templates/overview.md](../skills/project-workflow/assets/templates/overview.md) | 專案總覽空白模板 |
@@ -138,14 +145,17 @@ projects/<id>/tasks/
 shared/research/
 ```
 
-`status.md` 是現況唯一權威；`plan.md` 只講長期路線；`log/` 只講歷史。舊
-`progress.md` 冷凍，不重寫、不刪除、不再追加，只在沒有 `status.md` 的專案作 fallback。
+Git 路由下，`status.md` 是現況權威；managed Google 路由則由受管 Doc authority 提供
+相同的 logical status record。`plan.md` 只講長期路線；`log/` 只講歷史。舊
+`progress.md` 冷凍，不重寫、不刪除、不再追加，只在 Git 路由且沒有 `status.md` 時作 fallback。
 
 公開的 code repo 放程式碼、測試、README 與對外 `docs/`，**不得**含 private 工作筆記；
 code repo 的
 `.gitignore` 應排除暫存。workspace 的 `.tmp` 或 code repo 內的 `.tmp` 都應被 ignore，
-且 `.tmp` **絕不自動清理**。跨機接手時，先讀 `status.md` 與兩個 repo 的 Git 事實，
-再看 acceptance、任務卡與 `log/` 最近幾則；需要時才讀 plan／research。
+且 `.tmp` **絕不自動清理**。跨機接手時先核對工作紀錄 route：Git 路由讀 `status.md`
+與兩個 repo 的 Git 事實；managed Google 從受管 authority 讀取，再看 acceptance、任務卡
+與 `log/` 最近幾則；需要時才讀 plan／research。Git 路由中沒有 `status.md` 的舊專案，
+才退回 `progress.md` 最新段。
 
 ## 交接與同步的契約
 

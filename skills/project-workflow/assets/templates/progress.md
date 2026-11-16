@@ -1,7 +1,7 @@
 # 進度（progress，legacy）
 
 > **legacy（冷凍）**：新專案不要用這份模板。現況請用 `status.md`，歷史請用
-> `log/YYYY-MM.md`；只有「還沒有 `status.md`」的舊專案才用這份作 fallback 與歷史。
+> `log/YYYY-MM.md`；只有 Git 路由中「還沒有 `status.md`」的舊專案才用這份作 fallback 與歷史。
 >
 > 使用方式：把整份檔案複製到 private notes repo 的專案目錄，命名為 `progress.md`。
 > 所有 `<...>` 都要換成實際值；commit 欄位只能填**真實已存在**的 commit，不要填預期值。
@@ -75,3 +75,5 @@
 - 不要把 private notes 的具體連結貼進公開文件。
 - 未 push 的 commit 只在本機可見，跨機時必須明說。
 - 保留舊紀錄；「最新摘要」是現況，不是唯一歷史。
+
+<!-- 記錄路由：本模板是 Git 模式的實體文字映射。已啟用路由時先核對 binding/head；managed Google 不讀寫封存 notes，沿用同 kind 的 logical record、明確 scope 與版本回執。status/log/decision 僅 PM 寫入，worker 限派定 scope；人類決策先寫入 Doc authority，Sheet 只作衍生 view。實際 locator 僅保存在私有配置。 -->
