@@ -1,8 +1,8 @@
 # 混合來源 portfolio 候選
 
-`portfolio_mixed.collect_mixed(registry, events, reader_factory)` 讀固定 registry，Git 專案做前後兩次讀取；Google 專案只有收到 canonical receipt event 才啟動 `CanonicalReader`，重讀兩次 Doc head，驗 manifest/status bytes/hash、summary、epoch、version、revision 與 receipt 對應 operation/result。reader 由同一受管 `CodexActionSession` 注入，工具回執是實際 App 結果，不是模型最終文字。
+`portfolio_mixed.collect_mixed(registry, events, reader_factory)` 讀固定 registry，Git 專案做前後兩次讀取；Google 專案收到 canonical receipt event，或已啟動的 consumer session 需要首次觀察無 cache 專案時，啟動 `CanonicalReader`，重讀兩次 Doc head，驗 manifest/status bytes/hash、summary、epoch、version、revision；有 receipt 時另驗對應 operation/result。reader 由同一受管 `CodexActionSession` 注入，工具回執是實際 App 結果，不是模型最終文字。
 
-未收到 Google 事件時只讀上次已驗證的本機 cache，不啟動 reader；列的 freshness 顯示 `last_observed@<時間>`，不是目前線上狀態保證。沒有 cache 或讀取、receipt、route、head/manifest 不一致時顯示 unknown，該事件保持 pending；不從舊 Git 讀 Google 專案。Git 專案仍雙次讀取並獨立提供來源。登記缺失、binding 變更或 Git 雙讀競態會拒絕本次收集。
+未收到 Google 事件時，優先使用上次已驗證的本機 cache；若 cache 不存在，而其他已排隊事件已啟動 consumer session，該 session 會對 steady Google 專案進行完整 canonical 初次讀取。零模型本機 probe 不啟動 reader。列的 freshness 顯示 `last_observed@<時間>`，不是目前線上狀態保證。沒有 cache 且無 session，或讀取、receipt、route、head/manifest 不一致時顯示 unknown；未驗證的 receipt 事件保持 pending。不從舊 Git 讀 Google 專案。Git 專案仍雙次讀取並獨立提供來源。登記缺失、binding 變更或 Git 雙讀競態會拒絕本次收集。
 
 `source_digest` 綁定 registry、內容、來源 epoch/version/hash，但不含觀察時間、native revision 或工具 proof id；`coverage_digest` 綁定該 digest 與本次 covered/pending event hashes。`desired_rows` 維持既有 14 欄與每列全域 source_digest，Google 的 `source_time` 是 canonical status 的 updated；freshness 才是觀察時間。這可能因全域 digest 更新多列，不能宣稱只改一列。
 

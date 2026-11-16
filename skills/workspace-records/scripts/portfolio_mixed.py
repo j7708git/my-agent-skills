@@ -163,8 +163,8 @@ def observe_google(registry, binding, event_receipts, reader_factory, previous):
     return row, covered, pending
 
 
-def collect_mixed(registry, events, reader_factory):
-    """Two-pass Git and registry, selective verified Google reads on receipt events."""
+def collect_mixed(registry, events, reader_factory, observe_uncached=False):
+    """Verify Google receipt reads and, when requested, initial uncached observations."""
     if not isinstance(events, list) or not callable(reader_factory):
         raise RecordError('INVALID_ARGUMENT')
     data, digest = registry.load()
@@ -214,6 +214,9 @@ def collect_mixed(registry, events, reader_factory):
                     row = portfolio.unknown(project, 'google_head', 'RECEIPT_UNAVAILABLE')
             elif previous is not None:
                 row = previous
+            elif observe_uncached:
+                row, unused_covered, unused_pending = observe_google(registry, binding, [], reader_factory, None)
+                save_cache(registry, binding, row)
             else:
                 row = portfolio.unknown(project, 'google_head', 'GOOGLE_NOT_OBSERVED')
             rows.append(row)
@@ -288,7 +291,7 @@ class MixedSource:
 
     def __call__(self):
         selected = [event for event in self.events if event.get('kind') == 'canonical_receipt'] if self.broker is not None else []
-        source = collect_mixed(self.registry, selected, self.reader)
+        source = collect_mixed(self.registry, selected, self.reader, observe_uncached=self.broker is not None)
         routes, route_hash = self.registry.load()
         if route_hash != source['registry_sha256']:
             raise RecordError('REVISION_CONFLICT')
