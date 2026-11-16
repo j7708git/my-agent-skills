@@ -10,6 +10,10 @@
 
 固定的 `runner.json` 可選配 `client.codex_executable`，內容只能有 `path`（絕對路徑）、`sha256`（64 位小寫 hex）與 `size`（正整數）。這是部署者核准的主機設定，不能從 Issue、request 或環境變數指定。每次 session factory 建構前重驗檔案及祖先無 symlink／reparse、檔案為一般檔且無 hardlink alias、精確 size/hash；不存在或漂移就拒絕。不設定 `client` 時保留原本 PATH 發現行為，不修改全域 PATH。驗證後透過既有 `CodexActionSession(executable=...)` 傳入；tool metadata、readOnly、精確參數及 approval gates 不變。建構成功不等於事件執行或寫入成功。
 
+Google session 失敗時，adapter 將有限的事件形狀、hash-only 工具回執、階段與清理狀態保存至固定 runtime 的 `runner-diagnostics`，以 claim key 及原 plan／request hash 綁定；不保存工具參數、結果、文件或 app ID。錯誤回應的 `diagnostic_saved` 表示保存是否成功，原錯誤碼與 unknown claim 不變；保存失敗不掩蓋原錯誤，也不授權重送或將 unknown 標為完成。
+
+Google 模式的 PM bundle 建立及執行載入會在 claim 前檢查既有 canonical 限制：`append` 只能指向 `log/`，batch 的每個子動作同樣適用；不合法請求直接拒絕。這是靜態前置檢查，並不取代正式寫入時的 scope、authority、base hash 或完整規則驗證。
+
 既有 Actions job 呼叫：
 
 ```text

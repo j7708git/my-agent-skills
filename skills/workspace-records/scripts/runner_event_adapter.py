@@ -11,6 +11,7 @@ import re
 import stat
 import subprocess
 import sys
+import uuid
 
 import canonical_writer
 import core
@@ -194,6 +195,17 @@ def build_operation_bundle(issue, request, review_id):
     return {'plan': plan, 'plan_sha256': object_hash(plan)}
 
 
+def preflight_google_append(request, binding):
+    """Reject the canonical connector's static append/path violation before claim."""
+    if binding['backend'] != 'google_head':
+        return
+    changes = request['payload']['changes'] if request['action'] == 'batch' else [request]
+    paths = {item['record_id']: item['path'] for item in request['scope']['records']}
+    for item in changes:
+        if item['action'] == 'append' and not paths[item['target_record_id']].startswith('log/'):
+            raise RecordError('FORBIDDEN')
+
+
 def prepare_review_bundle(registry, config, number, request_file, review_id, github):
     """PM CLI: fetch the exact Issue now, scan, and save an immutable bundle."""
     if not isinstance(number, str) or not re.fullmatch('[1-9][0-9]*', number):
@@ -205,6 +217,7 @@ def prepare_review_bundle(registry, config, number, request_file, review_id, git
     if request['project_id'] not in config['projects']:
         raise RecordError('PROJECT_MAPPING_UNVERIFIED')
     binding = registry.bind(request['project_id'])
+    preflight_google_append(request, binding)
     expected_mode = 'google' if binding['backend'] == 'google_head' else 'git'
     if binding['route_phase'] != 'steady' or request['expected']['mode'] != expected_mode:
         raise RecordError('REVISION_CONFLICT')
@@ -252,6 +265,7 @@ def load_operation(registry, config, event_context):
     core.validate_request(request, True)
     if request['project_id'] != project or request['action'] not in ('replace', 'append', 'status_patch', 'batch'):
         raise RecordError('FORBIDDEN')
+    preflight_google_append(request, registry.bind(project))
     return plan, selected['plan_sha256']
 
 
@@ -387,6 +401,64 @@ def recover_projections(registry, config, claim_key, session_factory):
     return {**envelope['driver_result'], 'model_turns': envelope.get('model_turns')}
 
 
+def save_transport_diagnostic(registry, event, operation, plan_hash, envelope):
+    """Persist only bounded shapes and hashes, never tool arguments or results."""
+    allowed_stage = {'open', 'turn_start', 'server_request', 'notification', 'dynamic_next_action',
+                     'request_denied', 'mcp_start', 'mcp_complete', 'driver_wait'}
+    methods = {'item/tool/call', 'mcpServer/elicitation/request', 'tool/requestUserInput',
+               'item/started', 'item/completed', 'turn/completed', 'other'}
+    types = {'mcpToolCall', 'dynamicToolCall', 'commandExecution', 'fileChange',
+             'collabAgentToolCall', 'agentMessage', 'reasoning', 'other'}
+    arg_types = {'missing', 'object', 'array', 'string', 'boolean', 'number', 'null', 'other'}
+    events = []
+    trace = envelope.get('event_trace')
+    if isinstance(trace, list):
+        for item in trace[-16:]:
+            if not isinstance(item, dict):
+                continue
+            row = {key: item[key] for key in ('request', 'thread_matches', 'turn_matches', 'item_correlated',
+                   'dynamic_name_matches', 'arguments_empty_object', 'active_action', 'mcp_arguments_match')
+                   if key in item and (type(item[key]) is bool or key == 'mcp_arguments_match' and item[key] is None)}
+            for key, choices in (('method', methods), ('item_type', types), ('arguments_type', arg_types)):
+                row[key] = item.get(key) if isinstance(item.get(key), str) and item[key] in choices else 'other'
+            events.append(row)
+    proofs = []
+    receipts = envelope.get('tool_receipts')
+    if isinstance(receipts, list):
+        for item in receipts[-32:]:
+            if isinstance(item, dict):
+                proofs.append({key: item[key] for key in ('arguments_sha256', 'result_sha256')
+                               if isinstance(item.get(key), str) and re.fullmatch('[a-f0-9]{64}', item[key])})
+    def cleanup(value):
+        if not isinstance(value, dict):
+            return None
+        return {key: value[key] for key in ('appserver_exited', 'reader_thread_settled', 'pipes_closed')
+                if type(value.get(key)) is bool} | {'remaining_processes': len(value['remaining_job_pids'])
+                if isinstance(value.get('remaining_job_pids'), list) and len(value['remaining_job_pids']) <= 1024 else None}
+    mismatch = envelope.get('mcp_start_diagnostic')
+    if not isinstance(mismatch, dict):
+        mismatch = {}
+    diagnostic = {'schema_version': 1, 'claim_key': guard.event_key(event),
+                  'plan_sha256': plan_hash if operation else None,
+                  'request_sha256': core.request_hash(operation['request']) if operation else None,
+                  'failure_stage': envelope.get('failure_stage') if isinstance(envelope.get('failure_stage'), str) and envelope['failure_stage'] in allowed_stage else 'other',
+                  'model_turns': envelope.get('model_turns') if type(envelope.get('model_turns')) is int and 0 <= envelope['model_turns'] <= 100 else None,
+                  'driver_thread_settled': envelope.get('driver_thread_settled') if type(envelope.get('driver_thread_settled')) is bool else None,
+                  'event_trace': events, 'tool_proofs': proofs,
+                  'mcp_arguments_exact': mismatch.get('arguments_exact') if type(mismatch.get('arguments_exact')) is bool else None,
+                  'mcp_argument_hashes': {key: mismatch[key] for key in ('expected_arguments_sha256', 'actual_arguments_sha256')
+                                          if isinstance(mismatch.get(key), str) and re.fullmatch('[a-f0-9]{64}', mismatch[key])},
+                  'cleanup': cleanup(envelope.get('cleanup')), 'discovery_cleanup': cleanup(envelope.get('discovery_cleanup'))}
+    parent = registry.workspace / routing.RUNTIME / 'runner-diagnostics'
+    if not os.path.lexists(parent):
+        parent.mkdir(mode=0o700)
+    parent = git_store.safe_dir(parent)
+    destination = parent / (diagnostic['claim_key'] + '-' + uuid.uuid4().hex + '.json')
+    fd = os.open(destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, 'wb') as stream:
+        stream.write(core.canonical(diagnostic)); stream.flush(); os.fsync(stream.fileno())
+
+
 def dispatch(registry, config, event_context, session_factory):
     if event_context.get('dispatch_route') != 'pilot':
         raise RecordError('LEGACY_SCOPE_SEPARATE')
@@ -469,7 +541,13 @@ def dispatch(registry, config, event_context, session_factory):
     session = session_factory()
     envelope = session.run(lambda broker: execute(canonical_writer.CanonicalReader(broker, settings['google'])))
     if envelope.get('outcome') != 'driver_completed' or not isinstance(envelope.get('driver_result'), dict):
-        raise RecordError(envelope.get('code', 'CONNECTOR_UNAVAILABLE'))
+        failure = RecordError(envelope.get('code', 'CONNECTOR_UNAVAILABLE'))
+        try:
+            save_transport_diagnostic(registry, event, operation, plan_hash if operation else None, envelope)
+            failure.diagnostic_saved = True
+        except Exception:
+            failure.diagnostic_saved = False
+        raise failure
     result = envelope['driver_result']
     if result.get('outcome') not in ('canonical_confirmed', 'patrol_read_confirmed', 'duplicate_event'):
         raise RecordError('READBACK_UNVERIFIED')
@@ -592,7 +670,10 @@ def main():
         return 0
     except (RecordError, OSError, ValueError, TypeError, KeyError, subprocess.SubprocessError) as error:
         code = error.code if isinstance(error, RecordError) else 'CONTROL_UNAVAILABLE'
-        print(json.dumps({'ok': False, 'error': {'code': code, 'retryable': False}}, ensure_ascii=True))
+        result = {'ok': False, 'error': {'code': code, 'retryable': False}}
+        if hasattr(error, 'diagnostic_saved'):
+            result['error']['diagnostic_saved'] = error.diagnostic_saved
+        print(json.dumps(result, ensure_ascii=True))
         return 2
 
 

@@ -211,6 +211,48 @@ class Tests(unittest.TestCase):
         with self.assertRaises(core.RecordError):
             adapter.prepare_review_bundle(self.fixture.registry, self.config, '42', '../outside.json', 'pm-review-3', self.github)
 
+    def test_google_invalid_task_append_rejected_before_plan_and_claim(self):
+        import git_store
+        request = copy.deepcopy(self.review_request)
+        request['action'] = 'append'
+        request['scope']['actions'] = ['append']
+        directory = self.fixture.root / '.openchamber/workspace-records/runner-operations'
+        git_store.write_json(directory / 'invalid-request.json', request)
+        before = {p.name for p in directory.iterdir()}
+        with self.assertRaisesRegex(core.RecordError, 'FORBIDDEN'):
+            adapter.prepare_review_bundle(self.fixture.registry, self.config, '42', 'invalid-request.json', 'review-invalid', self.github)
+        self.assertEqual({p.name for p in directory.iterdir()}, before)
+        self.review_request = request
+        self.review()  # Existing legacy bundle: load_operation must reject it too.
+        event = self.event()
+        sessions = pathlib.Path(self.fixture.binding['runtime_directory']) / 'p3-sessions'
+        prior_sessions = set(sessions.iterdir()) if sessions.exists() else set()
+        with self.assertRaisesRegex(core.RecordError, 'FORBIDDEN'):
+            adapter.dispatch(self.fixture.registry, self.config, event, self.factory)
+        self.assertIsNone(dispatch_guard.peek(self.fixture.registry, event['event']))
+        self.assertEqual(self.sessions, 0)
+        self.assertEqual(set(sessions.iterdir()) if sessions.exists() else set(), prior_sessions)
+        self.assertFalse((self.fixture.root / '.openchamber/workspace-records/runner-receipts').exists())
+
+    def test_google_task_replace_and_log_append_pass_static_preflight(self):
+        request = copy.deepcopy(self.review_request)
+        task = {'action': 'replace', 'target_record_id': 'task', 'payload': request['payload']}
+        log = {'action': 'append', 'target_record_id': 'log', 'payload': {'base_sha256': 'a' * 64, 'content': 'new entry\n'}}
+        request.update(actor_role='pm', action='batch', target_record_id=None, payload={'changes': [task, log]})
+        request['scope']['actions'] = ['batch', 'replace', 'append']
+        request['scope']['records'].append({'record_id': 'log', 'path': 'log/2026-01.md', 'fields': ['body']})
+        core.validate_request(request, True)
+        adapter.preflight_google_append(request, self.fixture.registry.bind('Demo'))
+        import git_store
+        directory = self.fixture.root / '.openchamber/workspace-records/runner-operations'
+        git_store.write_json(directory / 'valid-request.json', request)
+        prepared = adapter.prepare_review_bundle(self.fixture.registry, self.config, '42', 'valid-request.json', 'review-valid', self.github)
+        self.config['reviewed_operations'] = prepared['catalog_entry']
+        plan, digest = adapter.load_operation(self.fixture.registry, self.config, self.event())
+        self.assertEqual(digest, prepared['plan_sha256'])
+        self.assertEqual(plan['request'], request)
+        self.assertEqual(self.sessions, 0)
+
     def test_zero_exit_or_model_claim_cannot_finish(self):
         class FakeExitZero:
             def run(self, callback):
@@ -237,6 +279,56 @@ class Tests(unittest.TestCase):
         self.assertEqual(repeated['claim']['state'], 'unknown')
         self.assertEqual(self.sessions, 1)
         self.assertEqual(sum(tool == 'batch_update_document' for tool, _, _ in self.fixture.broker.calls), 1)
+
+    def test_transport_failure_saves_bounded_shapes_without_replaying(self):
+        self.fixture.broker.failure = 'cas_after'
+        owner = self
+        class FailedSession:
+            def run(inner, callback):
+                owner.sessions += 1
+                try:
+                    callback(owner.fixture.broker)
+                except core.RecordError:
+                    return {'outcome': 'error', 'code': 'FORBIDDEN', 'failure_stage': 'mcp_start',
+                            'model_turns': 1, 'driver_thread_settled': True,
+                            'event_trace': [{'method': 'CANARY_SECRET', 'item_type': 'CANARY_SECRET',
+                                             'arguments_type': 'object', 'request': True,
+                                             'unknown': 'CANARY_SECRET'}] * 40,
+                            'mcp_start_diagnostic': {'arguments_exact': False, 'arguments': 'CANARY_SECRET'},
+                            'tool_receipts': [{'arguments_sha256': 'a' * 64, 'result_sha256': 'b' * 64,
+                                               'tool': 'CANARY_SECRET', 'result': 'CANARY_SECRET'}] * 50,
+                            'cleanup': {'appserver_exited': True, 'remaining_job_pids': [], 'path': 'CANARY_SECRET'},
+                            'unknown': 'CANARY_SECRET'}
+                raise AssertionError('expected failure')
+        event = self.event()
+        with self.assertRaises(core.RecordError) as caught:
+            adapter.dispatch(self.fixture.registry, self.config, event, FailedSession)
+        self.assertEqual(caught.exception.code, 'FORBIDDEN')
+        self.assertTrue(caught.exception.diagnostic_saved)
+        claim = dispatch_guard.peek(self.fixture.registry, event['event'])
+        self.assertEqual(claim['state'], 'unknown')
+        folder = self.fixture.root / '.openchamber/workspace-records/runtime/runner-diagnostics'
+        files = list(folder.glob('*.json')); self.assertEqual(len(files), 1)
+        raw = files[0].read_bytes(); self.assertNotIn(b'CANARY_SECRET', raw)
+        saved = json.loads(raw)
+        self.assertEqual(saved['claim_key'], claim['key'])
+        self.assertEqual(saved['plan_sha256'], self.config['reviewed_operations']['42']['plan_sha256'])
+        self.assertEqual(saved['request_sha256'], core.request_hash(self.review_request))
+        self.assertEqual(len(saved['event_trace']), 16)
+        self.assertEqual(len(saved['tool_proofs']), 32)
+        self.assertFalse(saved['mcp_arguments_exact'])
+        self.assertEqual(adapter.dispatch(self.fixture.registry, self.config, event, FailedSession)['claim']['state'], 'unknown')
+        self.assertEqual(self.sessions, 1)
+
+    def test_transport_diagnostic_write_failure_preserves_original_error(self):
+        class FailedSession:
+            def run(inner, callback):
+                return {'outcome': 'error', 'code': 'FORBIDDEN', 'event_trace': []}
+        with patch.object(adapter, 'save_transport_diagnostic', side_effect=OSError('CANARY_SECRET')):
+            with self.assertRaises(core.RecordError) as caught:
+                adapter.dispatch(self.fixture.registry, self.config, self.event(), FailedSession)
+        self.assertEqual(caught.exception.code, 'FORBIDDEN')
+        self.assertFalse(caught.exception.diagnostic_saved)
 
     def test_owner_and_fresh_run_context_required(self):
         for mutation in ('actor', 'actions', 'sha'):
