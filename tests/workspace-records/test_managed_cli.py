@@ -88,6 +88,21 @@ class TestManagedCli(unittest.TestCase):
         self.assertFalse((self.root / "wrong-notes").exists())
         self.assertEqual(self.call("preview")[1]["data"]["outcome"], "no_write")
 
+    def test_pending_activation_blocks_git_preview_apply_and_recover(self):
+        import hashlib
+        self.initialize()
+        self.plan()
+        before = self.status.read_bytes()
+        barriers = self.root / '.openchamber/workspace-records/activation-barriers'
+        barriers.mkdir()
+        marker = barriers / (hashlib.sha256(b'Legacy_Project').hexdigest() + '.json')
+        marker.write_text('{}')
+        for command in ('preview', 'apply', 'recover'):
+            code, value = self.call(command)
+            self.assertNotEqual(code, 0, value)
+            self.assertEqual(value['error']['code'], 'PHASE_FROZEN')
+        self.assertEqual(self.status.read_bytes(), before)
+
     def test_registry_changes_after_preview_prevent_apply(self):
         self.initialize(); self.plan()
         self.routes["generation"] += 1; self.save()

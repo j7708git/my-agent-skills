@@ -226,6 +226,10 @@ def run(x):
 
 
 def runtime_preview(x):
+    return _runtime_preview(x)
+
+
+def _runtime_preview(x, disaster=None):
     """Create a frozen Git runtime preserving every operation and exact result."""
     from collections import Counter
 
@@ -233,7 +237,7 @@ def runtime_preview(x):
     runtime = target_dir(x["approved_root"], x["runtime_dir"])
     directory, state, unused = material(root, x["snapshot_id"])
     head = state["source"]["head"]
-    if head["control"]["phase"] != "frozen":
+    if disaster is None and head["control"]["phase"] != "frozen":
         raise RecordError("PHASE_FROZEN")
     rootref = head["root_manifest"]
     value = manifest.parse_json(
@@ -272,7 +276,7 @@ def runtime_preview(x):
     control = {
         "mode": "git",
         "phase": "frozen",
-        "epoch": head["control"]["epoch"],
+        "epoch": head["control"]["epoch"] if disaster is None else disaster["target_epoch"],
         "version": head["version"],
         "policy_version": head["control"]["policy_version"],
         "record_metadata": "required-v1",
@@ -293,6 +297,8 @@ def runtime_preview(x):
         "metadata_catalog": metadata,
         "journal": entries,
     }
+    if disaster is not None:
+        plan["disaster"] = disaster
     plan_hash = object_hash(plan)
     expected = {"control.json": core.canonical(control)}
     for entry in entries:

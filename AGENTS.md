@@ -49,7 +49,7 @@
   - `skills/workspace-sync/`：換機／換 agent 的開工同步；執行 agent 依使用者的同步請求，
     偵測 notes、skills 與專案的遠端預設主線，安全切換並快轉；保留阻擋同步的本機工作。
     它是純文字流程，不 push、不解決分岔、不更新所有已安裝 skill 副本。
-  - `skills/workspace-records/`：在 fixed managed route 下管理 canonical records；Google mode 以 Doc head CAS 為唯一 authority，Sheet／Project 閱讀面為衍生資料。寫入須先預覽並完成 privacy scan；route 或 connector 不可確認時拒寫，不 fallback；本 skill 不自行 commit／push、切換 authority 或持有憑證。
+  - `skills/workspace-records/`：在 fixed managed route 下管理 canonical records；Google mode 以 Doc head CAS 為唯一 authority，Sheet／Project 閱讀面為衍生資料。寫入須先預覽並完成 privacy scan；route 或 connector 不可確認時拒寫，不 fallback；本 skill 不自行 commit／push、切換 authority 或持有憑證。總表事件與故障退回各有獨立契約，從該 skill 的條件式引用進入；合成測試、真工具回執、部署與端到端驗收分開回報。
   - `project-workflow` 與 `web-ui-e2e-smoke`／`independent-rerun-verify`／
     `review-fix-round`／`native-crash-triage`／`release-prep`／`handoff-refresh`／
     `diagram-guide` 都是**純文字流程指引**：不下載或安裝工具、skill 本身不自行

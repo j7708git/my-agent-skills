@@ -100,9 +100,30 @@ class Registry:
         }
         return binding
 
+    def require_no_activation(self, project_id):
+        """Fail closed while an emergency activation is not durably complete."""
+        ident(project_id)
+        parent = self.workspace / '.openchamber/workspace-records/activation-barriers'
+        try:
+            os.lstat(parent)
+        except FileNotFoundError:
+            return
+        except OSError:
+            raise RecordError('CONTROL_UNAVAILABLE') from None
+        parent = git_store.safe_dir(parent)
+        path = parent / (sha(project_id.encode('utf-8')) + '.json')
+        try:
+            os.lstat(path)
+        except FileNotFoundError:
+            return
+        except OSError:
+            raise RecordError('CONTROL_UNAVAILABLE') from None
+        raise RecordError('PHASE_FROZEN')
+
     def check(self, binding, authority_state=None):
         if not isinstance(binding, dict):
             raise RecordError('INVALID_ARGUMENT')
+        self.require_no_activation(binding.get('project_id'))
         fresh = self.bind(binding.get('project_id'))
         if fresh['route_phase'] != 'steady':
             raise RecordError('PHASE_FROZEN')

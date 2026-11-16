@@ -104,6 +104,8 @@ class Tests(unittest.TestCase):
         self.assertIn('人工補充',str(after))
         binding={'backend':'google_head','route_phase':'steady','runtime_directory':str(self.root),'locator':{'document_id':'doc'},'privacy_policy':str(self.root/'policy'),'policy_version':'1'}
         class FakeRegistry:
+            def require_no_activation(self, project):
+                pass
             def bind(self, project):
                 self.project=project
                 return binding

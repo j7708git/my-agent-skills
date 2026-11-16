@@ -124,6 +124,7 @@ def verify_project(root, snapshot_id, binding, project_id):
 
 
 def binding_for(registry, project):
+    registry.require_no_activation(project)
     binding = registry.bind(project)
     if (
         binding["backend"] not in ("git_local", "google_head")

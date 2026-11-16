@@ -30,3 +30,11 @@ Google head revision 改變、缺少 attachment/object、hash 不符、operation
 切換順序是 authority freeze、route freeze、writer drain、snapshot 與 target readback、發布 frozen route、恢復 target、發布 steady route。工具保存並核對呼叫者提供的證據，不會自行證明 OS、Runner 或外部 agent 已停止寫入；實體 fence 是 P6 的獨立前置條件。這些 CLI 不代表已部署，隔離 runtime 的成功也不等於正式 pilot 已切換。
 
 以上 snapshot 僅涵蓋 canonical records、events/journal 與被 manifest 引用的 raw objects/attachments。它不備份或還原原生 Google Doc 的任意格式、comments、未納入 schema 的 tabs、Sheet/Project 的視覺格式或檔案系統原始 mtime；原始時間值保存在 metadata catalog。
+
+## 離線災難候選
+
+`disaster_recovery.py assess` 只掃指定 private root 的本機 snapshot 集合，重新核對 receipt、graph 與 hash；同來源同 epoch 依版本選擇可比較快照，分叉或不可比較時拒絕。輸出包含快照完成時間、未知後續缺口、未知待送工作與 incomplete 數量；不能證明該目錄含所有備份、來源仍停在該版本或外部 writer 已停止。
+
+`prepare` 要求操作者明確接受與 assessment hash 綁定的未知缺口，並拒絕已知未解 writer；空清單只是呼叫者聲明，不是排他證據。它產生既有 restore 的資料與 runtime plans，目標應為核准的隔離目錄。runtime 只建立 frozen Git 候選，保留來源版本、snapshot receipt、metadata、operation history 與決策 hash；新 epoch 僅是候選值，不能證明高於失聯的遠端。使用 `disaster_recovery.py apply` 前會重新檢查本機快照集合與兩個 plan hash，資料與 runtime 套用間再檢查一次；完成後仍是 `not_activated`。`inspect` 讀取 pending／partial 狀態並逐檔比對 before／after／conflict，runtime 寫入開始後顯示 applying；中斷或集合變更時需人工對帳，重送會拒絕，尚不支援自動續跑；不能因此發布 route 或啟動 writer。正式啟用仍需獨立驗證持續的 OS fence、所有 writer 狀態及 registry，並先對帳未知遠端寫入。
+
+候選介面 `disaster_activation.py template` 產生未接受的隔離演練決策範本，綁定來源、完成時間、未知缺口、登記版本與合作 writer PID。明確決策後 `prepare` 建立持久 intent；`apply` 保持自有 Windows directory holder 並反覆驗 process、handle/path identity 及列出的 writer，再依序還原、發布 frozen Git route、以受管 journal 恢復、發布 steady route。`inspect` 在結果未知時重新讀取登記與 runtime control，要求停止 writer 並人工對帳；last-confirmed route 不必等於現況。這是單機合作 writer 的隔離演練，PID 清單、同帳號 holder 與未知遠端狀態不構成跨機或惡意程序的排他保證；不得自動重新連接未知遠端 writer。

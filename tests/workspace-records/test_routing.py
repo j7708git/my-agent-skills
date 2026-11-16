@@ -56,6 +56,17 @@ class TestRouting(unittest.TestCase):
         git_store.write_json(expected/'control.json', {'mode':'git','phase':'frozen','epoch':2,'version':1,'policy_version':'1'})
         with self.assertRaisesRegex(core.RecordError, 'PHASE_FROZEN'): self.registry.check(binding)
 
+    def test_activation_barrier_blocks_even_when_route_is_steady(self):
+        binding = self.registry.bind('Legacy_Project')
+        barriers = self.root / '.openchamber/workspace-records/activation-barriers'
+        barriers.mkdir()
+        marker = barriers / (core.sha(b'Legacy_Project') + '.json')
+        marker.write_bytes(b'incomplete-or-corrupt')
+        with self.assertRaisesRegex(core.RecordError, 'PHASE_FROZEN'):
+            self.registry.check(binding)
+        marker.unlink()
+        self.assertEqual(self.registry.check(binding)['state'], 'unmigrated_git')
+
     def test_google_unavailable_never_falls_back_to_git(self):
         self.google()
         binding = self.registry.bind('Legacy_Project')

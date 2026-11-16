@@ -321,7 +321,10 @@ Google connector 授權由執行端 runtime 提供；helper 不保存 token。�
 - canonical records、hash 與寫入契約：[references/contract.md](skills/workspace-records/references/contract.md)
 - fixed registry、mode 路由與停止條件：[references/routing.md](skills/workspace-records/references/routing.md)
 - Google mode 設定與授權邊界：[references/google-setup.md](skills/workspace-records/references/google-setup.md)
-- snapshot、restore、promotion 與 transition 界線：[references/backup-restore.md](skills/workspace-records/references/backup-restore.md)
+- snapshot、restore、promotion、transition 與災難啟用界線：[references/backup-restore.md](skills/workspace-records/references/backup-restore.md)
+- 既有總表的固定欄位、事件 queue、outbox 與讀回：[portfolio-refresh.md](skills/workspace-records/references/portfolio-refresh.md)
+- Git／Google 混合來源、觀察時間與 receipt 覆蓋：[portfolio-mixed.md](skills/workspace-records/references/portfolio-mixed.md)
+- PM 審核操作、原 Issue／Runner 入口與完成回執：[runner-integration.md](skills/workspace-records/references/runner-integration.md)
 - project-workflow 的選用 route registry 與失敗條件：[record-routing.md](skills/project-workflow/references/record-routing.md)
 - 各環境實測範圍見 [docs/compatibility.md](docs/compatibility.md)。
 
@@ -662,7 +665,10 @@ skill 自己的文件（安裝後也可用，不依賴本 repo）：
 | `skills/workspace-records/references/contract.md` | RecordSet、authority、request hash、privacy 與衍生面界線 |
 | `skills/workspace-records/references/routing.md` | managed registry、mode 路由與停止條件 |
 | `skills/workspace-records/references/google-setup.md` | Google connector/runtime 前提與 authority 設定邊界 |
-| `skills/workspace-records/references/backup-restore.md` | canonical snapshot 範圍、restore、promotion 與 transition 界線 |
+| `skills/workspace-records/references/backup-restore.md` | canonical snapshot、正常回程與災難啟用界線 |
+| `skills/workspace-records/references/portfolio-refresh.md` | 固定總表欄位、來源核對、事件 queue 與未知傳送對帳 |
+| `skills/workspace-records/references/portfolio-mixed.md` | 混合來源觀察、durable receipts 與逐事件覆蓋 |
+| `skills/workspace-records/references/runner-integration.md` | PM 審核操作、可信事件、canonical 完成與 projection 分離 |
 
 本 repo 的 `docs/` 只放公開文件。完整計畫、todo、session 日誌、驗收紀錄與研究筆記
 是本機工作紀錄，不進版控，也不從公開文件連過去；分流規則見

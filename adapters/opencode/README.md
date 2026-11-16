@@ -7,6 +7,10 @@ agent 定義與 skill 分開發行（原因見
 [docs/research/portability.md](../../docs/research/portability.md)）：
 agent 是平台專屬的角色、權限與模型設定，skill 是純文字流程指引。
 
+## 選用受管工作紀錄
+
+工作區已啟用 `workspace-records` 時，PM 與 worker 依[紀錄路由](../../skills/project-workflow/references/record-routing.md)取得專案的實際 authority，並遵守派工的精確 scope。總表是衍生閱讀面；Google 專案遇連線或版本不明時保持拒寫。Codex Apps transport 的驗證不能推論成 OpenCode 已能使用相同 Google 連線；本 adapters 的角色定義也不會自行安裝背景 consumer 或切換專案。各 client 的限制見[相容性說明](../../docs/compatibility.md)。
+
 ## 目錄結構
 
 | 檔案 | 說明 |

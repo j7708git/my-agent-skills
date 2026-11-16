@@ -180,6 +180,9 @@ class Tests(unittest.TestCase):
             }
 
             class Registry:
+                def require_no_activation(self, project):
+                    pass
+
                 def bind(self, project):
                     return binding
 
@@ -568,6 +571,9 @@ class Tests(unittest.TestCase):
                 }
 
                 class Registry:
+                    def require_no_activation(self, project):
+                        pass
+
                     def bind(self, project):
                         return binding
 
@@ -775,6 +781,9 @@ class Tests(unittest.TestCase):
         }
 
         class PromotionRegistry:
+            def require_no_activation(self, project):
+                pass
+
             def bind(self, project):
                 return binding
 
@@ -854,6 +863,9 @@ class Tests(unittest.TestCase):
         }
 
         class Registry:
+            def require_no_activation(self, project):
+                pass
+
             def bind(self, project):
                 return binding
 

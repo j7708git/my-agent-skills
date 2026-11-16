@@ -191,6 +191,7 @@ def compute(registry, x):
     if x.get("actor_role") != "pm" or x.get("stage") not in STAGES:
         raise RecordError("FORBIDDEN")
     project = ident(x["project_id"])
+    registry.require_no_activation(project)
     ident(x["operation_id"])
     root, state = transition_state(registry, x)
     binding = registry.bind(project)

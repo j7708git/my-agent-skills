@@ -74,6 +74,8 @@ def managed_dispatch(command, env, registry):
         "policy": binding["privacy_policy"],
         "gitleaks_config": str(pathlib.Path(__file__).resolve().parents[3] / ".gitleaks.toml"),
     }
+    if command in ("initialize", "preview", "apply", "recover"):
+        registry.require_no_activation(req["project_id"])
     if command in ("preview", "apply", "recover"):
         validate_request(req, True)
         # This branch only reads a completed receipt; it cannot resume a partial write.

@@ -607,6 +607,7 @@ def resume_google(x, registry):
 
     root = git_store.safe_dir(x["private_dir"])
     directory, state = load(root, x["transition_id"])
+    registry.require_no_activation(state["project_id"])
     with git_store.locked(directory):
         state = git_store.read_json(directory / "transition.json")
         intent = state.get("pending")
@@ -741,6 +742,7 @@ def resume_git(x, registry):
 
     root = git_store.safe_dir(x["private_dir"])
     directory, state = load(root, x["transition_id"])
+    registry.require_no_activation(state["project_id"])
     with git_store.locked(directory):
         state = git_store.read_json(directory / "transition.json")
         intent = state.get("pending")
@@ -803,109 +805,123 @@ def resume_git(x, registry):
                 pathlib.Path(__file__).resolve().parents[3] / ".gitleaks.toml"
             ),
         }
-        scan = git_store.privacy_check(
-            {"request": req, "transition": intent}, privacy_config
+        return resume_git_operation(
+            req, binding, registry, {"request": req, "transition": intent}, privacy_config
         )
-        with git_store.locked(runtime):
-            if registry.bind(state["project_id"]) != binding:
-                raise RecordError("REVISION_CONFLICT")
-            entries = git_store.journal_entries(runtime)
-            if any(
-                item.get("operation_id") != req["operation_id"]
-                and item.get("state") != "complete"
-                for item in entries
-            ):
-                raise RecordError("IN_FLIGHT")
-            path = git_store.operation_path(runtime, req["operation_id"])
-            control = git_store.get_control(runtime)
-            git_store.metadata_catalog(runtime, control, state["project_id"])
-            original = {**expected, "policy_version": binding["policy_version"]}
-            if "record_metadata" in control:
-                original["record_metadata"] = control["record_metadata"]
-            updated = {
-                **original,
-                "phase": "steady",
-                "version": expected["version"] + 1,
-            }
-            if os.path.lexists(path):
-                entry = git_store.read_operation(runtime, req["operation_id"])
-                if entry.get("request_hash") != rh:
-                    raise RecordError("ID_REUSE")
-                if entry.get("state") == "complete":
-                    if control != updated:
-                        raise RecordError("INTEGRITY_FAILED")
-                    return {
-                        "outcome": "no_write",
-                        "request": req,
-                        "result": entry["result"],
-                    }
-                if entry.get("state") != "files_done" or control not in (
-                    original,
-                    updated,
-                ):
-                    raise RecordError("MANUAL_REVIEW")
-                for key in ("content_sha256", "policy_sha256", "rules_sha256"):
-                    if entry.get("scan", {}).get(key) != scan.get(key):
-                        raise RecordError("SCAN_INCOMPLETE")
-            else:
-                if control != original:
-                    raise RecordError("REVISION_CONFLICT")
-                now = datetime.now(timezone.utc).isoformat()
-                result = {
-                    "authority": {
-                        "state": "complete",
-                        "logical_version": updated["version"],
-                        "docs_revision": None,
-                        "readback_verified": True,
-                    },
-                    "projection": {
-                        "state": "not_applicable",
-                        "source_version": updated["version"],
-                        "source_hash": None,
-                    },
-                    "operation_id": req["operation_id"],
-                    "request_hash": rh,
-                    "epoch": updated["epoch"],
-                    "phase": "steady",
-                    "affected_ids": [],
-                    "observed_at": now,
-                }
-                event = {
-                    "operation_id": req["operation_id"],
-                    "request_hash": rh,
-                    "version": updated["version"],
-                    "action": "resume",
-                    "target_record_id": None,
-                    "payload": req["payload"],
-                    "actor_role": "pm",
-                    "occurred_at": now,
-                }
-                entry = {
-                    "schema_version": 1,
-                    "operation_id": req["operation_id"],
-                    "request_hash": rh,
-                    "state": "files_done",
-                    "expected_control": original,
-                    "scope": req["scope"],
-                    "actor_role": "pm",
-                    "action": "resume",
-                    "target_record_id": None,
-                    "files": [],
-                    "event": event,
-                    "result": result,
-                    "scan": scan,
-                }
-                git_store.write_json(path, entry)
-            if control == original:
-                git_store.write_json(runtime / "control.json", updated)
-            entry["state"] = "complete"
-            git_store.write_json(path, entry)
-        return {
-            "outcome": "complete",
-            "request": req,
-            "result": entry["result"],
-            "route_phase": "frozen",
+
+def resume_git_operation(req, binding, registry, scan_payload, privacy_config):
+    """Commit a validated frozen Git resume with privacy scan and journal."""
+    from datetime import datetime, timezone
+    core.validate_request(req, True)
+    if (req["action"] != "resume" or req["actor_role"] != "pm"
+            or binding["backend"] != "git_local" or binding["route_phase"] != "frozen"
+            or scan_payload.get("request") != req):
+        raise RecordError("FORBIDDEN")
+    scan = git_store.privacy_check(scan_payload, privacy_config)
+    runtime = git_store.safe_dir(binding["runtime_directory"])
+    expected = req["expected"]
+    rh = core.request_hash(req)
+    with git_store.locked(runtime):
+        if registry.bind(req["project_id"]) != binding:
+            raise RecordError("REVISION_CONFLICT")
+        entries = git_store.journal_entries(runtime)
+        if any(
+            item.get("operation_id") != req["operation_id"]
+            and item.get("state") != "complete"
+            for item in entries
+        ):
+            raise RecordError("IN_FLIGHT")
+        path = git_store.operation_path(runtime, req["operation_id"])
+        control = git_store.get_control(runtime)
+        git_store.metadata_catalog(runtime, control, req["project_id"])
+        original = {**expected, "policy_version": binding["policy_version"]}
+        if "record_metadata" in control:
+            original["record_metadata"] = control["record_metadata"]
+        updated = {
+            **original,
+            "phase": "steady",
+            "version": expected["version"] + 1,
         }
+        if os.path.lexists(path):
+            entry = git_store.read_operation(runtime, req["operation_id"])
+            if entry.get("request_hash") != rh:
+                raise RecordError("ID_REUSE")
+            if entry.get("state") == "complete":
+                if control != updated:
+                    raise RecordError("INTEGRITY_FAILED")
+                return {
+                    "outcome": "no_write",
+                    "request": req,
+                    "result": entry["result"],
+                }
+            if entry.get("state") != "files_done" or control not in (
+                original,
+                updated,
+            ):
+                raise RecordError("MANUAL_REVIEW")
+            for key in ("content_sha256", "policy_sha256", "rules_sha256"):
+                if entry.get("scan", {}).get(key) != scan.get(key):
+                    raise RecordError("SCAN_INCOMPLETE")
+        else:
+            if control != original:
+                raise RecordError("REVISION_CONFLICT")
+            now = datetime.now(timezone.utc).isoformat()
+            result = {
+                "authority": {
+                    "state": "complete",
+                    "logical_version": updated["version"],
+                    "docs_revision": None,
+                    "readback_verified": True,
+                },
+                "projection": {
+                    "state": "not_applicable",
+                    "source_version": updated["version"],
+                    "source_hash": None,
+                },
+                "operation_id": req["operation_id"],
+                "request_hash": rh,
+                "epoch": updated["epoch"],
+                "phase": "steady",
+                "affected_ids": [],
+                "observed_at": now,
+            }
+            event = {
+                "operation_id": req["operation_id"],
+                "request_hash": rh,
+                "version": updated["version"],
+                "action": "resume",
+                "target_record_id": None,
+                "payload": req["payload"],
+                "actor_role": "pm",
+                "occurred_at": now,
+            }
+            entry = {
+                "schema_version": 1,
+                "operation_id": req["operation_id"],
+                "request_hash": rh,
+                "state": "files_done",
+                "expected_control": original,
+                "scope": req["scope"],
+                "actor_role": "pm",
+                "action": "resume",
+                "target_record_id": None,
+                "files": [],
+                "event": event,
+                "result": result,
+                "scan": scan,
+            }
+            git_store.write_json(path, entry)
+        if control == original:
+            git_store.write_json(runtime / "control.json", updated)
+        entry["state"] = "complete"
+        git_store.write_json(path, entry)
+    return {
+        "outcome": "complete",
+        "request": req,
+        "result": entry["result"],
+        "route_phase": "frozen",
+    }
+
 
 
 def inspect(x):

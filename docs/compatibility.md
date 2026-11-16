@@ -39,9 +39,11 @@ Windows Git Bash 的 hooks 專項執行：65 PASS、11 environment skips、0 fai
 
 ## workspace-records 的狀態
 
-`workspace-records` 的 managed local Git CLI、固定路由與 P2 record model 已有真資料隔離往返證據；Windows 8.3 短檔名 alias 的實際檔案系統情境，以及完整 repo 整合檢查仍未驗，因此不宣稱 P2 已完成日常部署驗收。Google connector 已有隔離 head/CAS、完整 graph/object readback、snapshot restore 與 derived projection 實測；P4 promotion/return 介面亦有 isolated same-runtime 路徑證據，但都不等於已部署 live pilot。較長可讀內容以分段副本保存且逐物件驗證 bytes/hash；Project 複合問答仍可能漏掉尾段，指定來源 part 才能補查。canonical 完整性以完整 graph 與 hash 為準，不保證語意搜尋一次回傳全文。
+`workspace-records` 的 managed local Git CLI、固定路由與 P2 record model 已有真資料隔離往返證據；Windows 8.3 短檔名 alias 的實際檔案系統情境，以及完整 repo 整合檢查仍未驗，因此不宣稱 P2 已完成日常部署驗收。Google connector 已有隔離 head/CAS、完整 graph/object readback、snapshot restore 與 derived projection 實測；P4 promotion/return 介面亦有 isolated same-runtime 路徑證據，受限 Windows＋Codex 單專案正常往返另有實際寫入、獨立讀回與恢復原 Git 的證據；此結果不代表所有專案已切換、其他 client 可寫或災難退回通過。較長可讀內容以分段副本保存且逐物件驗證 bytes/hash；Project 複合問答仍可能漏掉尾段，指定來源 part 才能補查。canonical 完整性以完整 graph 與 hash 為準，不保證語意搜尋一次回傳全文。
 
-helper 依賴同一 repo 中的 `repo-privacy-audit` scanner、Gitleaks 和固定位置的 local policy/configuration。缺少任何必要 scanner dependency、掃描未完成、內容 hash 不符或有發現時，操作必須 fail closed。個資偵測不完整，敏感正文仍需人工檢視。skill 單獨安裝不會攜帶上述 runtime dependencies；runtime 載入與實際行為也未驗證。Google authorization 由 connector/runtime 提供，helper 不保存憑證；Google route 無法確認時不回退到 Git。
+helper 依賴同一 repo 中的 `repo-privacy-audit` scanner、Gitleaks 和固定位置的 local policy/configuration。缺少任何必要 scanner dependency、掃描未完成、內容 hash 不符或有發現時，操作必須 fail closed。個資偵測不完整，敏感正文仍需人工檢視。skill 單獨安裝不會攜帶上述 runtime dependencies；runtime 載入與實際行為須對部署包逐一驗證，單檔複製不是完整安裝。Google authorization 由 connector/runtime 提供，helper 不保存憑證；Google route 無法確認時不回退到 Git。
+
+總表的 Windows Codex Apps consumer 已有單次真實 Sheet 寫入、獨立欄位讀回與來源無變更時零模型／零工具呼叫的證據。回執核對實際 thread／turn／tool item、目標與完整參數；模型完成文字不作寫入證明。背景事件部署、Tasks／Issue／Runner 的完整派工、混合 Google 更新及故障啟用仍需各自驗收，不能由該單次結果推論。Google 斷線時 Sheet 也可能不可寫，失敗保存在本地 outbox；表上時間表示最後確認或觀察，不保證即時狀態。
 
 ## 安裝路徑
 

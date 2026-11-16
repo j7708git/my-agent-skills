@@ -20,7 +20,7 @@
 | `tests/project-workflow/` | `project-workflow` 的契約測試（模板欄位、自足引用、隔離複製、平台中立、隱私 placeholder、授權敘述） |
 | `tests/academic-paper-search/` | `academic-paper-search` 檢索腳本的離線契約測試（查詢建構、Atom 解析、輸出格式、退出碼） |
 | `tests/fizgig-moss-lora/` | 資料整理與 Fizgig 配置 helper 的合成契約測試，不載入模型或使用 GPU |
-| `tests/workspace-records/` | P2 RecordSet/Git/privacy/managed CLI tests；Google head、connector、projection 與 Drive detail projection tests；另含 snapshot、restore、transition 和 portfolio tests，case 數與各子系統凍結狀態以當次輸出及相容性文件為準 |
+| `tests/workspace-records/` | P2 RecordSet/Git/privacy/managed CLI tests；Google head、connector、projection 與 Drive detail projection tests；另含 snapshot、restore、transition、災難啟用、canonical writer、Runner adapter、事件 consumer 與 mixed portfolio tests；case 數與各子系統驗收狀態以當次輸出及相容性文件為準 |
 
 `scripts/run-checks.sh` **只維護這個集合 repo**，不是 skill 的執行入口；
 skill 安裝到使用者的專案後，這個腳本不會跟著走。
@@ -55,7 +55,7 @@ skill 安裝到使用者的專案後，這個腳本不會跟著走。
 | `tests/project-workflow/test_skill_contract.py` | 契約測試 | `project-workflow`：模板欄位、自足引用、隔離複製、平台中立、隱私 placeholder、授權敘述 |
 | `tests/academic-paper-search/test_arxiv_search.py` | 54 | arXiv 檢索腳本契約：查詢建構與 URL 編碼、Atom 解析、json/text/bibtex 輸出、退出碼 |
 | `tests/fizgig-moss-lora/` | 以測試檔為準 | 圖片盤點、selection、來源保留、路徑與洩漏阻擋、配置產生與變更驗證 |
-| `tests/workspace-records/test_*.py` | 以測試輸出為準 | P2 managed/local Git、Google connector/head/projection、snapshot/restore/transition 與 portfolio 子系統；各部分驗收狀態不同，不可把整個目錄通過推論為全階段完成 |
+| `tests/workspace-records/test_*.py` | 以測試輸出為準 | managed/local Git、Google connector/head/projection、snapshot/restore/transition、災難啟用、canonical writer／Runner、事件與混合總表；單元測試不取代實際 Apps 回執、已部署事件觸發或故障啟用驗收 |
 
 上表項目數以實際測試輸出為準；平台限定 hooks cases 可能 skip，須列明環境原因，不能將 skip 當 pass。新增測試時同步更新這張表的覆蓋對象。
 

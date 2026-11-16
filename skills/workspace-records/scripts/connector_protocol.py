@@ -1059,6 +1059,8 @@ def managed_dispatch(command, x, registry):
         else x.get("project_id")
     )
     binding = registry.bind(project)
+    if command not in ("inspect", "reconcile-cas"):
+        registry.require_no_activation(project)
     if binding["backend"] != "google_head" or binding["route_phase"] != "steady":
         raise RecordError("FORBIDDEN")
     guarded = dict(x)
